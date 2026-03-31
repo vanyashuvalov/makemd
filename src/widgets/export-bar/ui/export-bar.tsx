@@ -31,16 +31,16 @@ export function ExportBar({
       <Button
         variant="outline"
         size="sm"
-        className="h-11 rounded-full border-border bg-card px-4"
-        after={<Icon icon={IconPencil} size="sm" />}
+        className="h-11 rounded-full border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
+        after={<Icon icon={IconPencil} size="md" tone="white" />}
       >
         <span className="max-w-[14rem] truncate">{fileName}</span>
       </Button>
-      <IconButton aria-label="Copy document" variant="outline" size="default" className="border border-border">
-        <Icon icon={IconCopy} size="sm" />
+      <IconButton aria-label="Copy document" variant="outline" size="default" className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]">
+        <Icon icon={IconCopy} size="md" tone="white" />
       </IconButton>
-      <IconButton aria-label="Download PDF" variant="primary" size="default">
-        <Icon icon={IconDownload} size="sm" />
+      <IconButton aria-label="Download PDF" variant="outline" size="default" className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]">
+        <Icon icon={IconDownload} size="md" tone="white" />
       </IconButton>
     </div>
   )

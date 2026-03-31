@@ -29,9 +29,8 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
   return (
     <article
       className={cn(
-        'group flex min-h-[67px] cursor-pointer items-center gap-3 rounded-[12px] px-4 py-3 transition-[background-color] duration-150',
-        rowTone,
-        !item.selected && !item.active ? 'hover:bg-white/[0.05] active:bg-white/[0.08]' : null
+        'group flex min-h-[67px] cursor-pointer items-center gap-3 rounded-[12px] px-4 py-3 transition-[background-color] duration-150 hover:bg-white/[0.05] active:bg-white/[0.08]',
+        rowTone
       )}
     >
       {selectionMode ? (
@@ -60,14 +59,14 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
         </p>
       </div>
 
-      {showOverflow ? (
+      {item.withMenu ? (
         <IconButton
           aria-label={`Open actions for ${item.title}`}
           size="icon"
           variant="ghost"
           className={cn(
             'opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-sidebar-foreground',
-            item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
+            isSelected || item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
           )}
         >
           <Icon icon={IconDotsVertical} size="md" />

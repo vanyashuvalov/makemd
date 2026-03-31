@@ -78,7 +78,7 @@ export function DocumentSelectionBar({
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span className="whitespace-nowrap font-normal text-white">Hold</span>
             <span className="whitespace-nowrap rounded-[4px] bg-white/10 px-2 py-1 text-[15px] font-bold leading-[18px] tracking-[0.03em] text-white/70">
-              (Ctrl)
+              ^Ctrl
             </span>
             {helperTailWords.map((word) => (
               <span key={word} className="whitespace-nowrap font-normal text-white">
