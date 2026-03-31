@@ -58,7 +58,7 @@ function createMarkdownEditorTheme(isMobile: boolean) {
       '.cm-gutters': {
         backgroundColor: 'transparent',
         border: 'none',
-        color: 'rgba(255, 255, 255, 0.38)',
+        color: 'var(--color-muted-foreground)',
       },
       '.cm-gutterElement': {
         paddingRight: '12px',
@@ -69,7 +69,7 @@ function createMarkdownEditorTheme(isMobile: boolean) {
         minWidth: '2.5rem',
       },
       '.cm-placeholder': {
-        color: 'rgba(255, 255, 255, 0.42)',
+        color: 'var(--color-muted-foreground)',
       },
       '.cm-cursor, .cm-dropCursor': {
         borderLeftColor: 'var(--color-foreground)',
