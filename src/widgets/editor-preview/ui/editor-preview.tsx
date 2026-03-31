@@ -1,20 +1,19 @@
 /**
  * File: src/widgets/editor-preview/ui/editor-preview.tsx
- * Purpose: Mobile fallback for the workspace editor and preview surfaces.
- * Why it exists: the desktop layout now uses separate full-height blocks, but mobile still needs a tabbed switcher.
- * What it does: renders the tabbed mobile control bar and swaps between markdown and preview panels.
- * Connected to: the markdown editor state from `AppShell`, `Tabs`, `IconButton`, and the mobile route fallback.
+ * Purpose: Mobile fallback and panel composition for the workspace editor and preview surfaces.
+ * Why it exists: the desktop layout uses separate full-height blocks, while mobile still needs a tabbed switcher around the shared markdown editor and preview renderer.
+ * What it does: renders the tabbed mobile control bar and swaps between the markdown CodeMirror editor and the preview panel.
+ * Connected to: `MarkdownEditor`, `MarkdownRenderer`, `Tabs`, `IconButton`, and the shared workspace markdown state.
  */
 'use client'
 
-import { useLayoutEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
-import { getMarkdownLineCount, tokenizeMarkdownInline, tokenizeMarkdownLine } from '@/entities/document/model/markdown'
+import { MarkdownEditor } from './markdown-editor'
 import { MarkdownRenderer } from './markdown-renderer'
 
 export function EditorPreview({
@@ -28,7 +27,7 @@ export function EditorPreview({
 }) {
   const [mobilePanel, setMobilePanel] = useState<'markdown' | 'preview'>('markdown')
 
-  // Render the compact mobile control surface so small screens still mirror the Figma interaction pattern.
+  // Keep the mobile experience aligned with the desktop shell by switching between the same markdown source and preview panels.
   return (
     <section className="flex h-full min-h-0 flex-col gap-2 lg:hidden">
       <div className="flex items-center gap-3 rounded-[16px] border border-border bg-card px-4 py-3">
@@ -72,108 +71,10 @@ export function MarkdownPane({
   placeholder: string
   mobile?: boolean
 }) {
-  const normalizedValue = value.replace(/\r\n/g, '\n')
-  const lines = normalizedValue.split('\n')
-  const lineCount = getMarkdownLineCount(normalizedValue)
-  const gutterWidthClass = mobile ? 'w-10' : 'w-14'
-  const editorPaddingClass = mobile ? 'pl-12 pr-4' : 'pl-16 pr-6'
-  const editorRef = useRef<HTMLDivElement>(null)
-  const mirrorRef = useRef<HTMLDivElement>(null)
-  const [scrollTop, setScrollTop] = useState(0)
-  const [lineHeights, setLineHeights] = useState<number[]>(
-    () => Array.from({ length: lineCount }, () => 24)
-  )
-
-  // Render the markdown source as a real textarea with a VS Code-style gutter so editing stays familiar and the preview can stay in sync.
-  useLayoutEffect(() => {
-    const measureLineHeights = () => {
-      const mirror = mirrorRef.current
-
-      if (!mirror) {
-        return
-      }
-
-      const nextHeights = Array.from(mirror.children, (child) =>
-        Math.max(24, Math.ceil((child as HTMLElement).getBoundingClientRect().height))
-      )
-
-      setLineHeights(nextHeights.length ? nextHeights : Array.from({ length: lineCount }, () => 24))
-    }
-
-    measureLineHeights()
-
-    if (typeof ResizeObserver === 'undefined' || !editorRef.current) {
-      return
-    }
-
-    const observer = new ResizeObserver(() => {
-      measureLineHeights()
-    })
-
-    observer.observe(editorRef.current)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [lineCount, normalizedValue, mobile])
-
+  // Keep the markdown editor inside the same framed surface as before so the shell layout and preview column do not need to change.
   return (
-    <section ref={editorRef} className="relative flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
-      <div className={cn('pointer-events-none absolute inset-y-0 left-0 border-r border-border bg-card', gutterWidthClass)}>
-        <div
-          className="flex flex-col px-3 py-8 font-mono text-[13px] leading-6 text-muted-foreground"
-          style={{ transform: `translateY(${-scrollTop}px)` }}
-        >
-          {Array.from({ length: lineCount }, (_, index) => (
-            <div
-              key={index}
-              className="flex items-start justify-end"
-              style={{ height: lineHeights[index] ?? 24 }}
-            >
-              <span className="w-full pr-3 text-right tabular-nums select-none">
-                {index + 1}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div
-        ref={mirrorRef}
-        aria-hidden="true"
-        className={cn(
-          'pointer-events-none absolute inset-0 overflow-hidden px-4 py-8 pb-24 font-mono text-[15px] leading-6 text-foreground',
-          editorPaddingClass
-        )}
-        style={{ transform: `translateY(${-scrollTop}px)` }}
-      >
-        {lines.map((line, index) => (
-          <div
-            key={index}
-            className="flex w-full items-start"
-            style={{ height: lineHeights[index] ?? 24 }}
-          >
-            <div className="block w-full min-w-0 whitespace-pre-wrap break-words">
-              {renderMarkdownLine(line)}
-            </div>
-          </div>
-        ))}
-      </div>
-      <textarea
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
-        aria-label="Markdown editor"
-        placeholder={placeholder}
-        spellCheck={false}
-        autoCapitalize="off"
-        autoComplete="off"
-        autoCorrect="off"
-        className={cn(
-          'h-full w-full resize-none border-0 bg-transparent px-4 py-8 pb-24 font-mono text-[15px] leading-6 text-transparent caret-foreground outline-none placeholder:text-muted-foreground/70 selection:bg-primary/20 selection:text-transparent',
-          editorPaddingClass
-        )}
-        style={{ scrollPaddingBottom: '6rem' }}
-      />
+    <section className="relative flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
+      <MarkdownEditor value={value} onChange={onChange} placeholder={placeholder} mobile={mobile} />
     </section>
   )
 }
@@ -198,127 +99,4 @@ export function PreviewPane({
       </div>
     </section>
   )
-}
-
-function renderMarkdownLine(line: string): ReactNode[] {
-  // Render a single source line with syntax-colored markdown markers and content so the overlay can behave like a code editor mirror.
-  const isListLine = /^(\s*)([-+*])(\s+)\[( |x|X)\](\s+)(.*)$/.test(line) || /^(\s*)([-+*])(\s+)(.*)$/.test(line) || /^(\s*)(\d+[.)])(\s+)(.*)$/.test(line)
-
-  return tokenizeMarkdownLine(line).map((token, index) => {
-    if (isListLine) {
-      return (
-        <span key={`${index}-list`} className="text-emerald-500">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'marker') {
-      const markerClassName =
-        token.tone === 'heading'
-          ? 'font-semibold text-orange-500'
-          : token.tone === 'list'
-            ? 'font-semibold text-emerald-500'
-            : token.tone === 'quote'
-              ? 'font-semibold text-sky-500'
-              : token.tone === 'rule'
-                ? 'font-semibold text-muted-foreground/70'
-          : token.tone === 'task'
-                  ? 'font-semibold text-emerald-500'
-                  : token.tone === 'link'
-                    ? 'font-semibold text-sky-700'
-                    : token.tone === 'image'
-                      ? 'font-semibold text-violet-500'
-                      : token.tone === 'code'
-                        ? 'font-semibold text-violet-500'
-                        : 'font-semibold text-violet-500'
-
-      return (
-        <span key={`${index}-marker`} className={markerClassName}>
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'strong') {
-      return (
-        <span key={`${index}-strong`} className="font-semibold text-violet-500">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'emphasis') {
-      return (
-        <span key={`${index}-em`} className="italic text-violet-400">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'code') {
-      return (
-        <span
-          key={`${index}-code`}
-          className="rounded-md bg-violet-500/10 px-1.5 py-0.5 font-mono text-[0.95em] text-violet-500"
-        >
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'strike') {
-      return (
-        <span key={`${index}-strike`} className="line-through text-violet-400/80">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'linkText') {
-      return (
-        <span key={`${index}-link-text`} className="text-sky-700 underline decoration-sky-700/30 underline-offset-2">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'linkUrl') {
-      return (
-        <span key={`${index}-link-url`} className="text-sky-700/70">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'url') {
-      return (
-        <span key={`${index}-url`} className="text-sky-700 underline decoration-sky-700/30 underline-offset-2">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'imageAlt') {
-      return (
-        <span key={`${index}-image-alt`} className="text-violet-500">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'imageUrl') {
-      return (
-        <span key={`${index}-image-url`} className="text-violet-500/70">
-          {token.value}
-        </span>
-      )
-    }
-
-    return (
-      <span key={`${index}-text`} className="text-foreground">
-        {token.value}
-      </span>
-    )
-  })
 }
