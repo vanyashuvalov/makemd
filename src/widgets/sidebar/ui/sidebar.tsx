@@ -15,8 +15,7 @@ import { Tabs } from '@/shared/ui/tabs'
 import { Icon } from '@/shared/ui/icon'
 import { Separator } from '@/shared/ui/separator'
 import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
-import { DocumentHistoryList } from '@/entities/document/ui/document-history-list'
-import { DocumentSelectionBar } from '@/features/document-selection/ui/document-selection-bar'
+import { DocumentList } from './document-list'
 import type { DocumentRecord, WorkspaceSnapshot } from '@/entities/document/model/types'
 import {
   IconAlertTriangle,
@@ -47,8 +46,6 @@ export function Sidebar({
   onToggleAllSelection,
   onToggleDocument,
 }: SidebarProps) {
-  const hasSelection = selectedCount > 0
-
   // Render the dense navigation rail used in the Figma side-bar states.
   return (
     <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground">
@@ -102,18 +99,14 @@ export function Sidebar({
           />
         ) : null}
 
-        <DocumentSelectionBar
-          mode={hasSelection ? 'actions' : 'hint'}
+        <DocumentList
+          documents={documents}
+          selectionMode={selectionMode}
           selectedCount={selectedCount}
           totalCount={totalCount}
           helperText={helperText}
           onToggleAllSelection={onToggleAllSelection}
-        />
-
-        <DocumentHistoryList
-          items={documents}
-          selectionMode={selectionMode}
-          onToggleItem={onToggleDocument}
+          onToggleDocument={onToggleDocument}
         />
       </div>
 
@@ -121,14 +114,13 @@ export function Sidebar({
         <Separator className="bg-sidebar-border" />
         <div className="flex items-center justify-between text-sm text-sidebar-muted-foreground">
           <span>makemd &copy; 2026</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]"
-            before={<Icon icon={IconHelpCircle} size="sm" />}
+          <a
+            href="#help"
+            className="inline-flex items-center gap-2 text-sidebar-foreground/60 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            Help
-          </Button>
+            <Icon icon={IconHelpCircle} size="sm" tone="sidebarMuted" />
+            <span>Help</span>
+          </a>
         </div>
       </div>
     </aside>

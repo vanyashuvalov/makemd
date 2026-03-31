@@ -22,7 +22,7 @@ export function Alert({ title, description, icon, tone = 'warning', className, .
   return (
     <div
       className={cn(
-        'flex gap-3 rounded-[1.1rem] border px-4 py-3 text-sm',
+        'flex items-center gap-3 rounded-[1.1rem] border px-4 py-3 text-sm',
         tone === 'warning'
           ? 'border-[#5d4a24] bg-[#3a2f19] text-[#f7e2b7]'
           : 'border-border bg-card text-card-foreground',
@@ -30,7 +30,7 @@ export function Alert({ title, description, icon, tone = 'warning', className, .
       )}
       {...props}
     >
-      {icon ? <div className="mt-0.5">{icon}</div> : null}
+      {icon ? <div className="shrink-0 self-center">{icon}</div> : null}
       <div className="space-y-1">
         <p className="font-medium leading-tight">{title}</p>
         <p className={cn('leading-snug', tone === 'warning' ? 'text-[#d8be8c]' : 'text-muted-foreground')}>
