@@ -196,7 +196,17 @@ export function PreviewPane({
 
 function renderMarkdownLine(line: string): ReactNode[] {
   // Render a single source line with syntax-colored markdown markers and content so the overlay can behave like a code editor mirror.
+  const isListLine = /^(\s*)([-+*])(\s+)\[( |x|X)\](\s+)(.*)$/.test(line) || /^(\s*)([-+*])(\s+)(.*)$/.test(line) || /^(\s*)(\d+[.)])(\s+)(.*)$/.test(line)
+
   return tokenizeMarkdownLine(line).map((token, index) => {
+    if (isListLine) {
+      return (
+        <span key={`${index}-list`} className="text-emerald-500">
+          {token.value}
+        </span>
+      )
+    }
+
     if (token.type === 'marker') {
       const markerClassName =
         token.tone === 'heading'
@@ -207,10 +217,10 @@ function renderMarkdownLine(line: string): ReactNode[] {
               ? 'font-semibold text-sky-500'
               : token.tone === 'rule'
                 ? 'font-semibold text-muted-foreground/70'
-                : token.tone === 'task'
+          : token.tone === 'task'
                   ? 'font-semibold text-emerald-500'
                   : token.tone === 'link'
-                    ? 'font-semibold text-sky-500'
+                    ? 'font-semibold text-sky-700'
                     : token.tone === 'image'
                       ? 'font-semibold text-violet-500'
                       : token.tone === 'code'
@@ -261,7 +271,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'linkText') {
       return (
-        <span key={`${index}-link-text`} className="text-sky-500 underline decoration-sky-500/30 underline-offset-2">
+        <span key={`${index}-link-text`} className="text-sky-700 underline decoration-sky-700/30 underline-offset-2">
           {token.value}
         </span>
       )
@@ -269,7 +279,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'linkUrl') {
       return (
-        <span key={`${index}-link-url`} className="text-sky-500/70">
+        <span key={`${index}-link-url`} className="text-sky-700/70">
           {token.value}
         </span>
       )
@@ -277,7 +287,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'url') {
       return (
-        <span key={`${index}-url`} className="text-sky-500 underline decoration-sky-500/30 underline-offset-2">
+        <span key={`${index}-url`} className="text-sky-700 underline decoration-sky-700/30 underline-offset-2">
           {token.value}
         </span>
       )

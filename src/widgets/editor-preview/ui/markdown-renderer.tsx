@@ -73,7 +73,7 @@ const markdownComponents: Components = {
     <a
       {...props}
       href={href}
-      className="text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary/80"
+      className="text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80"
       target={href?.startsWith('http') ? '_blank' : undefined}
       rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
     >
