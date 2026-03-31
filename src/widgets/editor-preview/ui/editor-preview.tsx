@@ -14,7 +14,12 @@ import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
-import { getMarkdownLineCount, parseMarkdownBlocks } from '@/entities/document/model/markdown'
+import {
+  getMarkdownLineCount,
+  parseMarkdownBlocks,
+  tokenizeMarkdownInline,
+  tokenizeMarkdownLine,
+} from '@/entities/document/model/markdown'
 
 export function EditorPreview({
   markdown,
@@ -140,13 +145,13 @@ export function MarkdownPane({
         ref={mirrorRef}
         aria-hidden="true"
         className={cn(
-          'pointer-events-none absolute inset-0 overflow-hidden px-4 py-8 font-mono text-[15px] leading-6 opacity-0',
+          'pointer-events-none absolute inset-0 overflow-hidden px-4 py-8 font-mono text-[15px] leading-6 text-foreground',
           editorPaddingClass
         )}
       >
         {lines.map((line, index) => (
           <div key={index} className="whitespace-pre-wrap break-words">
-            {line || '\u00a0'}
+            {renderMarkdownLine(line)}
           </div>
         ))}
       </div>
@@ -161,7 +166,7 @@ export function MarkdownPane({
         autoComplete="off"
         autoCorrect="off"
         className={cn(
-          'h-full w-full resize-none border-0 bg-transparent px-4 py-8 font-mono text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground/70',
+          'h-full w-full resize-none border-0 bg-transparent px-4 py-8 font-mono text-[15px] leading-6 text-transparent caret-foreground outline-none placeholder:text-muted-foreground/70 selection:bg-primary/20 selection:text-transparent',
           editorPaddingClass
         )}
       />
@@ -227,48 +232,89 @@ export function PreviewPane({
 }
 
 function renderInlineMarkdown(text: string): ReactNode[] {
-  // Translate tiny inline markdown patterns into semantic React nodes so bold tips and code snippets render naturally.
-  const segments: ReactNode[] = []
-  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
-  const parts = text.split(pattern)
-
-  parts.forEach((part, index) => {
-    if (!part) {
-      return
+  // Translate inline markdown tokens into semantic React nodes so the preview stays aligned with the syntax-highlighting source mirror.
+  return tokenizeMarkdownInline(text).map((token, index) => {
+    if (token.type === 'marker') {
+      return (
+        <span key={`${index}-marker`} className="text-muted-foreground/60">
+          {token.value}
+        </span>
+      )
     }
 
-    if (part.startsWith('**') && part.endsWith('**')) {
-      segments.push(
+    if (token.type === 'strong') {
+      return (
         <strong key={`${index}-strong`} className="font-semibold text-foreground">
-          {part.slice(2, -2)}
+          {token.value}
         </strong>
       )
-      return
     }
 
-    if (part.startsWith('*') && part.endsWith('*')) {
-      segments.push(
+    if (token.type === 'emphasis') {
+      return (
         <em key={`${index}-em`} className="italic text-foreground">
-          {part.slice(1, -1)}
+          {token.value}
         </em>
       )
-      return
     }
 
-    if (part.startsWith('`') && part.endsWith('`')) {
-      segments.push(
+    if (token.type === 'code') {
+      return (
         <code
           key={`${index}-code`}
           className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-foreground"
         >
-          {part.slice(1, -1)}
+          {token.value}
         </code>
       )
-      return
     }
 
-    segments.push(<span key={`${index}-text`}>{part}</span>)
+    return <span key={`${index}-text`}>{token.value}</span>
   })
+}
 
-  return segments
+function renderMarkdownLine(line: string): ReactNode[] {
+  // Render a single source line with syntax-colored markdown markers and content so the overlay can behave like a code editor mirror.
+  return tokenizeMarkdownLine(line).map((token, index) => {
+    if (token.type === 'marker') {
+      return (
+        <span key={`${index}-marker`} className="text-muted-foreground/60">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'strong') {
+      return (
+        <span key={`${index}-strong`} className="font-semibold text-primary">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'emphasis') {
+      return (
+        <span key={`${index}-em`} className="italic text-primary/80">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'code') {
+      return (
+        <span
+          key={`${index}-code`}
+          className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-primary"
+        >
+          {token.value}
+        </span>
+      )
+    }
+
+    return (
+      <span key={`${index}-text`} className="text-foreground">
+        {token.value}
+      </span>
+    )
+  })
 }

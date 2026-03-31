@@ -22,6 +22,28 @@ export type MarkdownBlock =
       type: 'divider'
     }
 
+export type MarkdownSyntaxToken =
+  | {
+      type: 'text'
+      value: string
+    }
+  | {
+      type: 'marker'
+      value: string
+    }
+  | {
+      type: 'strong'
+      value: string
+    }
+  | {
+      type: 'emphasis'
+      value: string
+    }
+  | {
+      type: 'code'
+      value: string
+    }
+
 function createBlockId(prefix: string, index: number) {
   // Build a stable local identifier for a parsed markdown block so preview rendering can key rows consistently.
   return `${prefix}-${index}`
@@ -87,6 +109,74 @@ export function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
   flushParagraph()
 
   return blocks
+}
+
+export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
+  // Split inline markdown into semantic tokens so both the editor highlighter and preview renderer can reuse the same parsing rules.
+  const tokens: MarkdownSyntaxToken[] = []
+  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
+  const parts = text.split(pattern)
+
+  parts.forEach((part) => {
+    if (!part) {
+      return
+    }
+
+    if (part.startsWith('**') && part.endsWith('**')) {
+      tokens.push(
+        { type: 'marker', value: '**' },
+        { type: 'strong', value: part.slice(2, -2) },
+        { type: 'marker', value: '**' }
+      )
+      return
+    }
+
+    if (part.startsWith('*') && part.endsWith('*')) {
+      tokens.push(
+        { type: 'marker', value: '*' },
+        { type: 'emphasis', value: part.slice(1, -1) },
+        { type: 'marker', value: '*' }
+      )
+      return
+    }
+
+    if (part.startsWith('`') && part.endsWith('`')) {
+      tokens.push(
+        { type: 'marker', value: '`' },
+        { type: 'code', value: part.slice(1, -1) },
+        { type: 'marker', value: '`' }
+      )
+      return
+    }
+
+    tokens.push({ type: 'text', value: part })
+  })
+
+  return tokens
+}
+
+export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
+  // Convert a single markdown source line into highlighted tokens so the editor can render a VS Code-style mirror behind the textarea.
+  const trimmedLine = line.trim()
+
+  if (!trimmedLine) {
+    return [{ type: 'text', value: '\u00a0' }]
+  }
+
+  if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmedLine)) {
+    return [{ type: 'marker', value: trimmedLine }]
+  }
+
+  const headingMatch = /^(#{1,6})(\s+)(.*)$/.exec(line)
+  if (headingMatch) {
+    return [
+      { type: 'marker', value: headingMatch[1] },
+      { type: 'text', value: headingMatch[2] },
+      ...tokenizeMarkdownInline(headingMatch[3]),
+    ]
+  }
+
+  return tokenizeMarkdownInline(line)
 }
 
 export function getMarkdownTitle(markdown: string, fallback: string) {
