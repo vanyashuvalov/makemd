@@ -7,7 +7,7 @@
  */
 'use client'
 
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { ElementType, ReactNode } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
@@ -70,26 +70,84 @@ export function MarkdownPane({
   placeholder: string
   mobile?: boolean
 }) {
-  const lineCount = getMarkdownLineCount(value)
+  const normalizedValue = value.replace(/\r\n/g, '\n')
+  const lines = normalizedValue.split('\n')
+  const lineCount = getMarkdownLineCount(normalizedValue)
+  const gutterWidthClass = mobile ? 'w-10' : 'w-14'
+  const editorPaddingClass = mobile ? 'pl-12 pr-4' : 'pl-16 pr-6'
+  const editorRef = useRef<HTMLDivElement>(null)
+  const mirrorRef = useRef<HTMLDivElement>(null)
   const [scrollTop, setScrollTop] = useState(0)
+  const [lineHeights, setLineHeights] = useState<number[]>(
+    () => Array.from({ length: lineCount }, () => 24)
+  )
 
   // Render the markdown source as a real textarea with a VS Code-style gutter so editing stays familiar and the preview can stay in sync.
+  useLayoutEffect(() => {
+    const measureLineHeights = () => {
+      const mirror = mirrorRef.current
+
+      if (!mirror) {
+        return
+      }
+
+      const nextHeights = Array.from(mirror.children, (child) =>
+        Math.max(24, Math.ceil((child as HTMLElement).getBoundingClientRect().height))
+      )
+
+      setLineHeights(nextHeights.length ? nextHeights : Array.from({ length: lineCount }, () => 24))
+    }
+
+    measureLineHeights()
+
+    if (typeof ResizeObserver === 'undefined' || !editorRef.current) {
+      return
+    }
+
+    const observer = new ResizeObserver(() => {
+      measureLineHeights()
+    })
+
+    observer.observe(editorRef.current)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [lineCount, normalizedValue, mobile])
+
   return (
-    <section className="relative flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
-      <div className={cn('pointer-events-none absolute inset-y-0 left-0 border-r border-border bg-card', mobile ? 'w-10' : 'w-14')}>
+    <section ref={editorRef} className="relative flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
+      <div className={cn('pointer-events-none absolute inset-y-0 left-0 border-r border-border bg-card', gutterWidthClass)}>
         <div
-          className={cn(
-            'px-3 py-8 font-mono text-[13px] leading-6 text-muted-foreground',
-            mobile ? 'px-2' : 'px-3'
-          )}
+          className="flex flex-col px-3 py-8 font-mono text-[13px] leading-6 text-muted-foreground"
           style={{ transform: `translateY(${-scrollTop}px)` }}
         >
           {Array.from({ length: lineCount }, (_, index) => (
-            <div key={index} className="h-6 select-none">
-              {index + 1}
+            <div
+              key={index}
+              className="flex items-start justify-end"
+              style={{ height: lineHeights[index] ?? 24 }}
+            >
+              <span className="w-full pr-3 text-right tabular-nums select-none">
+                {index + 1}
+              </span>
             </div>
           ))}
         </div>
+      </div>
+      <div
+        ref={mirrorRef}
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute inset-0 overflow-hidden px-4 py-8 font-mono text-[15px] leading-6 opacity-0',
+          editorPaddingClass
+        )}
+      >
+        {lines.map((line, index) => (
+          <div key={index} className="whitespace-pre-wrap break-words">
+            {line || '\u00a0'}
+          </div>
+        ))}
       </div>
       <textarea
         value={value}
@@ -103,7 +161,7 @@ export function MarkdownPane({
         autoCorrect="off"
         className={cn(
           'h-full w-full resize-none border-0 bg-transparent px-4 py-8 font-mono text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground/70',
-          mobile ? 'pl-12 pr-4' : 'pl-16 pr-6'
+          editorPaddingClass
         )}
       />
     </section>
