@@ -147,8 +147,14 @@ export function MarkdownPane({
         style={{ transform: `translateY(${-scrollTop}px)` }}
       >
         {lines.map((line, index) => (
-          <div key={index} className="whitespace-pre-wrap break-words">
-            {renderMarkdownLine(line)}
+          <div
+            key={index}
+            className="flex w-full items-start"
+            style={{ height: lineHeights[index] ?? 24 }}
+          >
+            <div className="block w-full min-w-0 whitespace-pre-wrap break-words">
+              {renderMarkdownLine(line)}
+            </div>
           </div>
         ))}
       </div>
