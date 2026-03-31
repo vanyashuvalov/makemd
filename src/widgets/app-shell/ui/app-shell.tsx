@@ -1,24 +1,32 @@
 /**
  * File: src/widgets/app-shell/ui/app-shell.tsx
  * Purpose: Top-level composition that mirrors the three-panel Figma layout.
- * Why it exists: the page needs one place that wires the sidebar, workspace, and export affordances together.
- * What it does: lays out the sidebar and editor/preview surface as a responsive shell.
- * Connected to: `Sidebar`, `EditorPreview`, `ExportBar`, and the workspace snapshot model.
+ * Why it exists: the page needs one place that wires the sidebar, markdown, preview, and mobile fallback together.
+ * What it does: lays out the desktop three-column shell and the mobile single-column fallback.
+ * Connected to: `Sidebar`, `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, and the workspace snapshot model.
  */
-import { EditorPreview } from '@/widgets/editor-preview/ui/editor-preview'
+import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import type { WorkspaceSnapshot } from '@/entities/document/model/types'
 
 export function AppShell({ snapshot }: { snapshot: WorkspaceSnapshot }) {
-  // Keep the column gap tight so the layout feels like a dense desktop workspace rather than a dashboard.
+  // Keep the desktop layout as three full-height columns while preserving a mobile fallback for narrow viewports.
   return (
-    <section className="grid min-h-full items-start gap-3 lg:grid-cols-[22.5rem_minmax(0,1fr)] lg:gap-3">
-      <Sidebar snapshot={snapshot} />
+    <section className="h-full min-h-0">
+      <div className="hidden h-full min-h-0 gap-2 lg:grid lg:grid-cols-[20%_minmax(0,1fr)_minmax(0,1fr)]">
+        <Sidebar snapshot={snapshot} />
 
-      <div className="relative min-w-0">
+        <MarkdownPane lines={snapshot.editor.lines} />
+
+        <div className="relative min-h-0">
+          <PreviewPane title={snapshot.preview.title} note={snapshot.preview.note} body={snapshot.preview.body} />
+          <ExportBar fileName={snapshot.exportFileName} />
+        </div>
+      </div>
+
+      <div className="h-full min-h-0 lg:hidden">
         <EditorPreview snapshot={snapshot} />
-        <ExportBar fileName={snapshot.exportFileName} />
       </div>
     </section>
   )

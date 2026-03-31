@@ -24,7 +24,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
   // Render the dense navigation rail used in the Figma side-bar states.
   return (
-    <aside className="flex h-full min-h-[42rem] w-full max-w-[22.5rem] flex-col overflow-hidden rounded-[1.4rem] border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[0_14px_34px_rgba(15,15,15,0.14)]">
+    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[0_14px_34px_rgba(15,15,15,0.14)]">
       <div className="flex-1 space-y-6 px-6 py-6">
         <div className="flex items-center gap-3">
           {snapshot.account ? (
