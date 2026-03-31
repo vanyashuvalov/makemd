@@ -14,40 +14,64 @@ import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/cn'
 
 export interface DocumentSelectionBarProps {
-  selectedCount: number
+  mode?: 'hint' | 'actions'
+  selectedCount?: number
+  helperText?: string
   className?: string
 }
 
-export function DocumentSelectionBar({ selectedCount, className }: DocumentSelectionBarProps) {
-  // Render the compact selected-state toolbar that mirrors the unauthorized mockup with 2 selected items.
+export function DocumentSelectionBar({
+  mode = 'hint',
+  selectedCount = 0,
+  helperText = 'Hold Ctrl to select many',
+  className,
+}: DocumentSelectionBarProps) {
+  const helperTail = helperText.replace(/^Hold Ctrl\s*/, '') || helperText
+
+  // Render the compact selection rail in either the default hint state or the active bulk-actions state.
   return (
     <div
       className={cn(
-        'flex h-14 items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 text-sidebar-foreground',
+        'flex h-14 items-center gap-4 rounded-[12px] border border-sidebar-border px-4 text-sidebar-foreground',
         className
       )}
     >
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Checkbox checked="indeterminate" aria-label="Selection summary" />
-        <span>{selectedCount}</span>
-      </div>
+      {mode === 'actions' ? (
+        <>
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Checkbox checked="indeterminate" aria-label="Selection summary" />
+            <span>{selectedCount}</span>
+          </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6 bg-sidebar-border" />
+          <Separator orientation="vertical" className="mx-1 h-6 bg-sidebar-border" />
 
-      <div className="flex items-center gap-2">
-        <IconButton aria-label="Delete selected documents" size="sm" variant="ghost">
-          <IconTrash className="h-4 w-4" />
-        </IconButton>
-        <IconButton aria-label="Download selected documents" size="sm" variant="ghost">
-          <IconDownload className="h-4 w-4" />
-        </IconButton>
-        <IconButton aria-label="Copy share link" size="sm" variant="ghost">
-          <IconLink className="h-4 w-4" />
-        </IconButton>
-        <IconButton aria-label="Copy selected content" size="sm" variant="ghost">
-          <IconCopy className="h-4 w-4" />
-        </IconButton>
-      </div>
+          <div className="flex items-center gap-2">
+            <IconButton aria-label="Delete selected documents" size="sm" variant="ghost">
+              <IconTrash className="h-4 w-4" />
+            </IconButton>
+            <IconButton aria-label="Download selected documents" size="sm" variant="ghost">
+              <IconDownload className="h-4 w-4" />
+            </IconButton>
+            <IconButton aria-label="Copy share link" size="sm" variant="ghost">
+              <IconLink className="h-4 w-4" />
+            </IconButton>
+            <IconButton aria-label="Copy selected content" size="sm" variant="ghost">
+              <IconCopy className="h-4 w-4" />
+            </IconButton>
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center gap-4 text-[18px] leading-[22px]">
+          <Checkbox checked={false} aria-label="Selection hint" />
+          <div className="flex items-center gap-2">
+            <span className="font-normal text-white">Hold</span>
+            <span className="rounded-[4px] bg-white/10 px-2 py-1 text-[15px] font-bold leading-[18px] tracking-[0.03em] text-white/70">
+              ? Ctrl
+            </span>
+            <span className="font-normal text-white">{helperTail}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

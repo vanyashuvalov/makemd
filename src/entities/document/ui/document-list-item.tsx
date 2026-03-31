@@ -16,27 +16,27 @@ import type { DocumentRecord } from '../model/types'
 export interface DocumentListItemProps {
   item: DocumentRecord
   selectionMode?: boolean
+  onToggleSelected?: (documentId: string) => void
 }
 
-export function DocumentListItem({ item, selectionMode = false }: DocumentListItemProps) {
+export function DocumentListItem({ item, selectionMode = false, onToggleSelected }: DocumentListItemProps) {
   const isSelected = Boolean(item.selected)
+  const rowTone = item.selected || item.active ? 'bg-white/[0.15]' : 'bg-transparent'
 
   // Render a single history row that can visually switch between the default, selected, and active states from the mockup.
   return (
     <article
       className={cn(
-        'group flex cursor-pointer items-start gap-3 rounded-[0.95rem] px-4 py-3.5 transition-[transform,background-color] duration-150 hover:-translate-y-px active:translate-x-px active:translate-y-px',
-        item.active
-          ? 'bg-white/[0.12]'
-          : isSelected
-            ? 'bg-white/[0.08]'
-            : 'hover:bg-white/[0.05] active:bg-white/[0.08]'
+        'group flex min-h-[67px] items-center gap-3 rounded-[12px] px-4 py-3 transition-[transform,background-color] duration-150 hover:-translate-y-px active:translate-x-px active:translate-y-px',
+        rowTone,
+        !item.selected && !item.active ? 'hover:bg-white/[0.05] active:bg-white/[0.08]' : null
       )}
     >
       {selectionMode ? (
         <Checkbox
-          checked={item.active ? 'indeterminate' : item.selected ?? false}
+          checked={isSelected}
           aria-label={`Select ${item.title}`}
+          onCheckedChange={() => onToggleSelected?.(item.id)}
         />
       ) : (
         <div className="mt-0.5 text-sidebar-foreground/80">
@@ -44,11 +44,11 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
         </div>
       )}
 
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate text-[15px] font-medium leading-5 text-sidebar-foreground">
+      <div className="min-w-0 flex-1 space-y-1">
+        <h3 className="truncate text-[18px] font-normal leading-[22px] text-sidebar-foreground">
           {item.title}
         </h3>
-        <p className="mt-1 text-[11px] leading-4 text-sidebar-muted-foreground">
+        <p className="text-[14px] leading-[17px] text-sidebar-muted-foreground">
           {item.updatedLabel}
         </p>
       </div>
@@ -59,7 +59,7 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
           size="sm"
           variant="ghost"
           className={cn(
-            'mt-0.5 opacity-80 transition-opacity group-hover:opacity-100',
+            'opacity-80 transition-opacity group-hover:opacity-100',
             item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground group-hover:text-sidebar-foreground'
           )}
         >

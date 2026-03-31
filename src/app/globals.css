@@ -41,6 +41,7 @@
   --color-sidebar-tab-active: rgba(255, 255, 255, 0.15);
   --color-sidebar-icon-hover: rgba(255, 255, 255, 0.14);
   --color-sidebar-icon-active: rgba(255, 255, 255, 0.16);
+  --color-sidebar-checkbox-border: rgba(255, 255, 255, 0.6);
   --color-canvas: #000000;
   --color-sidebar-surface: #292929;
 

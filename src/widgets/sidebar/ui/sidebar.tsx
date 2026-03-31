@@ -5,7 +5,9 @@
  * What it does: composes the account header, primary action, tabs, warnings, selection actions, history list, and footer.
  * Connected to: `WorkspaceSnapshot`, document entities, and the editor/preview shell.
  */
-import { IconAlertTriangle, IconCheck, IconClipboardList, IconHelpCircle, IconHistory, IconLogin2 } from '@tabler/icons-react'
+'use client'
+
+import { IconAlertTriangle, IconClipboardList, IconHelpCircle, IconHistory, IconLogin2 } from '@tabler/icons-react'
 import { Alert } from '@/shared/ui/alert'
 import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
@@ -15,12 +17,26 @@ import { Separator } from '@/shared/ui/separator'
 import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
 import { DocumentHistoryList } from '@/entities/document/ui/document-history-list'
 import { DocumentSelectionBar } from '@/features/document-selection/ui/document-selection-bar'
-import type { WorkspaceSnapshot } from '@/entities/document/model/types'
+import type { DocumentRecord, WorkspaceSnapshot } from '@/entities/document/model/types'
 
-export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
-  const hasSelection = Boolean(snapshot.selection?.selectedCount && snapshot.selection.selectedCount > 0)
-  const helperText = snapshot.selection?.helperText ?? 'Hold Ctrl to select many'
-  const helperTail = helperText.replace(/^Hold Ctrl\s*/, '') || helperText
+export interface SidebarProps {
+  snapshot: WorkspaceSnapshot
+  documents: DocumentRecord[]
+  selectionMode: boolean
+  selectedCount: number
+  helperText?: string
+  onToggleDocument: (documentId: string) => void
+}
+
+export function Sidebar({
+  snapshot,
+  documents,
+  selectionMode,
+  selectedCount,
+  helperText = 'Hold Ctrl to select many',
+  onToggleDocument,
+}: SidebarProps) {
+  const hasSelection = selectedCount > 0
 
   // Render the dense navigation rail used in the Figma side-bar states.
   return (
@@ -75,26 +91,17 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           />
         ) : null}
 
-        {!snapshot.warning && snapshot.selection?.helperText ? (
-          <div className="flex items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 py-3 text-sm text-sidebar-foreground">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-[0.4rem] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-xs font-medium">
-                <IconCheck className="h-3.5 w-3.5" />
-              </div>
-              <span className="font-medium">Hold</span>
-            </div>
-            <span className="rounded-full border border-sidebar-border bg-[color:var(--color-sidebar-surface)] px-2 py-1 font-mono text-xs">
-              Ctrl
-            </span>
-            <span className="text-sidebar-muted-foreground">{helperTail}</span>
-          </div>
-        ) : null}
+        <DocumentSelectionBar
+          mode={hasSelection ? 'actions' : 'hint'}
+          selectedCount={selectedCount}
+          helperText={helperText}
+        />
 
-        {hasSelection ? (
-          <DocumentSelectionBar selectedCount={snapshot.selection?.selectedCount ?? 0} />
-        ) : null}
-
-        <DocumentHistoryList items={snapshot.documents} selectionMode={hasSelection} />
+        <DocumentHistoryList
+          items={documents}
+          selectionMode={selectionMode}
+          onToggleItem={onToggleDocument}
+        />
       </div>
 
       <div className="space-y-4 px-6 py-4">
