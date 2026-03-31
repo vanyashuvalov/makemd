@@ -29,6 +29,14 @@
   --color-border: #d6cec1;
   --color-input: #d6cec1;
   --color-ring: #4f74ff;
+  --color-syntax-heading: #f97316;
+  --color-syntax-strong: #8b5cf6;
+  --color-syntax-emphasis: #a78bfa;
+  --color-syntax-link: #0369a1;
+  --color-syntax-list: #16a34a;
+  --color-syntax-quote: #0ea5e9;
+  --color-syntax-code: #8b5cf6;
+  --color-syntax-rule: #6d6860;
 
   --color-sidebar: #292929;
   --color-sidebar-foreground: #f4f1eb;
