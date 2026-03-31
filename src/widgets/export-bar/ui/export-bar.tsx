@@ -7,7 +7,7 @@
  * What it does: shows the document chip plus copy and download actions in a floating cluster.
  * Connected to: the editor/preview widget and the current document snapshot.
  */
-import { Copy, Download, PencilLine } from 'lucide-react'
+import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
 import { Button } from '@/shared/ui/button'
 import { IconButton } from '@/shared/ui/icon-button'
 import { cn } from '@/shared/lib/cn'
@@ -30,16 +30,16 @@ export function ExportBar({
       <Button
         variant="outline"
         size="sm"
-        className="h-11 rounded-full border-border bg-card px-4 shadow-[0_8px_20px_rgba(20,20,20,0.08)]"
-        after={<PencilLine className="h-4 w-4" />}
+        className="h-11 rounded-full border-border bg-card px-4"
+        after={<IconPencil className="h-4 w-4" />}
       >
         <span className="max-w-[14rem] truncate">{fileName}</span>
       </Button>
-      <IconButton aria-label="Copy document" variant="outline" size="default" className="border border-border shadow-[0_8px_20px_rgba(20,20,20,0.08)]">
-        <Copy className="h-4 w-4" />
+      <IconButton aria-label="Copy document" variant="outline" size="default" className="border border-border">
+        <IconCopy className="h-4 w-4" />
       </IconButton>
-      <IconButton aria-label="Download PDF" variant="primary" size="default" className="shadow-[0_8px_20px_rgba(79,116,255,0.18)]">
-        <Download className="h-4 w-4" />
+      <IconButton aria-label="Download PDF" variant="primary" size="default">
+        <IconDownload className="h-4 w-4" />
       </IconButton>
     </div>
   )

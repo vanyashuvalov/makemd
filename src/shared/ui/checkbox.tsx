@@ -8,7 +8,7 @@
  * Connected to: document rows, selection summary bars, and any future bulk-action workflows.
  */
 import * as React from 'react'
-import { Check, Minus } from 'lucide-react'
+import { IconCheck, IconMinus } from '@tabler/icons-react'
 import { cn } from '@/shared/lib/cn'
 
 export type CheckboxState = boolean | 'indeterminate'
@@ -38,16 +38,16 @@ export function Checkbox({
       aria-label={ariaLabel}
       onClick={() => onCheckedChange?.(!isChecked)}
       className={cn(
-        'inline-flex h-6 w-6 items-center justify-center rounded-[0.4rem] border transition-[transform,background-color,border-color,box-shadow] duration-150 hover:-translate-y-px active:translate-y-px active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'inline-flex h-6 w-6 items-center justify-center rounded-[0.4rem] border transition-[transform,background-color,border-color] duration-150 hover:-translate-y-px active:translate-y-px active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         isChecked || isMixed
-          ? 'border-sidebar-accent bg-sidebar-accent text-sidebar-accent-foreground shadow-[0_1px_2px_rgba(79,116,255,0.22)]'
+          ? 'border-sidebar-accent bg-sidebar-accent text-sidebar-accent-foreground'
           : 'border-border bg-card text-card-foreground hover:border-sidebar-accent/40 hover:bg-muted',
         className
       )}
       {...props}
     >
-      {isChecked ? <Check className="h-4 w-4" /> : null}
-      {isMixed ? <Minus className="h-4 w-4" /> : null}
+      {isChecked ? <IconCheck className="h-4 w-4" /> : null}
+      {isMixed ? <IconMinus className="h-4 w-4" /> : null}
     </button>
   )
 }

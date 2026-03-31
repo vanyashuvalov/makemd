@@ -7,7 +7,7 @@
  * What it does: renders title, date, active state, selection checkbox, and an optional overflow action.
  * Connected to: `DocumentHistoryList`, the selection feature, and the sidebar widget.
  */
-import { FileText, MoreVertical } from 'lucide-react'
+import { IconDotsVertical, IconFileText } from '@tabler/icons-react'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { IconButton } from '@/shared/ui/icon-button'
 import { cn } from '@/shared/lib/cn'
@@ -25,11 +25,11 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
   return (
     <article
       className={cn(
-        'group flex cursor-pointer items-start gap-3 rounded-[0.95rem] px-4 py-3.5 transition-[transform,background-color,box-shadow] duration-150 hover:-translate-y-px active:translate-x-px active:translate-y-px',
+        'group flex cursor-pointer items-start gap-3 rounded-[0.95rem] px-4 py-3.5 transition-[transform,background-color] duration-150 hover:-translate-y-px active:translate-x-px active:translate-y-px',
         item.active
-          ? 'bg-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+          ? 'bg-white/[0.12]'
           : isSelected
-            ? 'bg-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+            ? 'bg-white/[0.08]'
             : 'hover:bg-white/[0.05] active:bg-white/[0.08]'
       )}
     >
@@ -40,7 +40,7 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
         />
       ) : (
         <div className="mt-0.5 text-sidebar-foreground/80">
-          <FileText className="h-5 w-5" />
+          <IconFileText className="h-5 w-5" />
         </div>
       )}
 
@@ -63,7 +63,7 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
             item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground group-hover:text-sidebar-foreground'
           )}
         >
-          <MoreVertical className="h-4 w-4" />
+          <IconDotsVertical className="h-4 w-4" />
         </IconButton>
       ) : null}
     </article>

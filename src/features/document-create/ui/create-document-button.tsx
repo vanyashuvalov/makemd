@@ -7,7 +7,7 @@
  * What it does: wraps the shared button primitive with a plus icon and the expected label.
  * Connected to: sidebar composition and any future document creation workflow.
  */
-import { Plus } from 'lucide-react'
+import { IconPlus } from '@tabler/icons-react'
 import { Button } from '@/shared/ui/button'
 
 export function CreateDocumentButton() {
@@ -17,7 +17,7 @@ export function CreateDocumentButton() {
       variant="primary"
       size="primary"
       className="w-full"
-      before={<Plus className="h-6 w-6 shrink-0" />}
+      before={<IconPlus className="h-6 w-6 shrink-0" />}
     >
       New
     </Button>

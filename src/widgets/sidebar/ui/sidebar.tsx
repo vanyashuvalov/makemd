@@ -5,7 +5,7 @@
  * What it does: composes the account header, primary action, tabs, warnings, selection actions, history list, and footer.
  * Connected to: `WorkspaceSnapshot`, document entities, and the editor/preview shell.
  */
-import { AlertTriangle, Check, ClipboardList, HelpCircle, History, LogIn } from 'lucide-react'
+import { IconAlertTriangle, IconCheck, IconClipboardList, IconHelpCircle, IconHistory, IconLogin2 } from '@tabler/icons-react'
 import { Alert } from '@/shared/ui/alert'
 import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
@@ -24,7 +24,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
   // Render the dense navigation rail used in the Figma side-bar states.
   return (
-    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground shadow-[0_14px_34px_rgba(15,15,15,0.14)]">
+    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground">
       <div className="flex-1 space-y-6 px-6 py-6">
         <div className="flex items-center gap-3">
           {snapshot.account ? (
@@ -41,13 +41,13 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             <Button
               variant="text"
               size="text"
-              className="w-full"
-              before={
-                <IconButton as="span" variant="neutral" aria-hidden>
-                  <LogIn className="h-6 w-6 opacity-60" />
-                </IconButton>
-              }
-            >
+                className="w-full"
+                before={
+                  <IconButton as="span" variant="neutral" aria-hidden>
+                  <IconLogin2 className="h-6 w-6 opacity-60" />
+                  </IconButton>
+                }
+              >
               Sign up
             </Button>
           )}
@@ -58,8 +58,8 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         <Tabs
           ariaLabel="Sidebar sections"
           items={[
-            { value: 'history', label: 'History', icon: <History className="h-5 w-5" /> },
-            { value: 'documents', label: 'Documents', icon: <ClipboardList className="h-5 w-5" /> },
+            { value: 'history', label: 'History', icon: <IconHistory className="h-5 w-5" /> },
+            { value: 'documents', label: 'Documents', icon: <IconClipboardList className="h-5 w-5" /> },
           ]}
           value="history"
           compact
@@ -70,16 +70,16 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             tone="warning"
             title={snapshot.warning.title}
             description={snapshot.warning.description}
-            icon={<AlertTriangle className="h-4 w-4 text-[#f2c46f]" />}
+            icon={<IconAlertTriangle className="h-4 w-4 text-[#f2c46f]" />}
             className="border-[#5a4823] bg-[#40321b]"
           />
         ) : null}
 
         {!snapshot.warning && snapshot.selection?.helperText ? (
-          <div className="flex items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 py-3 text-sm text-sidebar-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="flex items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 py-3 text-sm text-sidebar-foreground">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-[0.4rem] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-xs font-medium">
-                <Check className="h-3.5 w-3.5" />
+                <IconCheck className="h-3.5 w-3.5" />
               </div>
               <span className="font-medium">Hold</span>
             </div>
@@ -105,7 +105,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             variant="ghost"
             size="sm"
             className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]"
-            before={<HelpCircle className="h-4 w-4" />}
+            before={<IconHelpCircle className="h-4 w-4" />}
           >
             Help
           </Button>

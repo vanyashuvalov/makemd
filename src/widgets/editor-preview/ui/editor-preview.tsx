@@ -8,7 +8,7 @@
  * Connected to: `WorkspaceSnapshot`, `Tabs`, `IconButton`, and the mobile route fallback in `AppShell`.
  */
 import { useState } from 'react'
-import { Download, Eye, FileCode2, Menu } from 'lucide-react'
+import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
 import { cn } from '@/shared/lib/cn'
@@ -22,20 +22,20 @@ export function EditorPreview({ snapshot }: { snapshot: WorkspaceSnapshot }) {
     <section className="flex h-full min-h-0 flex-col gap-2 lg:hidden">
       <div className="flex items-center gap-3 rounded-[16px] border border-border bg-card px-4 py-3">
         <IconButton aria-label="Open navigation" variant="outline" size="sm">
-          <Menu className="h-4 w-4" />
+          <IconMenu2 className="h-4 w-4" />
         </IconButton>
         <Tabs
           ariaLabel="Workspace mode"
           items={[
-            { value: 'markdown', label: 'Markdown', icon: <FileCode2 className="h-5 w-5" /> },
-            { value: 'preview', label: 'Preview', icon: <Eye className="h-5 w-5" /> },
+            { value: 'markdown', label: 'Markdown', icon: <IconFileCode2 className="h-5 w-5" /> },
+            { value: 'preview', label: 'Preview', icon: <IconEye className="h-5 w-5" /> },
           ]}
           value={mobilePanel}
           onValueChange={(value) => setMobilePanel(value as 'markdown' | 'preview')}
           className="flex-1"
         />
         <IconButton aria-label="Download PDF" variant="primary" size="sm">
-          <Download className="h-4 w-4" />
+          <IconDownload className="h-4 w-4" />
         </IconButton>
       </div>
 
@@ -64,7 +64,7 @@ export function MarkdownPane({
 }) {
   // Render the markdown source as a line-numbered code surface, matching the left desktop block and the mobile markdown tab.
   return (
-    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card shadow-[0_16px_40px_rgba(20,20,20,0.08)]">
+    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
       <div className={cn('grid min-h-full w-full grid-cols-[42px_minmax(0,1fr)] bg-card', mobile && 'grid-cols-[34px_minmax(0,1fr)]')}>
         <div className="border-r border-border px-2 py-8 font-mono text-[13px] leading-6 text-muted-foreground">
           {lines.map((_, index) => (
@@ -96,7 +96,7 @@ export function PreviewPane({
 }) {
   // Render the preview side with a large heading, supporting note, and a sparse content column that mirrors the mockup.
   return (
-    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card shadow-[0_16px_40px_rgba(20,20,20,0.08)]">
+    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
       <div className={cn('w-full bg-card px-8 py-8', mobile && 'px-6 py-6')}>
         <div className="max-w-[43rem]">
           <h1 className={cn('font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground', mobile && 'text-[2.5rem]')}>

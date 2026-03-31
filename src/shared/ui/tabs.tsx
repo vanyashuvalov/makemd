@@ -50,9 +50,9 @@ export function Tabs({
             role="tab"
             aria-selected={active}
             className={cn(
-              'inline-flex min-w-0 items-center justify-center gap-2 rounded-[0.9rem] px-4 py-3 text-sm font-medium transition-[transform,background-color,box-shadow,color] duration-150 hover:-translate-y-px active:translate-y-px active:scale-[0.99]',
+              'inline-flex min-w-0 items-center justify-center gap-2 rounded-[0.9rem] px-4 py-3 text-sm font-medium transition-[transform,background-color,color] duration-150 hover:-translate-y-px active:translate-y-px active:scale-[0.99]',
               active
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-[0_8px_18px_rgba(79,116,255,0.18)]'
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                 : 'text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground active:bg-white/[0.1]',
               compact && 'px-0'
             )}
