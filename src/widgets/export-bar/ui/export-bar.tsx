@@ -35,10 +35,10 @@ export function ExportBar({
       >
         <span className="max-w-[14rem] truncate">{fileName}</span>
       </Button>
-      <IconButton aria-label="Copy document" variant="subtle" size="default" className="border border-border shadow-[0_8px_20px_rgba(20,20,20,0.08)]">
+      <IconButton aria-label="Copy document" variant="outline" size="default" className="border border-border shadow-[0_8px_20px_rgba(20,20,20,0.08)]">
         <Copy className="h-4 w-4" />
       </IconButton>
-      <IconButton aria-label="Download PDF" variant="accent" size="default" className="shadow-[0_8px_20px_rgba(79,116,255,0.18)]">
+      <IconButton aria-label="Download PDF" variant="primary" size="default" className="shadow-[0_8px_20px_rgba(79,116,255,0.18)]">
         <Download className="h-4 w-4" />
       </IconButton>
     </div>

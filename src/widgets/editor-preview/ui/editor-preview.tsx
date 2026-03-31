@@ -33,7 +33,7 @@ export function EditorPreview({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
       <div className="flex min-h-[32rem] flex-1 flex-col md:hidden">
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <IconButton aria-label="Open navigation" variant="subtle" size="sm">
+          <IconButton aria-label="Open navigation" variant="outline" size="sm">
             <Menu className="h-4 w-4" />
           </IconButton>
           <Tabs
@@ -46,7 +46,7 @@ export function EditorPreview({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             onValueChange={(value) => setMobilePanel(value as 'markdown' | 'preview')}
             className="flex-1"
           />
-          <IconButton aria-label="Download PDF" variant="accent" size="sm">
+          <IconButton aria-label="Download PDF" variant="primary" size="sm">
             <Download className="h-4 w-4" />
           </IconButton>
         </div>

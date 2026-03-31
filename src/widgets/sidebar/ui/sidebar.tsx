@@ -9,6 +9,7 @@ import { AlertTriangle, Check, ClipboardList, HelpCircle, History, LogIn } from 
 import { Alert } from '@/shared/ui/alert'
 import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
+import { IconButton } from '@/shared/ui/icon-button'
 import { Tabs } from '@/shared/ui/tabs'
 import { Separator } from '@/shared/ui/separator'
 import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
@@ -42,9 +43,9 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
               size="text"
               className="w-full"
               before={
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sidebar-foreground/60">
-                  <LogIn className="h-6 w-6" />
-                </span>
+                <IconButton as="span" variant="neutral" aria-hidden>
+                  <LogIn className="h-6 w-6 opacity-60" />
+                </IconButton>
               }
             >
               Sign up

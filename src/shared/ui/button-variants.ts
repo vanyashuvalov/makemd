@@ -25,18 +25,18 @@ export const buttonVariants = cva(
         outline: 'border border-border bg-card text-card-foreground hover:-translate-y-px hover:bg-muted active:bg-muted/80',
         sidebar: 'bg-sidebar-muted text-sidebar-foreground hover:-translate-y-px hover:bg-sidebar-border active:bg-sidebar-border/90',
         text:
-          'bg-transparent text-white hover:bg-white/10 active:bg-white/15',
+          'bg-transparent text-sidebar-foreground hover:bg-[color:var(--color-sidebar-icon)] active:bg-[color:var(--color-sidebar-icon-active)]',
       },
-    size: {
-      default: 'h-12 px-5',
-      sm: 'h-10 px-4',
-      lg: 'h-14 px-6 text-base',
-      icon: 'h-10 w-10 p-0',
-      iconSm: 'h-8 w-8 p-0',
-      primary:
+      size: {
+        default: 'h-12 px-5',
+        sm: 'h-10 px-4',
+        lg: 'h-14 px-6 text-base',
+        icon: 'h-10 w-10 p-0',
+        iconSm: 'h-8 w-8 p-0',
+        primary:
           'h-14 px-4 text-[18px] font-normal leading-[25px] border border-white/20 bg-[#3C64FF]',
-      text: 'h-10 px-0 text-[18px] font-medium leading-[25px]',
-    },
+        text: 'h-10 px-0 text-[18px] font-medium leading-[25px]',
+      },
     },
     defaultVariants: {
       variant: 'primary',

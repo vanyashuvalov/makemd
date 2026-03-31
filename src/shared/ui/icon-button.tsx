@@ -22,10 +22,14 @@ export const iconButtonVariants = cva(
   {
     variants: {
       variant: {
-        neutral: 'bg-sidebar-muted text-sidebar-foreground hover:bg-sidebar-border active:bg-sidebar-border/90',
-        subtle: 'bg-card text-card-foreground hover:bg-muted active:bg-muted/80',
-        accent: 'bg-primary text-primary-foreground hover:bg-primary/90 active:shadow-none',
+        primary: 'bg-primary text-primary-foreground hover:bg-primary/90 active:shadow-none',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 active:shadow-none',
         ghost: 'bg-transparent text-inherit hover:bg-white/10 active:bg-white/15',
+        outline: 'border border-border bg-card text-card-foreground hover:bg-muted active:bg-muted/80',
+        sidebar:
+          'bg-sidebar-muted text-sidebar-foreground hover:bg-sidebar-border active:bg-sidebar-border/90',
+        neutral:
+          'bg-sidebar-icon text-sidebar-foreground/60 hover:bg-sidebar-icon-hover active:bg-sidebar-icon-active',
       },
       size: {
         default: 'h-10 w-10',
@@ -42,15 +46,19 @@ export const iconButtonVariants = cva(
 
 export interface IconButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof iconButtonVariants> {}
+    VariantProps<typeof iconButtonVariants> {
+  as?: 'button' | 'span'
+}
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  function IconButton({ className, variant, size, type = 'button', ...props }, ref) {
-    // Render a single-purpose icon action that can be reused for overflow, export, copy, and help controls.
+  function IconButton({ className, variant, size, as = 'button', type = 'button', ...props }, ref) {
+    // Render a single-purpose icon action that can be reused for overflow, export, copy, help, and slot-based icon surfaces.
+    const Component = as
+
     return (
-      <button
-        ref={ref}
-        type={type}
+      <Component
+        ref={ref as React.ForwardedRef<HTMLButtonElement & HTMLSpanElement>}
+        {...(Component === 'button' ? { type } : {})}
         className={cn(iconButtonVariants({ variant, size }), className)}
         {...props}
       />
