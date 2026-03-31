@@ -58,8 +58,8 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         <Tabs
           ariaLabel="Sidebar sections"
           items={[
-            { value: 'history', label: 'History', icon: <IconHistory className="h-5 w-5" /> },
-            { value: 'documents', label: 'Documents', icon: <IconClipboardList className="h-5 w-5" /> },
+            { value: 'history', label: 'History', icon: <IconHistory className="h-6 w-6" /> },
+            { value: 'documents', label: 'Documents', icon: <IconClipboardList className="h-6 w-6" /> },
           ]}
           value="history"
           compact

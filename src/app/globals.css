@@ -38,6 +38,7 @@
   --color-sidebar-accent: #4f74ff;
   --color-sidebar-accent-foreground: #ffffff;
   --color-sidebar-icon: rgba(255, 255, 255, 0.1);
+  --color-sidebar-tab-active: rgba(255, 255, 255, 0.15);
   --color-sidebar-icon-hover: rgba(255, 255, 255, 0.14);
   --color-sidebar-icon-active: rgba(255, 255, 255, 0.16);
   --color-canvas: #000000;
