@@ -7,6 +7,14 @@
  */
 import type { WorkspaceSnapshot, WorkspaceStateKey } from './types'
 
+const starterMarkdown = `# Paste Markdown here
+
+**tip:** click on the pencil icon on the left to clear the editor
+
+---
+
+ok`
+
 const authorizedSnapshot: WorkspaceSnapshot = {
   state: 'authorized',
   account: {
@@ -41,17 +49,7 @@ const authorizedSnapshot: WorkspaceSnapshot = {
     },
   ],
   editor: {
-    lines: [
-      '# Paste Markdown here',
-      '<sup style="display: inline-block;">**tip:** click on the pencil icon on the left to clear the editor</sup>',
-      '---',
-      'ok',
-    ],
-  },
-  preview: {
-    title: 'Paste Markdown here',
-    note: 'tip: click on the pencil icon on the left to clear the editor',
-    body: ['ok'],
+    markdown: starterMarkdown,
   },
   exportFileName: 'Paste Markdown here.pdf',
 }
@@ -85,17 +83,7 @@ const unauthorizedSnapshot: WorkspaceSnapshot = {
     selectedCount: 2,
   },
   editor: {
-    lines: [
-      '# Paste Markdown here',
-      '<sup style="display: inline-block;">**tip:** click on the pencil icon on the left to clear the editor</sup>',
-      '---',
-      'ok',
-    ],
-  },
-  preview: {
-    title: 'Paste Markdown here',
-    note: 'tip: click on the pencil icon on the left to clear the editor',
-    body: ['ok'],
+    markdown: starterMarkdown,
   },
   exportFileName: 'Paste Markdown here.pdf',
 }
@@ -115,11 +103,7 @@ const emptySnapshot: WorkspaceSnapshot = {
     },
   ],
   editor: {
-    lines: ['# Paste text or drop file here'],
-  },
-  preview: {
-    title: 'Paste text or drop file here',
-    body: [],
+    markdown: '# Paste text or drop file here',
   },
   exportFileName: 'Paste text or drop file here.pdf',
 }

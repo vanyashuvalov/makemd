@@ -32,13 +32,7 @@ export type WorkspaceSelection = {
 }
 
 export type WorkspaceEditor = {
-  lines: string[]
-}
-
-export type WorkspacePreview = {
-  title: string
-  note?: string
-  body: string[]
+  markdown: string
 }
 
 export type WorkspaceSnapshot = {
@@ -53,6 +47,5 @@ export type WorkspaceSnapshot = {
   selection?: WorkspaceSelection
   documents: DocumentRecord[]
   editor: WorkspaceEditor
-  preview: WorkspacePreview
   exportFileName: string
 }

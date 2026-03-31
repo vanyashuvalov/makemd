@@ -1,20 +1,29 @@
-'use client'
-
 /**
  * File: src/widgets/editor-preview/ui/editor-preview.tsx
  * Purpose: Mobile fallback for the workspace editor and preview surfaces.
  * Why it exists: the desktop layout now uses separate full-height blocks, but mobile still needs a tabbed switcher.
  * What it does: renders the tabbed mobile control bar and swaps between markdown and preview panels.
- * Connected to: `WorkspaceSnapshot`, `Tabs`, `IconButton`, and the mobile route fallback in `AppShell`.
+ * Connected to: the markdown editor state from `AppShell`, `Tabs`, `IconButton`, and the mobile route fallback.
  */
+'use client'
+
 import { useState } from 'react'
+import type { ElementType, ReactNode } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
 import { cn } from '@/shared/lib/cn'
-import type { WorkspaceSnapshot } from '@/entities/document/model/types'
+import { getMarkdownLineCount, parseMarkdownBlocks } from '@/entities/document/model/markdown'
 
-export function EditorPreview({ snapshot }: { snapshot: WorkspaceSnapshot }) {
+export function EditorPreview({
+  markdown,
+  onMarkdownChange,
+  placeholder,
+}: {
+  markdown: string
+  onMarkdownChange: (value: string) => void
+  placeholder: string
+}) {
   const [mobilePanel, setMobilePanel] = useState<'markdown' | 'preview'>('markdown')
 
   // Render the compact mobile control surface so small screens still mirror the Figma interaction pattern.
@@ -41,14 +50,9 @@ export function EditorPreview({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
       <div className="min-h-0 flex-1">
         {mobilePanel === 'markdown' ? (
-          <MarkdownPane lines={snapshot.editor.lines} mobile />
+          <MarkdownPane value={markdown} onChange={onMarkdownChange} placeholder={placeholder} mobile />
         ) : (
-          <PreviewPane
-            title={snapshot.preview.title}
-            note={snapshot.preview.note}
-            body={snapshot.preview.body}
-            mobile
-          />
+          <PreviewPane markdown={markdown} mobile />
         )}
       </div>
     </section>
@@ -56,61 +60,151 @@ export function EditorPreview({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 }
 
 export function MarkdownPane({
-  lines,
+  value,
+  onChange,
+  placeholder,
   mobile = false,
 }: {
-  lines: string[]
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
   mobile?: boolean
 }) {
-  // Render the markdown source as a line-numbered code surface, matching the left desktop block and the mobile markdown tab.
+  const lineCount = getMarkdownLineCount(value)
+  const [scrollTop, setScrollTop] = useState(0)
+
+  // Render the markdown source as a real textarea with a VS Code-style gutter so editing stays familiar and the preview can stay in sync.
   return (
-    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
-      <div className={cn('grid min-h-full w-full grid-cols-[42px_minmax(0,1fr)] bg-card', mobile && 'grid-cols-[34px_minmax(0,1fr)]')}>
-        <div className="border-r border-border px-2 py-8 font-mono text-[13px] leading-6 text-muted-foreground">
-          {lines.map((_, index) => (
-            <div key={index} className="h-6">
+    <section className="relative flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
+      <div className={cn('pointer-events-none absolute inset-y-0 left-0 border-r border-border bg-card', mobile ? 'w-10' : 'w-14')}>
+        <div
+          className={cn(
+            'px-3 py-8 font-mono text-[13px] leading-6 text-muted-foreground',
+            mobile ? 'px-2' : 'px-3'
+          )}
+          style={{ transform: `translateY(${-scrollTop}px)` }}
+        >
+          {Array.from({ length: lineCount }, (_, index) => (
+            <div key={index} className="h-6 select-none">
               {index + 1}
             </div>
           ))}
         </div>
-        <div className="px-4 py-8">
-          <pre className={cn('whitespace-pre-wrap font-mono text-[15px] leading-6 text-foreground', mobile ? 'max-w-[22rem]' : 'max-w-[44rem]')}>
-            {lines.join('\n')}
-          </pre>
+      </div>
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+        aria-label="Markdown editor"
+        placeholder={placeholder}
+        spellCheck={false}
+        autoCapitalize="off"
+        autoComplete="off"
+        autoCorrect="off"
+        className={cn(
+          'h-full w-full resize-none border-0 bg-transparent px-4 py-8 font-mono text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground/70',
+          mobile ? 'pl-12 pr-4' : 'pl-16 pr-6'
+        )}
+      />
+    </section>
+  )
+}
+
+export function PreviewPane({
+  markdown,
+  mobile = false,
+}: {
+  markdown: string
+  mobile?: boolean
+}) {
+  const blocks = parseMarkdownBlocks(markdown)
+
+  // Render the parsed markdown blocks as document typography so headings, paragraphs, and dividers feel like a live rendered page.
+  return (
+    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
+      <div className={cn('w-full bg-card px-8 py-8', mobile && 'px-6 py-6')}>
+        <div className={cn('max-w-[43rem]', mobile && 'max-w-none')}>
+          {blocks.map((block) => {
+            if (block.type === 'heading') {
+              const HeadingTag = `h${block.level}` as ElementType
+              const headingClassName =
+                block.level === 1
+                  ? cn(
+                      'font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground',
+                      mobile && 'text-[2.5rem]'
+                    )
+                  : block.level === 2
+                    ? 'mt-6 font-sans text-[2.25rem] font-semibold tracking-[-0.04em] text-foreground'
+                    : 'mt-5 font-sans text-[1.5rem] font-semibold tracking-[-0.03em] text-foreground'
+
+              return <HeadingTag key={block.id} className={headingClassName}>{renderInlineMarkdown(block.text)}</HeadingTag>
+            }
+
+            if (block.type === 'divider') {
+              return <div key={block.id} className="my-4 h-px bg-border" />
+            }
+
+            return (
+              <p
+                key={block.id}
+                className={cn(
+                  'text-sm leading-7 text-foreground',
+                  mobile && 'text-[13px] leading-6'
+                )}
+              >
+                {renderInlineMarkdown(block.text)}
+              </p>
+            )
+          })}
         </div>
       </div>
     </section>
   )
 }
 
-export function PreviewPane({
-  title,
-  note,
-  body,
-  mobile = false,
-}: {
-  title: string
-  note?: string
-  body: string[]
-  mobile?: boolean
-}) {
-  // Render the preview side with a large heading, supporting note, and a sparse content column that mirrors the mockup.
-  return (
-    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
-      <div className={cn('w-full bg-card px-8 py-8', mobile && 'px-6 py-6')}>
-        <div className="max-w-[43rem]">
-          <h1 className={cn('font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground', mobile && 'text-[2.5rem]')}>
-            {title}
-          </h1>
-          {note ? <p className="mt-2 text-[11px] font-medium leading-4 text-muted-foreground">{note}</p> : null}
-          {note ? <div className="mt-3 h-px bg-border" /> : null}
-          <div className="mt-4 space-y-3.5 text-sm leading-6 text-foreground">
-            {body.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
+function renderInlineMarkdown(text: string): ReactNode[] {
+  // Translate tiny inline markdown patterns into semantic React nodes so bold tips and code snippets render naturally.
+  const segments: ReactNode[] = []
+  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
+  const parts = text.split(pattern)
+
+  parts.forEach((part, index) => {
+    if (!part) {
+      return
+    }
+
+    if (part.startsWith('**') && part.endsWith('**')) {
+      segments.push(
+        <strong key={`${index}-strong`} className="font-semibold text-foreground">
+          {part.slice(2, -2)}
+        </strong>
+      )
+      return
+    }
+
+    if (part.startsWith('*') && part.endsWith('*')) {
+      segments.push(
+        <em key={`${index}-em`} className="italic text-foreground">
+          {part.slice(1, -1)}
+        </em>
+      )
+      return
+    }
+
+    if (part.startsWith('`') && part.endsWith('`')) {
+      segments.push(
+        <code
+          key={`${index}-code`}
+          className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-foreground"
+        >
+          {part.slice(1, -1)}
+        </code>
+      )
+      return
+    }
+
+    segments.push(<span key={`${index}-text`}>{part}</span>)
+  })
+
+  return segments
 }
