@@ -41,13 +41,13 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             <Button
               variant="text"
               size="text"
-                className="w-full"
-                before={
-                  <IconButton as="span" variant="neutral" aria-hidden>
+              className="w-full"
+              before={
+                <IconButton as="span" variant="neutral" aria-hidden>
                   <IconLogin2 className="h-6 w-6 opacity-60" />
-                  </IconButton>
-                }
-              >
+                </IconButton>
+              }
+            >
               Sign up
             </Button>
           )}
