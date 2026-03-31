@@ -14,16 +14,18 @@ import { cn } from '@/shared/lib/cn'
 export const iconButtonVariants = cva(
   [
     'inline-flex items-center justify-center rounded-full',
-    'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+    'transition-[transform,background-color,box-shadow,color,border-color] duration-150',
+    'hover:-translate-y-px active:translate-y-px active:scale-[0.97]',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
     'disabled:pointer-events-none disabled:opacity-50',
   ].join(' '),
   {
     variants: {
       variant: {
-        neutral: 'bg-sidebar-muted text-sidebar-foreground hover:bg-sidebar-border',
-        subtle: 'bg-card text-card-foreground hover:bg-muted',
-        accent: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        ghost: 'bg-transparent text-inherit hover:bg-white/10',
+        neutral: 'bg-sidebar-muted text-sidebar-foreground hover:bg-sidebar-border active:bg-sidebar-border/90',
+        subtle: 'bg-card text-card-foreground hover:bg-muted active:bg-muted/80',
+        accent: 'bg-primary text-primary-foreground hover:bg-primary/90 active:shadow-none',
+        ghost: 'bg-transparent text-inherit hover:bg-white/10 active:bg-white/15',
       },
       size: {
         default: 'h-10 w-10',

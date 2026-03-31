@@ -23,7 +23,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
   // Render the dense navigation rail used in the Figma side-bar states.
   return (
-    <aside className="flex h-full min-h-[42rem] w-full max-w-[22.5rem] flex-col overflow-hidden rounded-[1.5rem] border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[0_18px_44px_rgba(15,15,15,0.18)]">
+    <aside className="flex h-full min-h-[42rem] w-full max-w-[22.5rem] flex-col overflow-hidden rounded-[1.4rem] border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[0_14px_34px_rgba(15,15,15,0.14)]">
       <div className="flex-1 space-y-6 px-6 py-6">
         <div className="flex items-center gap-3">
           {snapshot.account ? (
@@ -39,7 +39,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           ) : (
             <Button
               variant="ghost"
-              className="h-10 w-fit justify-start rounded-[0.9rem] border border-sidebar-border/70 bg-sidebar-muted/30 px-3 text-sidebar-foreground hover:bg-white/[0.06]"
+              className="h-10 w-fit justify-start rounded-[0.9rem] border border-sidebar-border/70 bg-sidebar-muted/30 px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]"
             >
               <span className="flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-muted text-sidebar-foreground">
                 <LogIn className="h-3.5 w-3.5" />
@@ -72,7 +72,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         ) : null}
 
         {!snapshot.warning && snapshot.selection?.helperText ? (
-          <div className="flex items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 py-3 text-sm text-sidebar-foreground">
+          <div className="flex items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 py-3 text-sm text-sidebar-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-[0.4rem] border border-sidebar-border bg-sidebar text-xs font-medium">
                 <Check className="h-3.5 w-3.5" />
@@ -90,14 +90,14 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <DocumentSelectionBar selectedCount={snapshot.selection?.selectedCount ?? 0} />
         ) : null}
 
-        <DocumentHistoryList items={snapshot.documents} />
+        <DocumentHistoryList items={snapshot.documents} selectionMode={hasSelection} />
       </div>
 
       <div className="space-y-4 px-6 py-4">
         <Separator className="bg-sidebar-border" />
         <div className="flex items-center justify-between text-sm text-sidebar-muted-foreground">
           <span>makemd &copy; 2026</span>
-          <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.06]">
+          <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]">
             <HelpCircle className="h-4 w-4" />
             Help
           </Button>

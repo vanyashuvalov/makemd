@@ -38,10 +38,10 @@ export function Checkbox({
       aria-label={ariaLabel}
       onClick={() => onCheckedChange?.(!isChecked)}
       className={cn(
-        'inline-flex h-6 w-6 items-center justify-center rounded-[0.4rem] border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'inline-flex h-6 w-6 items-center justify-center rounded-[0.4rem] border transition-[transform,background-color,border-color,box-shadow] duration-150 hover:-translate-y-px active:translate-y-px active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         isChecked || isMixed
-          ? 'border-sidebar-accent bg-sidebar-accent text-sidebar-accent-foreground'
-          : 'border-border bg-card text-card-foreground hover:bg-muted',
+          ? 'border-sidebar-accent bg-sidebar-accent text-sidebar-accent-foreground shadow-[0_1px_2px_rgba(79,116,255,0.22)]'
+          : 'border-border bg-card text-card-foreground hover:border-sidebar-accent/40 hover:bg-muted',
         className
       )}
       {...props}

@@ -70,11 +70,13 @@ const unauthorizedSnapshot: WorkspaceSnapshot = {
       id: 'doc-1',
       title: 'Heading line here',
       updatedLabel: `23 Mar \u2022 12:32`,
+      selected: true,
     },
     {
       id: 'doc-2',
       title: 'Heading line here',
       updatedLabel: `23 Mar \u2022 12:32`,
+      selected: true,
       active: true,
       withMenu: true,
     },

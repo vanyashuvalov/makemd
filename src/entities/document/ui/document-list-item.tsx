@@ -19,12 +19,18 @@ export interface DocumentListItemProps {
 }
 
 export function DocumentListItem({ item, selectionMode = false }: DocumentListItemProps) {
+  const isSelected = Boolean(item.selected)
+
   // Render a single history row that can visually switch between the default, selected, and active states from the mockup.
   return (
     <article
       className={cn(
-        'group flex items-start gap-3 rounded-[0.95rem] px-4 py-3.5 transition-colors',
-        item.active ? 'bg-white/[0.1]' : 'hover:bg-white/[0.05]'
+        'group flex cursor-pointer items-start gap-3 rounded-[0.95rem] px-4 py-3.5 transition-[transform,background-color,box-shadow] duration-150 hover:-translate-y-px active:translate-x-px active:translate-y-px',
+        item.active
+          ? 'bg-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+          : isSelected
+            ? 'bg-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+            : 'hover:bg-white/[0.05] active:bg-white/[0.08]'
       )}
     >
       {selectionMode ? (
@@ -53,8 +59,8 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
           size="sm"
           variant="ghost"
           className={cn(
-            'mt-0.5 opacity-100 transition-opacity',
-            item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
+            'mt-0.5 opacity-80 transition-opacity group-hover:opacity-100',
+            item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground group-hover:text-sidebar-foreground'
           )}
         >
           <MoreVertical className="h-4 w-4" />
