@@ -23,7 +23,7 @@ export const iconButtonVariants = cva(
       variant: {
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'bg-transparent text-inherit hover:bg-white/10 active:bg-white/15',
+        ghost: 'bg-transparent text-inherit opacity-60 hover:bg-transparent hover:opacity-100 active:bg-transparent active:opacity-100',
         outline: 'border border-border bg-card text-card-foreground hover:bg-muted active:bg-muted/80',
         sidebar:
           'bg-sidebar-muted text-sidebar-foreground hover:bg-sidebar-border active:bg-sidebar-border/90',

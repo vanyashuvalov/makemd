@@ -46,18 +46,18 @@ export function DocumentSelectionBar({
     >
       {mode === 'actions' ? (
         <>
-          <div className="flex items-center gap-2 text-sm font-medium">
+          <div className="flex items-center gap-2 text-[18px] leading-[22px] font-medium">
             <Checkbox
               checked={summaryState}
               aria-label="Selection summary"
               onCheckedChange={onToggleAllSelection}
             />
-            <span className="font-mono">{selectedCount}</span>
+            <span className="font-mono text-[18px] leading-[22px]">{selectedCount}</span>
           </div>
 
-          <Separator orientation="vertical" className="mx-1 h-6 bg-sidebar-border" />
+          <Separator orientation="vertical" className="h-6 w-px bg-white/10" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <IconButton aria-label="Delete selected documents" size="icon" variant="ghost">
               <Icon icon={IconTrash} size="md" />
             </IconButton>

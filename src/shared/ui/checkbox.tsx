@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * File: src/shared/ui/checkbox.tsx
@@ -30,7 +30,7 @@ export function Checkbox({
   const isChecked = checked === true
   const isMixed = checked === 'indeterminate'
 
-  // Render a button-based checkbox so the selection state remains easy to style against the Figma mockups.
+  // Render the checkbox as a 24x24 wrapper with an inner 20x20 visual box so the outer hit area and the visible stroke match the Figma component model.
   return (
     <button
       type="button"
@@ -39,16 +39,26 @@ export function Checkbox({
       aria-label={ariaLabel}
       onClick={() => onCheckedChange?.(!isChecked)}
       className={cn(
-        'inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-[4px] border-2 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center p-0 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         isChecked || isMixed
-          ? 'border-white bg-transparent text-white'
-          : 'border-[color:var(--color-sidebar-checkbox-border)] bg-transparent text-sidebar-foreground/70 hover:border-white hover:text-white',
+          ? 'text-white'
+          : 'text-sidebar-foreground/70 hover:text-white',
         className
       )}
       {...props}
     >
-      {isChecked ? <Icon icon={IconCheck} size="sm" tone="current" /> : null}
-      {isMixed ? <Icon icon={IconMinus} size="sm" tone="current" /> : null}
+      <span
+        className={cn(
+          'inline-flex h-5 w-5 shrink-0 box-border items-center justify-center rounded-[4px] border-2 transition-[border-color] duration-150',
+          isChecked || isMixed
+            ? 'border-white'
+            : 'border-[color:var(--color-sidebar-checkbox-border)] hover:border-white'
+        )}
+      >
+        {isChecked ? <Icon icon={IconCheck} size="sm" tone="current" /> : null}
+        {isMixed ? <Icon icon={IconMinus} size="sm" tone="current" /> : null}
+      </span>
     </button>
   )
 }
+

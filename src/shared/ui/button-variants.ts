@@ -23,7 +23,7 @@ export const buttonVariants = cva(
         outline: 'border border-border bg-card text-card-foreground hover:bg-muted active:bg-muted/80',
         sidebar: 'bg-sidebar-muted text-sidebar-foreground hover:bg-sidebar-border active:bg-sidebar-border/90',
         text:
-          'bg-transparent text-sidebar-foreground hover:bg-[color:var(--color-sidebar-icon)] active:bg-[color:var(--color-sidebar-icon-active)]',
+          'bg-transparent text-sidebar-foreground/60 hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground',
       },
       size: {
         default: 'h-12 px-5',
