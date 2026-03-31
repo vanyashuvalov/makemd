@@ -23,14 +23,15 @@ export interface DocumentListItemProps {
 export function DocumentListItem({ item, selectionMode = false, onToggleSelected }: DocumentListItemProps) {
   const isSelected = Boolean(item.selected)
   const rowTone = item.selected || item.active ? 'bg-white/[0.15]' : 'bg-transparent'
-  const showOverflow = Boolean(item.withMenu && !item.selected)
+  const showOverflow = !item.selected
 
   // Render a single history row that can visually switch between the default, selected, and active states from the mockup.
   return (
     <article
       className={cn(
-        'group flex min-h-[67px] cursor-pointer items-center gap-3 rounded-[12px] px-4 py-3 transition-[background-color] duration-150 hover:bg-white/[0.05] active:bg-white/[0.08]',
-        rowTone
+        'group flex min-h-[67px] cursor-pointer items-center gap-3 rounded-[12px] px-4 py-3 transition-[background-color] duration-150 active:bg-white/[0.08]',
+        rowTone,
+        !item.selected && !item.active ? 'hover:bg-white/[0.05]' : null
       )}
     >
       {selectionMode ? (
@@ -59,14 +60,14 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
         </p>
       </div>
 
-      {item.withMenu ? (
+      {showOverflow ? (
         <IconButton
           aria-label={`Open actions for ${item.title}`}
           size="icon"
           variant="ghost"
           className={cn(
             'opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-sidebar-foreground',
-            isSelected || item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
+            item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
           )}
         >
           <Icon icon={IconDotsVertical} size="md" />

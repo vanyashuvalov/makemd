@@ -43,6 +43,30 @@ export type MarkdownSyntaxToken =
       type: 'code'
       value: string
     }
+  | {
+      type: 'strike'
+      value: string
+    }
+  | {
+      type: 'linkText'
+      value: string
+    }
+  | {
+      type: 'linkUrl'
+      value: string
+    }
+  | {
+      type: 'url'
+      value: string
+    }
+  | {
+      type: 'imageAlt'
+      value: string
+    }
+  | {
+      type: 'imageUrl'
+      value: string
+    }
 
 function createBlockId(prefix: string, index: number) {
   // Build a stable local identifier for a parsed markdown block so preview rendering can key rows consistently.
@@ -114,12 +138,65 @@ export function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
 export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
   // Split inline markdown into semantic tokens so both the editor highlighter and preview renderer can reuse the same parsing rules.
   const tokens: MarkdownSyntaxToken[] = []
-  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
-  const parts = text.split(pattern)
+  const pattern =
+    /(!?\[[^\]]+\]\([^)]+\)|~~[^~]+~~|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|https?:\/\/[^\s<]+|www\.[^\s<]+)/g
 
-  parts.forEach((part) => {
-    if (!part) {
-      return
+  let cursor = 0
+  let match: RegExpExecArray | null
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > cursor) {
+      tokens.push({ type: 'text', value: text.slice(cursor, match.index) })
+    }
+
+    const part = match[0]
+
+    if (part.startsWith('![')) {
+      const imageMatch = /^!\[([^\]]*)\]\(([^)]+)\)$/.exec(part)
+
+      if (imageMatch) {
+        tokens.push(
+          { type: 'marker', value: '![' },
+          { type: 'imageAlt', value: imageMatch[1] },
+          { type: 'marker', value: '](' },
+          { type: 'imageUrl', value: imageMatch[2] },
+          { type: 'marker', value: ')' }
+        )
+      } else {
+        tokens.push({ type: 'text', value: part })
+      }
+
+      cursor = pattern.lastIndex
+      continue
+    }
+
+    if (part.startsWith('[')) {
+      const linkMatch = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part)
+
+      if (linkMatch) {
+        tokens.push(
+          { type: 'marker', value: '[' },
+          { type: 'linkText', value: linkMatch[1] },
+          { type: 'marker', value: '](' },
+          { type: 'linkUrl', value: linkMatch[2] },
+          { type: 'marker', value: ')' }
+        )
+      } else {
+        tokens.push({ type: 'text', value: part })
+      }
+
+      cursor = pattern.lastIndex
+      continue
+    }
+
+    if (part.startsWith('~~') && part.endsWith('~~')) {
+      tokens.push(
+        { type: 'marker', value: '~~' },
+        { type: 'strike', value: part.slice(2, -2) },
+        { type: 'marker', value: '~~' }
+      )
+      cursor = pattern.lastIndex
+      continue
     }
 
     if (part.startsWith('**') && part.endsWith('**')) {
@@ -128,7 +205,8 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
         { type: 'strong', value: part.slice(2, -2) },
         { type: 'marker', value: '**' }
       )
-      return
+      cursor = pattern.lastIndex
+      continue
     }
 
     if (part.startsWith('*') && part.endsWith('*')) {
@@ -137,7 +215,8 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
         { type: 'emphasis', value: part.slice(1, -1) },
         { type: 'marker', value: '*' }
       )
-      return
+      cursor = pattern.lastIndex
+      continue
     }
 
     if (part.startsWith('`') && part.endsWith('`')) {
@@ -146,11 +225,23 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
         { type: 'code', value: part.slice(1, -1) },
         { type: 'marker', value: '`' }
       )
-      return
+      cursor = pattern.lastIndex
+      continue
+    }
+
+    if (/^(https?:\/\/[^\s<]+|www\.[^\s<]+)$/.test(part)) {
+      tokens.push({ type: 'url', value: part })
+      cursor = pattern.lastIndex
+      continue
     }
 
     tokens.push({ type: 'text', value: part })
-  })
+    cursor = pattern.lastIndex
+  }
+
+  if (cursor < text.length) {
+    tokens.push({ type: 'text', value: text.slice(cursor) })
+  }
 
   return tokens
 }
@@ -167,12 +258,66 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
     return [{ type: 'marker', value: trimmedLine }]
   }
 
+  const codeFenceMatch = /^(\s*)(`{3,}|~{3,})(.*)$/.exec(line)
+  if (codeFenceMatch) {
+    const fenceSuffixTokens = codeFenceMatch[3]
+      ? ([{ type: 'text', value: codeFenceMatch[3] }] as MarkdownSyntaxToken[])
+      : []
+
+    return [
+      { type: 'text', value: codeFenceMatch[1] },
+      { type: 'marker', value: codeFenceMatch[2] },
+      ...fenceSuffixTokens,
+    ]
+  }
+
   const headingMatch = /^(#{1,6})(\s+)(.*)$/.exec(line)
   if (headingMatch) {
     return [
       { type: 'marker', value: headingMatch[1] },
       { type: 'text', value: headingMatch[2] },
       ...tokenizeMarkdownInline(headingMatch[3]),
+    ]
+  }
+
+  const blockquoteMatch = /^(>\s?)(.*)$/.exec(line)
+  if (blockquoteMatch) {
+    return [
+      { type: 'marker', value: '>' },
+      { type: 'text', value: blockquoteMatch[1].slice(1) },
+      ...tokenizeMarkdownInline(blockquoteMatch[2]),
+    ]
+  }
+
+  const taskListMatch = /^(\s*)([-+*])(\s+)\[( |x|X)\](\s+)(.*)$/.exec(line)
+  if (taskListMatch) {
+    return [
+      { type: 'text', value: taskListMatch[1] },
+      { type: 'marker', value: taskListMatch[2] },
+      { type: 'text', value: taskListMatch[3] },
+      { type: 'marker', value: `[${taskListMatch[4].toLowerCase()}]` },
+      { type: 'text', value: taskListMatch[5] },
+      ...tokenizeMarkdownInline(taskListMatch[6]),
+    ]
+  }
+
+  const unorderedListMatch = /^(\s*)([-+*])(\s+)(.*)$/.exec(line)
+  if (unorderedListMatch) {
+    return [
+      { type: 'text', value: unorderedListMatch[1] },
+      { type: 'marker', value: unorderedListMatch[2] },
+      { type: 'text', value: unorderedListMatch[3] },
+      ...tokenizeMarkdownInline(unorderedListMatch[4]),
+    ]
+  }
+
+  const orderedListMatch = /^(\s*)(\d+[.)])(\s+)(.*)$/.exec(line)
+  if (orderedListMatch) {
+    return [
+      { type: 'text', value: orderedListMatch[1] },
+      { type: 'marker', value: orderedListMatch[2] },
+      { type: 'text', value: orderedListMatch[3] },
+      ...tokenizeMarkdownInline(orderedListMatch[4]),
     ]
   }
 

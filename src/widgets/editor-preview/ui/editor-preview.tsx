@@ -8,18 +8,14 @@
 'use client'
 
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { ElementType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
-import {
-  getMarkdownLineCount,
-  parseMarkdownBlocks,
-  tokenizeMarkdownInline,
-  tokenizeMarkdownLine,
-} from '@/entities/document/model/markdown'
+import { getMarkdownLineCount, tokenizeMarkdownInline, tokenizeMarkdownLine } from '@/entities/document/model/markdown'
+import { MarkdownRenderer } from './markdown-renderer'
 
 export function EditorPreview({
   markdown,
@@ -181,9 +177,7 @@ export function PreviewPane({
   markdown: string
   mobile?: boolean
 }) {
-  const blocks = parseMarkdownBlocks(markdown)
-
-  // Render the parsed markdown blocks as document typography so headings, paragraphs, and dividers feel like a live rendered page.
+  // Render the markdown preview through the shared renderer so CommonMark and GFM features stay visually consistent with the source editor.
   return (
     <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
       <div
@@ -192,85 +186,10 @@ export function PreviewPane({
           mobile && 'px-6 py-6 pb-20'
         )}
       >
-        <div className={cn('max-w-[43rem]', mobile && 'max-w-none')}>
-          {blocks.map((block) => {
-            if (block.type === 'heading') {
-              const HeadingTag = `h${block.level}` as ElementType
-              const headingClassName =
-                block.level === 1
-                  ? cn(
-                      'font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground',
-                      mobile && 'text-[2.5rem]'
-                    )
-                  : block.level === 2
-                    ? 'mt-6 font-sans text-[2.25rem] font-semibold tracking-[-0.04em] text-foreground'
-                    : 'mt-5 font-sans text-[1.5rem] font-semibold tracking-[-0.03em] text-foreground'
-
-              return <HeadingTag key={block.id} className={headingClassName}>{renderInlineMarkdown(block.text)}</HeadingTag>
-            }
-
-            if (block.type === 'divider') {
-              return <div key={block.id} className="my-4 h-px bg-border" />
-            }
-
-            return (
-              <p
-                key={block.id}
-                className={cn(
-                  'text-sm leading-7 text-foreground',
-                  mobile && 'text-[13px] leading-6'
-                )}
-              >
-                {renderInlineMarkdown(block.text)}
-              </p>
-            )
-          })}
-        </div>
+        <MarkdownRenderer markdown={markdown} mobile={mobile} />
       </div>
     </section>
   )
-}
-
-function renderInlineMarkdown(text: string): ReactNode[] {
-  // Translate inline markdown tokens into semantic React nodes so the preview stays aligned with the syntax-highlighting source mirror.
-  return tokenizeMarkdownInline(text).map((token, index) => {
-    if (token.type === 'marker') {
-      return (
-        <span key={`${index}-marker`} className="text-muted-foreground/60">
-          {token.value}
-        </span>
-      )
-    }
-
-    if (token.type === 'strong') {
-      return (
-        <strong key={`${index}-strong`} className="font-semibold text-foreground">
-          {token.value}
-        </strong>
-      )
-    }
-
-    if (token.type === 'emphasis') {
-      return (
-        <em key={`${index}-em`} className="italic text-foreground">
-          {token.value}
-        </em>
-      )
-    }
-
-    if (token.type === 'code') {
-      return (
-        <code
-          key={`${index}-code`}
-          className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-foreground"
-        >
-          {token.value}
-        </code>
-      )
-    }
-
-    return <span key={`${index}-text`}>{token.value}</span>
-  })
 }
 
 function renderMarkdownLine(line: string): ReactNode[] {
@@ -306,6 +225,54 @@ function renderMarkdownLine(line: string): ReactNode[] {
           key={`${index}-code`}
           className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-primary"
         >
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'strike') {
+      return (
+        <span key={`${index}-strike`} className="line-through text-primary/70">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'linkText') {
+      return (
+        <span key={`${index}-link-text`} className="text-primary underline decoration-primary/30 underline-offset-2">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'linkUrl') {
+      return (
+        <span key={`${index}-link-url`} className="text-muted-foreground/80">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'url') {
+      return (
+        <span key={`${index}-url`} className="text-primary underline decoration-primary/30 underline-offset-2">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'imageAlt') {
+      return (
+        <span key={`${index}-image-alt`} className="text-primary">
+          {token.value}
+        </span>
+      )
+    }
+
+    if (token.type === 'imageUrl') {
+      return (
+        <span key={`${index}-image-url`} className="text-muted-foreground/80">
           {token.value}
         </span>
       )
