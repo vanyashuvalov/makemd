@@ -144,6 +144,7 @@ export function MarkdownPane({
           'pointer-events-none absolute inset-0 overflow-hidden px-4 py-8 font-mono text-[15px] leading-6 text-foreground',
           editorPaddingClass
         )}
+        style={{ transform: `translateY(${-scrollTop}px)` }}
       >
         {lines.map((line, index) => (
           <div key={index} className="whitespace-pre-wrap break-words">
