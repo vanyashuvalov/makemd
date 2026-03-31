@@ -13,8 +13,8 @@ import { Button } from '@/shared/ui/button'
 export function CreateDocumentButton() {
   // Render the primary new-document action with the same pill proportion shown in the design board.
   return (
-    <Button size="lg" className="w-full rounded-full shadow-[0_10px_24px_rgba(79,116,255,0.3)]">
-      <Plus className="h-5 w-5" />
+    <Button variant="primary" size="primary" className="w-full">
+      <Plus className="h-6 w-6 shrink-0" />
       New
     </Button>
   )

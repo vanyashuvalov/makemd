@@ -31,7 +31,7 @@ export function WorkspaceStateSwitch({
             key={state.value}
             href={state.value === 'authorized' ? '/' : `/?state=${state.value}`}
             className={cn(
-              buttonVariants({ variant: active ? 'default' : 'outline', size: 'sm' }),
+              buttonVariants({ variant: active ? 'primary' : 'outline', size: 'sm' }),
               'rounded-full'
             )}
             aria-current={active ? 'page' : undefined}

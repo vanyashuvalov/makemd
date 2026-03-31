@@ -38,11 +38,12 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             </>
           ) : (
             <Button
-              variant="ghost"
-              className="h-10 w-fit justify-start rounded-[0.9rem] border border-sidebar-border/70 bg-sidebar-muted/30 px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]"
+              variant="text"
+              size="text"
+              className="w-full"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-muted text-sidebar-foreground">
-                <LogIn className="h-3.5 w-3.5" />
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sidebar-foreground/60">
+                <LogIn className="h-6 w-6" />
               </span>
               Sign up
             </Button>
