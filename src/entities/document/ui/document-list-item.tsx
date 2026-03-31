@@ -39,8 +39,8 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
           onCheckedChange={() => onToggleSelected?.(item.id)}
         />
       ) : (
-        <div className="mt-0.5 text-sidebar-foreground/80">
-          <IconFileText className="h-5 w-5" />
+        <div className="text-sidebar-foreground/80">
+          <IconFileText className="h-6 w-6" />
         </div>
       )}
 

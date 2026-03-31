@@ -27,6 +27,7 @@ export function DocumentSelectionBar({
   className,
 }: DocumentSelectionBarProps) {
   const helperTail = helperText.replace(/^Hold Ctrl\s*/, '') || helperText
+  const helperTailWords = helperTail.split(/\s+/).filter(Boolean)
 
   // Render the compact selection rail in either the default hint state or the active bulk-actions state.
   return (
@@ -61,14 +62,18 @@ export function DocumentSelectionBar({
           </div>
         </>
       ) : (
-        <div className="flex items-center gap-4 text-[18px] leading-[22px]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[18px] leading-[22px]">
           <Checkbox checked={false} aria-label="Selection hint" />
-          <div className="flex items-center gap-2">
-            <span className="font-normal text-white">Hold</span>
-            <span className="rounded-[4px] bg-white/10 px-2 py-1 text-[15px] font-bold leading-[18px] tracking-[0.03em] text-white/70">
-              ? Ctrl
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="whitespace-nowrap font-normal text-white">Hold</span>
+            <span className="whitespace-nowrap rounded-[4px] bg-white/10 px-2 py-1 text-[15px] font-bold leading-[18px] tracking-[0.03em] text-white/70">
+              (Ctrl)
             </span>
-            <span className="font-normal text-white">{helperTail}</span>
+            {helperTailWords.map((word) => (
+              <span key={word} className="whitespace-nowrap font-normal text-white">
+                {word}
+              </span>
+            ))}
           </div>
         </div>
       )}
