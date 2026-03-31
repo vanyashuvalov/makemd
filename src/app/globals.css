@@ -11,7 +11,7 @@
   --font-sans: ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, monospace;
 
-  --color-background: #f4efe7;
+  --color-background: #000000;
   --color-foreground: #181717;
   --color-card: #fffdf8;
   --color-card-foreground: #181717;
@@ -30,7 +30,7 @@
   --color-input: #d6cec1;
   --color-ring: #4f74ff;
 
-  --color-sidebar: #1d1f23;
+  --color-sidebar: #292929;
   --color-sidebar-foreground: #f4f1eb;
   --color-sidebar-muted: #2f3238;
   --color-sidebar-muted-foreground: #a8a49c;
@@ -40,6 +40,8 @@
   --color-sidebar-icon: rgba(255, 255, 255, 0.1);
   --color-sidebar-icon-hover: rgba(255, 255, 255, 0.14);
   --color-sidebar-icon-active: rgba(255, 255, 255, 0.16);
+  --color-canvas: #000000;
+  --color-sidebar-surface: #292929;
 
   --radius: 0.95rem;
 }

@@ -11,7 +11,7 @@ import type { WorkspaceSnapshot } from '@/entities/document/model/types'
 export function WorkspacePage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
   // Keep the page background flat and neutral so the viewport reads like the Figma frame instead of a decorative landing page.
   return (
-    <main className="min-h-screen overflow-hidden bg-background p-3 text-foreground">
+    <main className="min-h-screen overflow-hidden bg-[color:var(--color-canvas)] p-3 text-foreground">
       <div className="h-[calc(100vh-1.5rem)] w-full">
         <AppShell snapshot={snapshot} />
       </div>

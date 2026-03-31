@@ -24,7 +24,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
   // Render the dense navigation rail used in the Figma side-bar states.
   return (
-    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[0_14px_34px_rgba(15,15,15,0.14)]">
+    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground shadow-[0_14px_34px_rgba(15,15,15,0.14)]">
       <div className="flex-1 space-y-6 px-6 py-6">
         <div className="flex items-center gap-3">
           {snapshot.account ? (
@@ -78,12 +78,12 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         {!snapshot.warning && snapshot.selection?.helperText ? (
           <div className="flex items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 py-3 text-sm text-sidebar-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-[0.4rem] border border-sidebar-border bg-sidebar text-xs font-medium">
+              <div className="flex h-6 w-6 items-center justify-center rounded-[0.4rem] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-xs font-medium">
                 <Check className="h-3.5 w-3.5" />
               </div>
               <span className="font-medium">Hold</span>
             </div>
-            <span className="rounded-full border border-sidebar-border bg-sidebar px-2 py-1 font-mono text-xs">
+            <span className="rounded-full border border-sidebar-border bg-[color:var(--color-sidebar-surface)] px-2 py-1 font-mono text-xs">
               Ctrl
             </span>
             <span className="text-sidebar-muted-foreground">{helperTail}</span>
