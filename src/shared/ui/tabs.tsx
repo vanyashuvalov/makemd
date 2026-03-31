@@ -58,6 +58,7 @@ export function Tabs({
               compact
                 ? 'inline-flex h-14 flex-1 items-center justify-center rounded-[99px] bg-transparent px-[6px] py-4 text-base font-medium text-white transition-[background-color,opacity,color] duration-150'
                 : 'inline-flex min-w-0 items-center justify-center gap-2 rounded-[0.9rem] px-4 py-3 text-sm font-medium transition-[background-color,color] duration-150',
+              'cursor-pointer',
               compact &&
                 (active
                   ? 'bg-[color:var(--color-sidebar-tab-active)] opacity-100'

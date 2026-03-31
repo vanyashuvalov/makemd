@@ -16,18 +16,24 @@ import { cn } from '@/shared/lib/cn'
 export interface DocumentSelectionBarProps {
   mode?: 'hint' | 'actions'
   selectedCount?: number
+  totalCount?: number
   helperText?: string
+  onToggleAllSelection?: (checked: boolean) => void
   className?: string
 }
 
 export function DocumentSelectionBar({
   mode = 'hint',
   selectedCount = 0,
+  totalCount = 0,
   helperText = 'Hold Ctrl to select many',
+  onToggleAllSelection,
   className,
 }: DocumentSelectionBarProps) {
   const helperTail = helperText.replace(/^Hold Ctrl\s*/, '') || helperText
   const helperTailWords = helperTail.split(/\s+/).filter(Boolean)
+  const allSelected = totalCount > 0 && selectedCount === totalCount
+  const summaryState = allSelected ? true : 'indeterminate'
 
   // Render the compact selection rail in either the default hint state or the active bulk-actions state.
   return (
@@ -40,7 +46,11 @@ export function DocumentSelectionBar({
       {mode === 'actions' ? (
         <>
           <div className="flex items-center gap-2 text-sm font-medium">
-            <Checkbox checked="indeterminate" aria-label="Selection summary" />
+            <Checkbox
+              checked={summaryState}
+              aria-label="Selection summary"
+              onCheckedChange={onToggleAllSelection}
+            />
             <span>{selectedCount}</span>
           </div>
 

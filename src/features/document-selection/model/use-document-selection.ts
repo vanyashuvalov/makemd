@@ -14,8 +14,10 @@ export interface UseDocumentSelectionResult {
   documents: DocumentRecord[]
   hasSelection: boolean
   isCtrlPressed: boolean
+  isAllSelected: boolean
   selectedCount: number
   selectionMode: boolean
+  setAllSelected: (checked: boolean) => void
   toggleDocument: (documentId: string) => void
 }
 
@@ -62,6 +64,7 @@ export function useDocumentSelection(initialDocuments: DocumentRecord[]): UseDoc
     [documents]
   )
 
+  const isAllSelected = documents.length > 0 && selectedCount === documents.length
   const selectionMode = isCtrlPressed || selectedCount > 0
   const hasSelection = selectedCount > 0
 
@@ -73,12 +76,18 @@ export function useDocumentSelection(initialDocuments: DocumentRecord[]): UseDoc
     )
   }
 
+  const setAllSelected = (checked: boolean) => {
+    setDocuments((current) => current.map((document) => ({ ...document, selected: checked })))
+  }
+
   return {
     documents,
     hasSelection,
     isCtrlPressed,
+    isAllSelected,
     selectedCount,
     selectionMode,
+    setAllSelected,
     toggleDocument,
   }
 }

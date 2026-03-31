@@ -180,7 +180,12 @@ export function PreviewPane({
   // Render the parsed markdown blocks as document typography so headings, paragraphs, and dividers feel like a live rendered page.
   return (
     <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
-      <div className={cn('w-full bg-card px-8 py-8', mobile && 'px-6 py-6')}>
+      <div
+        className={cn(
+          'h-full min-h-0 w-full overflow-y-auto bg-card px-8 py-8 pb-24',
+          mobile && 'px-6 py-6 pb-20'
+        )}
+      >
         <div className={cn('max-w-[43rem]', mobile && 'max-w-none')}>
           {blocks.map((block) => {
             if (block.type === 'heading') {

@@ -24,7 +24,9 @@ export interface SidebarProps {
   documents: DocumentRecord[]
   selectionMode: boolean
   selectedCount: number
+  totalCount: number
   helperText?: string
+  onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
 }
 
@@ -33,7 +35,9 @@ export function Sidebar({
   documents,
   selectionMode,
   selectedCount,
+  totalCount,
   helperText = 'Hold Ctrl to select many',
+  onToggleAllSelection,
   onToggleDocument,
 }: SidebarProps) {
   const hasSelection = selectedCount > 0
@@ -94,7 +98,9 @@ export function Sidebar({
         <DocumentSelectionBar
           mode={hasSelection ? 'actions' : 'hint'}
           selectedCount={selectedCount}
+          totalCount={totalCount}
           helperText={helperText}
+          onToggleAllSelection={onToggleAllSelection}
         />
 
         <DocumentHistoryList

@@ -26,7 +26,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         type={type}
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={cn(buttonVariants({ variant, size }), 'cursor-pointer', className)}
         {...props}
       >
         {before ? <span className="shrink-0">{before}</span> : null}

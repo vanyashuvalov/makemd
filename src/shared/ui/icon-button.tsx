@@ -58,7 +58,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
       <Component
         ref={ref as React.ForwardedRef<HTMLButtonElement & HTMLSpanElement>}
         {...(Component === 'button' ? { type } : {})}
-        className={cn(iconButtonVariants({ variant, size }), className)}
+        className={cn(iconButtonVariants({ variant, size }), 'cursor-pointer', className)}
         {...props}
       />
     )
