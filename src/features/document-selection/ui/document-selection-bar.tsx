@@ -10,6 +10,7 @@
 import { IconCopy, IconDownload, IconLink, IconTrash } from '@tabler/icons-react'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { IconButton } from '@/shared/ui/icon-button'
+import { Icon } from '@/shared/ui/icon'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/cn'
 
@@ -51,29 +52,29 @@ export function DocumentSelectionBar({
               aria-label="Selection summary"
               onCheckedChange={onToggleAllSelection}
             />
-            <span>{selectedCount}</span>
+            <span className="font-mono">{selectedCount}</span>
           </div>
 
           <Separator orientation="vertical" className="mx-1 h-6 bg-sidebar-border" />
 
           <div className="flex items-center gap-2">
-            <IconButton aria-label="Delete selected documents" size="sm" variant="ghost">
-              <IconTrash className="h-4 w-4" />
+            <IconButton aria-label="Delete selected documents" size="icon" variant="ghost">
+              <Icon icon={IconTrash} size="md" />
             </IconButton>
-            <IconButton aria-label="Download selected documents" size="sm" variant="ghost">
-              <IconDownload className="h-4 w-4" />
+            <IconButton aria-label="Download selected documents" size="icon" variant="ghost">
+              <Icon icon={IconDownload} size="md" />
             </IconButton>
-            <IconButton aria-label="Copy share link" size="sm" variant="ghost">
-              <IconLink className="h-4 w-4" />
+            <IconButton aria-label="Copy share link" size="icon" variant="ghost">
+              <Icon icon={IconLink} size="md" />
             </IconButton>
-            <IconButton aria-label="Copy selected content" size="sm" variant="ghost">
-              <IconCopy className="h-4 w-4" />
+            <IconButton aria-label="Copy selected content" size="icon" variant="ghost">
+              <Icon icon={IconCopy} size="md" />
             </IconButton>
           </div>
         </>
       ) : (
         <div className="flex min-w-0 flex-1 items-center gap-2 text-[18px] leading-[22px]">
-          <Checkbox checked={false} aria-label="Selection hint" />
+          <Checkbox checked={false} aria-label="Selection hint" onCheckedChange={onToggleAllSelection} />
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span className="whitespace-nowrap font-normal text-white">Hold</span>
             <span className="whitespace-nowrap rounded-[4px] bg-white/10 px-2 py-1 text-[15px] font-bold leading-[18px] tracking-[0.03em] text-white/70">

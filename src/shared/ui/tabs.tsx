@@ -8,12 +8,14 @@
  * Connected to: sidebar navigation, the mobile editor viewport switch, and future mode toggles.
  */
 import * as React from 'react'
+import type { TablerIcon } from '@tabler/icons-react'
 import { cn } from '@/shared/lib/cn'
+import { Icon } from '@/shared/ui/icon'
 
 export type TabItem = {
   value: string
   label: string
-  icon?: React.ReactNode
+  icon?: TablerIcon
 }
 
 export interface TabsProps {
@@ -70,14 +72,20 @@ export function Tabs({
             )}
             onClick={() => onValueChange?.(item.value)}
           >
-            <span
-              className={cn(
-                'inline-flex shrink-0 items-center justify-center',
-                compact ? 'h-6 w-6' : 'h-5 w-5'
-              )}
-            >
-              {item.icon}
-            </span>
+            {item.icon ? (
+              <span
+                className={cn(
+                  'inline-flex shrink-0 items-center justify-center',
+                  compact ? 'h-6 w-6' : 'h-5 w-5'
+                )}
+              >
+                <Icon
+                  icon={item.icon}
+                  size={compact ? 'md' : 'sm'}
+                  tone={compact ? (active ? 'white' : 'sidebarMuted') : 'current'}
+                />
+              </span>
+            ) : null}
             <span className={cn(compact && 'sr-only')}>{item.label}</span>
           </button>
         )

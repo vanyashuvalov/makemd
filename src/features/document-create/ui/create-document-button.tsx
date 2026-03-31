@@ -7,8 +7,9 @@
  * What it does: wraps the shared button primitive with a plus icon and the expected label.
  * Connected to: sidebar composition and any future document creation workflow.
  */
-import { IconPlus } from '@tabler/icons-react'
 import { Button } from '@/shared/ui/button'
+import { Icon } from '@/shared/ui/icon'
+import { IconPlus } from '@tabler/icons-react'
 
 export function CreateDocumentButton() {
   // Render the primary new-document action with the same pill proportion shown in the design board.
@@ -17,7 +18,7 @@ export function CreateDocumentButton() {
       variant="primary"
       size="primary"
       className="w-full"
-      before={<IconPlus className="h-6 w-6 shrink-0" />}
+      before={<Icon icon={IconPlus} size="md" />}
     >
       New
     </Button>

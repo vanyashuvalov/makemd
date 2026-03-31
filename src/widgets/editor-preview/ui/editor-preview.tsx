@@ -12,6 +12,7 @@ import type { ElementType, ReactNode } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
+import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
 import { getMarkdownLineCount, parseMarkdownBlocks } from '@/entities/document/model/markdown'
 
@@ -31,20 +32,20 @@ export function EditorPreview({
     <section className="flex h-full min-h-0 flex-col gap-2 lg:hidden">
       <div className="flex items-center gap-3 rounded-[16px] border border-border bg-card px-4 py-3">
         <IconButton aria-label="Open navigation" variant="outline" size="sm">
-          <IconMenu2 className="h-4 w-4" />
+          <Icon icon={IconMenu2} size="sm" />
         </IconButton>
         <Tabs
           ariaLabel="Workspace mode"
           items={[
-            { value: 'markdown', label: 'Markdown', icon: <IconFileCode2 className="h-5 w-5" /> },
-            { value: 'preview', label: 'Preview', icon: <IconEye className="h-5 w-5" /> },
+            { value: 'markdown', label: 'Markdown', icon: IconFileCode2 },
+            { value: 'preview', label: 'Preview', icon: IconEye },
           ]}
           value={mobilePanel}
           onValueChange={(value) => setMobilePanel(value as 'markdown' | 'preview')}
           className="flex-1"
         />
         <IconButton aria-label="Download PDF" variant="primary" size="sm">
-          <IconDownload className="h-4 w-4" />
+          <Icon icon={IconDownload} size="sm" />
         </IconButton>
       </div>
 

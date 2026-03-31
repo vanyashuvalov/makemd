@@ -7,17 +7,24 @@
  */
 'use client'
 
-import { IconAlertTriangle, IconClipboardList, IconHelpCircle, IconHistory, IconLogin2 } from '@tabler/icons-react'
 import { Alert } from '@/shared/ui/alert'
 import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Tabs } from '@/shared/ui/tabs'
+import { Icon } from '@/shared/ui/icon'
 import { Separator } from '@/shared/ui/separator'
 import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
 import { DocumentHistoryList } from '@/entities/document/ui/document-history-list'
 import { DocumentSelectionBar } from '@/features/document-selection/ui/document-selection-bar'
 import type { DocumentRecord, WorkspaceSnapshot } from '@/entities/document/model/types'
+import {
+  IconAlertTriangle,
+  IconClipboardList,
+  IconHelpCircle,
+  IconHistory,
+  IconLogin2,
+} from '@tabler/icons-react'
 
 export interface SidebarProps {
   snapshot: WorkspaceSnapshot
@@ -64,7 +71,7 @@ export function Sidebar({
               className="w-full"
               before={
                 <IconButton as="span" variant="neutral" aria-hidden>
-                  <IconLogin2 className="h-6 w-6 opacity-60" />
+                  <Icon icon={IconLogin2} size="md" tone="sidebarMuted" />
                 </IconButton>
               }
             >
@@ -78,8 +85,8 @@ export function Sidebar({
         <Tabs
           ariaLabel="Sidebar sections"
           items={[
-            { value: 'history', label: 'History', icon: <IconHistory className="h-6 w-6" /> },
-            { value: 'documents', label: 'Documents', icon: <IconClipboardList className="h-6 w-6" /> },
+            { value: 'history', label: 'History', icon: IconHistory },
+            { value: 'documents', label: 'Documents', icon: IconClipboardList },
           ]}
           value="history"
           compact
@@ -90,7 +97,7 @@ export function Sidebar({
             tone="warning"
             title={snapshot.warning.title}
             description={snapshot.warning.description}
-            icon={<IconAlertTriangle className="h-4 w-4 text-[#f2c46f]" />}
+            icon={<Icon icon={IconAlertTriangle} size="sm" className="text-[#f2c46f]" />}
             className="border-[#5a4823] bg-[#40321b]"
           />
         ) : null}
@@ -118,7 +125,7 @@ export function Sidebar({
             variant="ghost"
             size="sm"
             className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]"
-            before={<IconHelpCircle className="h-4 w-4" />}
+            before={<Icon icon={IconHelpCircle} size="sm" />}
           >
             Help
           </Button>

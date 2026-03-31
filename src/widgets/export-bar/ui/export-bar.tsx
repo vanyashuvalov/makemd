@@ -7,10 +7,11 @@
  * What it does: shows the document chip plus copy and download actions in a floating cluster.
  * Connected to: the editor/preview widget and the current document snapshot.
  */
-import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
 import { Button } from '@/shared/ui/button'
 import { IconButton } from '@/shared/ui/icon-button'
+import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
+import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
 
 export function ExportBar({
   fileName,
@@ -31,15 +32,15 @@ export function ExportBar({
         variant="outline"
         size="sm"
         className="h-11 rounded-full border-border bg-card px-4"
-        after={<IconPencil className="h-4 w-4" />}
+        after={<Icon icon={IconPencil} size="sm" />}
       >
         <span className="max-w-[14rem] truncate">{fileName}</span>
       </Button>
       <IconButton aria-label="Copy document" variant="outline" size="default" className="border border-border">
-        <IconCopy className="h-4 w-4" />
+        <Icon icon={IconCopy} size="sm" />
       </IconButton>
       <IconButton aria-label="Download PDF" variant="primary" size="default">
-        <IconDownload className="h-4 w-4" />
+        <Icon icon={IconDownload} size="sm" />
       </IconButton>
     </div>
   )

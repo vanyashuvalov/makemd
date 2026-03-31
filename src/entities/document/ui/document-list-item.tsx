@@ -10,6 +10,7 @@
 import { IconDotsVertical, IconFileText } from '@tabler/icons-react'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { IconButton } from '@/shared/ui/icon-button'
+import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
 import type { DocumentRecord } from '../model/types'
 
@@ -40,7 +41,7 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
         />
       ) : (
         <div className="text-sidebar-foreground/80">
-          <IconFileText className="h-6 w-6" />
+          <Icon icon={IconFileText} size="md" />
         </div>
       )}
 
@@ -56,14 +57,14 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
       {item.withMenu ? (
         <IconButton
           aria-label={`Open actions for ${item.title}`}
-          size="sm"
+          size="icon"
           variant="ghost"
           className={cn(
             'opacity-80 transition-opacity group-hover:opacity-100',
             item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground group-hover:text-sidebar-foreground'
           )}
         >
-          <IconDotsVertical className="h-4 w-4" />
+          <Icon icon={IconDotsVertical} size="md" />
         </IconButton>
       ) : null}
     </article>
