@@ -141,7 +141,7 @@ export function MarkdownPane({
         ref={mirrorRef}
         aria-hidden="true"
         className={cn(
-          'pointer-events-none absolute inset-0 overflow-hidden px-4 py-8 font-mono text-[15px] leading-6 text-foreground',
+          'pointer-events-none absolute inset-0 overflow-hidden px-4 py-8 pb-24 font-mono text-[15px] leading-6 text-foreground',
           editorPaddingClass
         )}
         style={{ transform: `translateY(${-scrollTop}px)` }}
@@ -163,9 +163,10 @@ export function MarkdownPane({
         autoComplete="off"
         autoCorrect="off"
         className={cn(
-          'h-full w-full resize-none border-0 bg-transparent px-4 py-8 font-mono text-[15px] leading-6 text-transparent caret-foreground outline-none placeholder:text-muted-foreground/70 selection:bg-primary/20 selection:text-transparent',
+          'h-full w-full resize-none border-0 bg-transparent px-4 py-8 pb-24 font-mono text-[15px] leading-6 text-transparent caret-foreground outline-none placeholder:text-muted-foreground/70 selection:bg-primary/20 selection:text-transparent',
           editorPaddingClass
         )}
+        style={{ scrollPaddingBottom: '6rem' }}
       />
     </section>
   )
