@@ -1,0 +1,60 @@
+/**
+ * File: src/app/globals.css
+ * Purpose: Global Tailwind v4 theme and base reset for the makemd prototype.
+ * Why it exists: the Figma sketch relies on a warm page background, a dark sidebar, and a crisp paper-like editor surface.
+ * What it does: defines design tokens, base typography, and a few app-wide background behaviors.
+ * Connected to: `src/app/layout.tsx` and all Tailwind-styled components under `src/`.
+ */
+@import 'tailwindcss';
+
+@theme inline {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: #f3efe8;
+  --color-foreground: #171717;
+  --color-card: #ffffff;
+  --color-card-foreground: #171717;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #171717;
+  --color-primary: #4f74ff;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #e6e0d7;
+  --color-secondary-foreground: #171717;
+  --color-muted: #eee8df;
+  --color-muted-foreground: #6d6a65;
+  --color-accent: #e1e9ff;
+  --color-accent-foreground: #1230a0;
+  --color-destructive: #c45a4a;
+  --color-border: #d7d0c5;
+  --color-input: #d7d0c5;
+  --color-ring: #4f74ff;
+
+  --color-sidebar: #1f2023;
+  --color-sidebar-foreground: #f4f1eb;
+  --color-sidebar-muted: #32343a;
+  --color-sidebar-muted-foreground: #a7a39c;
+  --color-sidebar-border: #2f3136;
+  --color-sidebar-accent: #4f74ff;
+  --color-sidebar-accent-foreground: #ffffff;
+
+  --radius: 1rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-background;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  }
+}
