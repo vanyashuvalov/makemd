@@ -2,7 +2,7 @@
  * File: src/shared/ui/button-variants.ts
  * Purpose: Shared button style recipe used by both server and client components.
  * Why it exists: style variants need to be reusable without importing from a client-only module.
- * What it does: exposes the canonical button class recipe for buttons and link-shaped button surrogates.
+ * What it does: exposes the canonical button class recipe for buttons with optional leading and trailing slots.
  * Connected to: `Button`, the workspace state switch, and any future button-like links.
  */
 import { cva } from 'class-variance-authority'
@@ -27,16 +27,16 @@ export const buttonVariants = cva(
         text:
           'bg-transparent text-white hover:bg-white/10 active:bg-white/15',
       },
-      size: {
-        default: 'h-12 px-5',
-        sm: 'h-10 px-4',
-        lg: 'h-14 px-6 text-base',
-        icon: 'h-10 w-10 p-0',
-        iconSm: 'h-8 w-8 p-0',
-        primary:
+    size: {
+      default: 'h-12 px-5',
+      sm: 'h-10 px-4',
+      lg: 'h-14 px-6 text-base',
+      icon: 'h-10 w-10 p-0',
+      iconSm: 'h-8 w-8 p-0',
+      primary:
           'h-14 px-4 text-[18px] font-normal leading-[25px] border border-white/20 bg-[#3C64FF]',
-        text: 'h-10 px-0 text-[18px] font-medium leading-[25px]',
-      },
+      text: 'h-10 px-0 text-[18px] font-medium leading-[25px]',
+    },
     },
     defaultVariants: {
       variant: 'primary',

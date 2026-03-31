@@ -41,10 +41,12 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
               variant="text"
               size="text"
               className="w-full"
+              before={
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sidebar-foreground/60">
+                  <LogIn className="h-6 w-6" />
+                </span>
+              }
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sidebar-foreground/60">
-                <LogIn className="h-6 w-6" />
-              </span>
               Sign up
             </Button>
           )}
@@ -98,8 +100,12 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         <Separator className="bg-sidebar-border" />
         <div className="flex items-center justify-between text-sm text-sidebar-muted-foreground">
           <span>makemd &copy; 2026</span>
-          <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]">
-            <HelpCircle className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.08] active:bg-white/[0.12]"
+            before={<HelpCircle className="h-4 w-4" />}
+          >
             Help
           </Button>
         </div>

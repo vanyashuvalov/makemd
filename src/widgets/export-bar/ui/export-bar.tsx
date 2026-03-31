@@ -27,9 +27,13 @@ export function ExportBar({
         className
       )}
     >
-      <Button variant="outline" size="sm" className="h-11 rounded-full border-border bg-card px-4 shadow-[0_8px_20px_rgba(20,20,20,0.08)]">
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-11 rounded-full border-border bg-card px-4 shadow-[0_8px_20px_rgba(20,20,20,0.08)]"
+        after={<PencilLine className="h-4 w-4" />}
+      >
         <span className="max-w-[14rem] truncate">{fileName}</span>
-        <PencilLine className="h-4 w-4" />
       </Button>
       <IconButton aria-label="Copy document" variant="subtle" size="default" className="border border-border shadow-[0_8px_20px_rgba(20,20,20,0.08)]">
         <Copy className="h-4 w-4" />
