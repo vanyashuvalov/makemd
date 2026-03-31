@@ -28,7 +28,7 @@ export function ExportBar({
   return (
     <div
       className={cn(
-        'absolute bottom-6 right-6 z-10 inline-flex items-center gap-2',
+        'absolute bottom-3 right-3 z-10 inline-flex items-center gap-2',
         className
       )}
     >

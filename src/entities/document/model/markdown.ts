@@ -30,6 +30,7 @@ export type MarkdownSyntaxToken =
   | {
       type: 'marker'
       value: string
+      tone: 'heading' | 'list' | 'quote' | 'rule' | 'task' | 'strong' | 'emphasis' | 'code' | 'link' | 'image'
     }
   | {
       type: 'strong'
@@ -156,11 +157,11 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
 
       if (imageMatch) {
         tokens.push(
-          { type: 'marker', value: '![' },
+          { type: 'marker', value: '![', tone: 'image' },
           { type: 'imageAlt', value: imageMatch[1] },
-          { type: 'marker', value: '](' },
+          { type: 'marker', value: '](', tone: 'image' },
           { type: 'imageUrl', value: imageMatch[2] },
-          { type: 'marker', value: ')' }
+          { type: 'marker', value: ')', tone: 'image' }
         )
       } else {
         tokens.push({ type: 'text', value: part })
@@ -175,11 +176,11 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
 
       if (linkMatch) {
         tokens.push(
-          { type: 'marker', value: '[' },
+          { type: 'marker', value: '[', tone: 'link' },
           { type: 'linkText', value: linkMatch[1] },
-          { type: 'marker', value: '](' },
+          { type: 'marker', value: '](', tone: 'link' },
           { type: 'linkUrl', value: linkMatch[2] },
-          { type: 'marker', value: ')' }
+          { type: 'marker', value: ')', tone: 'link' }
         )
       } else {
         tokens.push({ type: 'text', value: part })
@@ -191,9 +192,9 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
 
     if (part.startsWith('~~') && part.endsWith('~~')) {
       tokens.push(
-        { type: 'marker', value: '~~' },
+        { type: 'marker', value: '~~', tone: 'strong' },
         { type: 'strike', value: part.slice(2, -2) },
-        { type: 'marker', value: '~~' }
+        { type: 'marker', value: '~~', tone: 'strong' }
       )
       cursor = pattern.lastIndex
       continue
@@ -201,9 +202,9 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
 
     if (part.startsWith('**') && part.endsWith('**')) {
       tokens.push(
-        { type: 'marker', value: '**' },
+        { type: 'marker', value: '**', tone: 'strong' },
         { type: 'strong', value: part.slice(2, -2) },
-        { type: 'marker', value: '**' }
+        { type: 'marker', value: '**', tone: 'strong' }
       )
       cursor = pattern.lastIndex
       continue
@@ -211,9 +212,9 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
 
     if (part.startsWith('*') && part.endsWith('*')) {
       tokens.push(
-        { type: 'marker', value: '*' },
+        { type: 'marker', value: '*', tone: 'emphasis' },
         { type: 'emphasis', value: part.slice(1, -1) },
-        { type: 'marker', value: '*' }
+        { type: 'marker', value: '*', tone: 'emphasis' }
       )
       cursor = pattern.lastIndex
       continue
@@ -221,9 +222,9 @@ export function tokenizeMarkdownInline(text: string): MarkdownSyntaxToken[] {
 
     if (part.startsWith('`') && part.endsWith('`')) {
       tokens.push(
-        { type: 'marker', value: '`' },
+        { type: 'marker', value: '`', tone: 'code' },
         { type: 'code', value: part.slice(1, -1) },
-        { type: 'marker', value: '`' }
+        { type: 'marker', value: '`', tone: 'code' }
       )
       cursor = pattern.lastIndex
       continue
@@ -255,7 +256,7 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
   }
 
   if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmedLine)) {
-    return [{ type: 'marker', value: trimmedLine }]
+    return [{ type: 'marker', value: trimmedLine, tone: 'rule' }]
   }
 
   const codeFenceMatch = /^(\s*)(`{3,}|~{3,})(.*)$/.exec(line)
@@ -266,7 +267,7 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
 
     return [
       { type: 'text', value: codeFenceMatch[1] },
-      { type: 'marker', value: codeFenceMatch[2] },
+      { type: 'marker', value: codeFenceMatch[2], tone: 'code' },
       ...fenceSuffixTokens,
     ]
   }
@@ -274,7 +275,7 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
   const headingMatch = /^(#{1,6})(\s+)(.*)$/.exec(line)
   if (headingMatch) {
     return [
-      { type: 'marker', value: headingMatch[1] },
+      { type: 'marker', value: headingMatch[1], tone: 'heading' },
       { type: 'text', value: headingMatch[2] },
       ...tokenizeMarkdownInline(headingMatch[3]),
     ]
@@ -283,7 +284,7 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
   const blockquoteMatch = /^(>\s?)(.*)$/.exec(line)
   if (blockquoteMatch) {
     return [
-      { type: 'marker', value: '>' },
+      { type: 'marker', value: '>', tone: 'quote' },
       { type: 'text', value: blockquoteMatch[1].slice(1) },
       ...tokenizeMarkdownInline(blockquoteMatch[2]),
     ]
@@ -293,9 +294,9 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
   if (taskListMatch) {
     return [
       { type: 'text', value: taskListMatch[1] },
-      { type: 'marker', value: taskListMatch[2] },
+      { type: 'marker', value: taskListMatch[2], tone: 'list' },
       { type: 'text', value: taskListMatch[3] },
-      { type: 'marker', value: `[${taskListMatch[4].toLowerCase()}]` },
+      { type: 'marker', value: `[${taskListMatch[4].toLowerCase()}]`, tone: 'task' },
       { type: 'text', value: taskListMatch[5] },
       ...tokenizeMarkdownInline(taskListMatch[6]),
     ]
@@ -305,7 +306,7 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
   if (unorderedListMatch) {
     return [
       { type: 'text', value: unorderedListMatch[1] },
-      { type: 'marker', value: unorderedListMatch[2] },
+      { type: 'marker', value: unorderedListMatch[2], tone: 'list' },
       { type: 'text', value: unorderedListMatch[3] },
       ...tokenizeMarkdownInline(unorderedListMatch[4]),
     ]
@@ -315,7 +316,7 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
   if (orderedListMatch) {
     return [
       { type: 'text', value: orderedListMatch[1] },
-      { type: 'marker', value: orderedListMatch[2] },
+      { type: 'marker', value: orderedListMatch[2], tone: 'list' },
       { type: 'text', value: orderedListMatch[3] },
       ...tokenizeMarkdownInline(orderedListMatch[4]),
     ]

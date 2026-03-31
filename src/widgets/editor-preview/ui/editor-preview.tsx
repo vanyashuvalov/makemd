@@ -197,8 +197,27 @@ function renderMarkdownLine(line: string): ReactNode[] {
   // Render a single source line with syntax-colored markdown markers and content so the overlay can behave like a code editor mirror.
   return tokenizeMarkdownLine(line).map((token, index) => {
     if (token.type === 'marker') {
+      const markerClassName =
+        token.tone === 'heading'
+          ? 'font-semibold text-orange-500'
+          : token.tone === 'list'
+            ? 'font-semibold text-emerald-500'
+            : token.tone === 'quote'
+              ? 'font-semibold text-sky-500'
+              : token.tone === 'rule'
+                ? 'font-semibold text-muted-foreground/70'
+                : token.tone === 'task'
+                  ? 'font-semibold text-emerald-500'
+                  : token.tone === 'link'
+                    ? 'font-semibold text-sky-500'
+                    : token.tone === 'image'
+                      ? 'font-semibold text-violet-500'
+                      : token.tone === 'code'
+                        ? 'font-semibold text-violet-500'
+                        : 'font-semibold text-violet-500'
+
       return (
-        <span key={`${index}-marker`} className="text-muted-foreground/60">
+        <span key={`${index}-marker`} className={markerClassName}>
           {token.value}
         </span>
       )
@@ -206,7 +225,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'strong') {
       return (
-        <span key={`${index}-strong`} className="font-semibold text-primary">
+        <span key={`${index}-strong`} className="font-semibold text-violet-500">
           {token.value}
         </span>
       )
@@ -214,7 +233,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'emphasis') {
       return (
-        <span key={`${index}-em`} className="italic text-primary/80">
+        <span key={`${index}-em`} className="italic text-violet-400">
           {token.value}
         </span>
       )
@@ -224,7 +243,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
       return (
         <span
           key={`${index}-code`}
-          className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-primary"
+          className="rounded-md bg-violet-500/10 px-1.5 py-0.5 font-mono text-[0.95em] text-violet-500"
         >
           {token.value}
         </span>
@@ -233,7 +252,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'strike') {
       return (
-        <span key={`${index}-strike`} className="line-through text-primary/70">
+        <span key={`${index}-strike`} className="line-through text-violet-400/80">
           {token.value}
         </span>
       )
@@ -241,7 +260,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'linkText') {
       return (
-        <span key={`${index}-link-text`} className="text-primary underline decoration-primary/30 underline-offset-2">
+        <span key={`${index}-link-text`} className="text-sky-500 underline decoration-sky-500/30 underline-offset-2">
           {token.value}
         </span>
       )
@@ -249,7 +268,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'linkUrl') {
       return (
-        <span key={`${index}-link-url`} className="text-muted-foreground/80">
+        <span key={`${index}-link-url`} className="text-sky-500/70">
           {token.value}
         </span>
       )
@@ -257,7 +276,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'url') {
       return (
-        <span key={`${index}-url`} className="text-primary underline decoration-primary/30 underline-offset-2">
+        <span key={`${index}-url`} className="text-sky-500 underline decoration-sky-500/30 underline-offset-2">
           {token.value}
         </span>
       )
@@ -265,7 +284,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'imageAlt') {
       return (
-        <span key={`${index}-image-alt`} className="text-primary">
+        <span key={`${index}-image-alt`} className="text-violet-500">
           {token.value}
         </span>
       )
@@ -273,7 +292,7 @@ function renderMarkdownLine(line: string): ReactNode[] {
 
     if (token.type === 'imageUrl') {
       return (
-        <span key={`${index}-image-url`} className="text-muted-foreground/80">
+        <span key={`${index}-image-url`} className="text-violet-500/70">
           {token.value}
         </span>
       )
