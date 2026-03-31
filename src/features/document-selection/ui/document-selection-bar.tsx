@@ -23,7 +23,7 @@ export function DocumentSelectionBar({ selectedCount, className }: DocumentSelec
   return (
     <div
       className={cn(
-        'flex h-14 items-center gap-3 rounded-[1rem] bg-sidebar-muted px-4 text-sidebar-foreground',
+        'flex h-14 items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 text-sidebar-foreground',
         className
       )}
     >

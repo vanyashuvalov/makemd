@@ -33,12 +33,12 @@ export function Tabs({
   compact = false,
   className,
 }: TabsProps) {
-  // Render a single row of tabs that can either drive real state or simply mirror a selected visual state.
+  // Render a single-row segmented control so the sidebar and mobile toggle stay visually aligned with the mockup.
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={cn('grid gap-1 rounded-full bg-sidebar-muted p-1', className)}
+      className={cn('grid grid-flow-col auto-cols-fr gap-1 rounded-[1rem] bg-sidebar-muted p-1', className)}
     >
       {items.map((item) => {
         const active = item.value === value
@@ -50,7 +50,7 @@ export function Tabs({
             role="tab"
             aria-selected={active}
             className={cn(
-              'inline-flex min-w-0 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors',
+              'inline-flex min-w-0 items-center justify-center gap-2 rounded-[0.9rem] px-4 py-3 text-sm font-medium transition-colors',
               active
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
                 : 'text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground',

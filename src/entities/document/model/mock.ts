@@ -20,24 +20,24 @@ const authorizedSnapshot: WorkspaceSnapshot = {
     {
       id: 'doc-1',
       title: 'Heading line here',
-      updatedLabel: '23 Mar • 12:32',
+      updatedLabel: `23 Mar \u2022 12:32`,
     },
     {
       id: 'doc-2',
       title: 'Heading line here',
-      updatedLabel: '23 Mar • 12:32',
+      updatedLabel: `23 Mar \u2022 12:32`,
     },
     {
       id: 'doc-3',
       title: 'Heading line here',
-      updatedLabel: '23 Mar • 12:32',
+      updatedLabel: `23 Mar \u2022 12:32`,
       active: true,
       withMenu: true,
     },
     {
       id: 'doc-4',
       title: 'Heading line here',
-      updatedLabel: '23 Mar • 12:32',
+      updatedLabel: `23 Mar \u2022 12:32`,
     },
   ],
   editor: {
@@ -69,12 +69,12 @@ const unauthorizedSnapshot: WorkspaceSnapshot = {
     {
       id: 'doc-1',
       title: 'Heading line here',
-      updatedLabel: '23 Mar • 12:32',
+      updatedLabel: `23 Mar \u2022 12:32`,
     },
     {
       id: 'doc-2',
       title: 'Heading line here',
-      updatedLabel: '23 Mar • 12:32',
+      updatedLabel: `23 Mar \u2022 12:32`,
       active: true,
       withMenu: true,
     },
@@ -107,7 +107,7 @@ const emptySnapshot: WorkspaceSnapshot = {
     {
       id: 'doc-1',
       title: 'Paste text or drop file here',
-      updatedLabel: 'Today • 12:32',
+      updatedLabel: `Today \u2022 12:32`,
       active: true,
       withMenu: true,
     },

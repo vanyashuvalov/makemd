@@ -23,8 +23,8 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
   return (
     <article
       className={cn(
-        'group flex items-start gap-3 rounded-[1rem] px-4 py-4 transition-colors',
-        item.active ? 'bg-white/[0.12]' : 'hover:bg-white/[0.06]'
+        'group flex items-start gap-3 rounded-[0.95rem] px-4 py-3.5 transition-colors',
+        item.active ? 'bg-white/[0.1]' : 'hover:bg-white/[0.05]'
       )}
     >
       {selectionMode ? (
@@ -39,10 +39,10 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
       )}
 
       <div className="min-w-0 flex-1">
-        <h3 className="truncate text-sm font-medium leading-5 text-sidebar-foreground">
+        <h3 className="truncate text-[15px] font-medium leading-5 text-sidebar-foreground">
           {item.title}
         </h3>
-        <p className="mt-1 text-xs leading-4 text-sidebar-muted-foreground">
+        <p className="mt-1 text-[11px] leading-4 text-sidebar-muted-foreground">
           {item.updatedLabel}
         </p>
       </div>
@@ -51,7 +51,7 @@ export function DocumentListItem({ item, selectionMode = false }: DocumentListIt
         <IconButton
           aria-label={`Open actions for ${item.title}`}
           size="sm"
-          variant={item.active ? 'ghost' : 'ghost'}
+          variant="ghost"
           className={cn(
             'mt-0.5 opacity-100 transition-opacity',
             item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'

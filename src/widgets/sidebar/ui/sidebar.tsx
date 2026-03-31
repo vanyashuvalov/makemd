@@ -5,7 +5,7 @@
  * What it does: composes the account header, primary action, tabs, warnings, selection actions, history list, and footer.
  * Connected to: `WorkspaceSnapshot`, document entities, and the editor/preview shell.
  */
-import { ClipboardList, HelpCircle, History, LogIn } from 'lucide-react'
+import { AlertTriangle, Check, ClipboardList, HelpCircle, History, LogIn } from 'lucide-react'
 import { Alert } from '@/shared/ui/alert'
 import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
@@ -18,10 +18,12 @@ import type { WorkspaceSnapshot } from '@/entities/document/model/types'
 
 export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
   const hasSelection = Boolean(snapshot.selection?.selectedCount && snapshot.selection.selectedCount > 0)
+  const helperText = snapshot.selection?.helperText ?? 'Hold Ctrl to select many'
+  const helperTail = helperText.replace(/^Hold Ctrl\s*/, '') || helperText
 
-  // Render the full navigation rail with the same dense, dark treatment used in the Figma side-bar states.
+  // Render the dense navigation rail used in the Figma side-bar states.
   return (
-    <aside className="flex h-full min-h-[42rem] w-full max-w-[22.5rem] flex-col overflow-hidden rounded-[1.75rem] border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[0_30px_80px_rgba(15,15,15,0.26)]">
+    <aside className="flex h-full min-h-[42rem] w-full max-w-[22.5rem] flex-col overflow-hidden rounded-[1.5rem] border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[0_18px_44px_rgba(15,15,15,0.18)]">
       <div className="flex-1 space-y-6 px-6 py-6">
         <div className="flex items-center gap-3">
           {snapshot.account ? (
@@ -35,8 +37,13 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
               </div>
             </>
           ) : (
-            <Button variant="ghost" className="w-full justify-center rounded-full bg-transparent text-sidebar-foreground hover:bg-white/[0.06]">
-              <LogIn className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              className="h-10 w-fit justify-start rounded-[0.9rem] border border-sidebar-border/70 bg-sidebar-muted/30 px-3 text-sidebar-foreground hover:bg-white/[0.06]"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-muted text-sidebar-foreground">
+                <LogIn className="h-3.5 w-3.5" />
+              </span>
               Sign up
             </Button>
           )}
@@ -59,7 +66,8 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             tone="warning"
             title={snapshot.warning.title}
             description={snapshot.warning.description}
-            className="border-none bg-[#3b311c]"
+            icon={<AlertTriangle className="h-4 w-4 text-[#f2c46f]" />}
+            className="border-[#5a4823] bg-[#40321b]"
           />
         ) : null}
 
@@ -67,14 +75,14 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <div className="flex items-center gap-3 rounded-[1rem] border border-sidebar-border bg-sidebar-muted px-4 py-3 text-sm text-sidebar-foreground">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-[0.4rem] border border-sidebar-border bg-sidebar text-xs font-medium">
-                <span className="mt-px">✓</span>
+                <Check className="h-3.5 w-3.5" />
               </div>
               <span className="font-medium">Hold</span>
             </div>
             <span className="rounded-full border border-sidebar-border bg-sidebar px-2 py-1 font-mono text-xs">
               Ctrl
             </span>
-            <span className="text-sidebar-muted-foreground">{snapshot.selection.helperText.replace('Hold Ctrl ', '')}</span>
+            <span className="text-sidebar-muted-foreground">{helperTail}</span>
           </div>
         ) : null}
 
@@ -88,7 +96,7 @@ export function Sidebar({ snapshot }: { snapshot: WorkspaceSnapshot }) {
       <div className="space-y-4 px-6 py-4">
         <Separator className="bg-sidebar-border" />
         <div className="flex items-center justify-between text-sm text-sidebar-muted-foreground">
-          <span>makemd © 2026</span>
+          <span>makemd &copy; 2026</span>
           <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-sidebar-foreground hover:bg-white/[0.06]">
             <HelpCircle className="h-4 w-4" />
             Help

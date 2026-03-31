@@ -20,7 +20,7 @@ export function EditorPreview({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
   // Split the mockup into a desktop paper surface and a compact mobile toggle so the same data works on both viewports.
   return (
-    <section className="relative flex min-h-full flex-1 overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-[0_30px_80px_rgba(20,20,20,0.08)]">
+    <section className="relative flex min-h-full flex-1 overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-[0_16px_40px_rgba(20,20,20,0.08)]">
       <div className="hidden min-w-0 flex-1 md:flex">
         <div className="flex min-w-0 flex-1">
           <MarkdownPane lines={snapshot.editor.lines} />
@@ -78,7 +78,7 @@ function MarkdownPane({
   // Render the markdown source as a line-numbered code surface, matching the left side of the desktop Figma board.
   return (
     <div className={cn('grid min-h-full w-full grid-cols-[42px_minmax(0,1fr)] bg-card', mobile && 'grid-cols-[34px_minmax(0,1fr)]')}>
-      <div className="border-r border-border px-2 py-8 font-mono text-sm leading-6 text-muted-foreground">
+      <div className="border-r border-border px-2 py-8 font-mono text-[13px] leading-6 text-muted-foreground">
         {lines.map((_, index) => (
           <div key={index} className="h-6">
             {index + 1}
@@ -86,7 +86,7 @@ function MarkdownPane({
         ))}
       </div>
       <div className="px-4 py-8">
-        <pre className={cn('whitespace-pre-wrap font-mono text-[15px] leading-6 text-foreground', mobile ? 'max-w-[22rem]' : 'max-w-[42rem]')}>
+        <pre className={cn('whitespace-pre-wrap font-mono text-[15px] leading-6 text-foreground', mobile ? 'max-w-[22rem]' : 'max-w-[44rem]')}>
           {lines.join('\n')}
         </pre>
       </div>
@@ -109,12 +109,12 @@ function PreviewPane({
   return (
     <div className={cn('w-full bg-card px-8 py-8', mobile && 'px-6 py-6')}>
       <div className="max-w-[43rem]">
-        <h1 className={cn('font-sans text-4xl font-semibold tracking-tight text-foreground', mobile && 'text-3xl')}>
+        <h1 className={cn('font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground', mobile && 'text-[2.5rem]')}>
           {title}
         </h1>
-        {note ? <p className="mt-2 text-xs font-medium text-muted-foreground">{note}</p> : null}
+        {note ? <p className="mt-2 text-[11px] font-medium leading-4 text-muted-foreground">{note}</p> : null}
         {note ? <div className="mt-3 h-px bg-border" /> : null}
-        <div className="mt-3 space-y-3 text-sm leading-6 text-foreground">
+        <div className="mt-4 space-y-3.5 text-sm leading-6 text-foreground">
           {body.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
