@@ -10,20 +10,18 @@ import { cva } from 'class-variance-authority'
 export const buttonVariants = cva(
   [
     'box-border inline-flex items-center justify-center gap-2 whitespace-nowrap',
-    'rounded-full text-sm font-medium transition-[transform,background-color,color,border-color] duration-150',
-    'active:translate-y-px active:scale-[0.99]',
+    'rounded-full text-sm font-medium transition-[background-color,color,border-color] duration-150',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
     'disabled:pointer-events-none disabled:opacity-50',
   ].join(' '),
   {
     variants: {
       variant: {
-        primary:
-          'border border-white/20 bg-[#3C64FF] text-white hover:-translate-y-px hover:bg-[#355cf2] active:bg-[#3458ec]',
-        secondary: 'bg-secondary text-secondary-foreground hover:-translate-y-px hover:bg-secondary/80',
+        primary: 'border border-white/20 bg-[#3C64FF] text-white hover:bg-[#355cf2] active:bg-[#3458ec]',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'bg-transparent text-foreground hover:bg-muted active:bg-muted/80',
-        outline: 'border border-border bg-card text-card-foreground hover:-translate-y-px hover:bg-muted active:bg-muted/80',
-        sidebar: 'bg-sidebar-muted text-sidebar-foreground hover:-translate-y-px hover:bg-sidebar-border active:bg-sidebar-border/90',
+        outline: 'border border-border bg-card text-card-foreground hover:bg-muted active:bg-muted/80',
+        sidebar: 'bg-sidebar-muted text-sidebar-foreground hover:bg-sidebar-border active:bg-sidebar-border/90',
         text:
           'bg-transparent text-sidebar-foreground hover:bg-[color:var(--color-sidebar-icon)] active:bg-[color:var(--color-sidebar-icon-active)]',
       },

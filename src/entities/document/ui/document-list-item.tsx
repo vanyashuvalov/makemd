@@ -27,7 +27,7 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
   return (
     <article
       className={cn(
-        'group flex min-h-[67px] items-center gap-3 rounded-[12px] px-4 py-3 transition-[transform,background-color] duration-150 hover:-translate-y-px active:translate-x-px active:translate-y-px',
+        'group flex min-h-[67px] items-center gap-3 rounded-[12px] px-4 py-3 transition-[background-color] duration-150',
         rowTone,
         !item.selected && !item.active ? 'hover:bg-white/[0.05] active:bg-white/[0.08]' : null
       )}
