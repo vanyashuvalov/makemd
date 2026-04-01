@@ -49,7 +49,7 @@ const markdownSyntaxTheme = HighlightStyle.define([
   { tag: tags.list, color: 'var(--color-syntax-list)' },
   { tag: tags.quote, color: 'var(--color-syntax-quote)' },
   { tag: tags.monospace, color: 'var(--color-syntax-code)', backgroundColor: 'color-mix(in srgb, var(--color-syntax-code) 10%, transparent)', borderRadius: '0.375rem' },
-  { tag: tags.processingInstruction, color: 'var(--color-syntax-list)' },
+  { tag: tags.processingInstruction, color: 'var(--color-syntax-marker)', fontWeight: '600' },
   { tag: tags.contentSeparator, color: 'color-mix(in srgb, var(--color-syntax-rule) 70%, transparent)' },
 ])
 
