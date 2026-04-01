@@ -205,7 +205,7 @@ const markdownComponents: Components = {
               </span>
             </div>
             <div className="overflow-x-auto px-4 py-3">
-              <code className="font-mono text-[0.95rem] leading-6 text-foreground">
+              <code className="block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6 text-foreground">
                 {child.props.children}
               </code>
             </div>
