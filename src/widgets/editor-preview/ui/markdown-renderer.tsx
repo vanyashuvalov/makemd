@@ -90,7 +90,15 @@ const markdownComponents: Components = {
     </blockquote>
   ),
   ul: ({ children, ...props }) => (
-    <ul {...props} className="my-0 list-disc space-y-2 pl-6 text-sm leading-7 text-foreground">
+    <ul
+      {...props}
+      className={cn(
+        'my-0 space-y-2 pl-6 text-sm leading-7 text-foreground',
+        typeof props.className === 'string' && props.className.includes('contains-task-list')
+          ? 'list-none pl-0'
+          : 'list-disc'
+      )}
+    >
       {children}
     </ul>
   ),
@@ -108,7 +116,7 @@ const markdownComponents: Components = {
         {...props}
         className={cn(
           'pl-1',
-          isTaskListItem && 'list-none flex items-start gap-2 pl-0 [&>p]:my-0'
+          isTaskListItem && 'list-none flex items-start gap-2 pl-0 leading-7 [&>p]:my-0'
         )}
       >
         {children}
@@ -191,7 +199,7 @@ const markdownComponents: Components = {
 
         return (
           <div className="my-4 overflow-hidden rounded-[14px] border border-border bg-muted">
-            <div className="border-b border-border/70 px-4 py-2">
+            <div className="px-4 pt-3">
               <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-muted-foreground">
                 {codeLanguage}
               </span>
@@ -213,13 +221,16 @@ const markdownComponents: Components = {
     )
   },
   input: ({ checked, ...props }) => (
-    <input
+    <span
       {...props}
-      type="checkbox"
-      checked={checked}
-      readOnly
-      className="mr-2 h-4 w-4 translate-y-[1px] rounded border-black/50 accent-black"
-    />
+      aria-hidden="true"
+      className={cn(
+        'mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border border-black/50 bg-transparent',
+        checked && 'border-black bg-black'
+      )}
+    >
+      {checked ? <span className="text-[0.7rem] leading-none text-white">✓</span> : null}
+    </span>
   ),
   img: ({ alt, src, ...props }) => (
     // eslint-disable-next-line @next/next/no-img-element
