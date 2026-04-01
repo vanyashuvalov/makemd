@@ -17,13 +17,13 @@ import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { cn } from '@/shared/lib/cn'
 
 const DESKTOP_SIDEBAR_MIN_WIDTH = 240
-const DESKTOP_SIDEBAR_INITIAL_WIDTH = 384
+const DESKTOP_SIDEBAR_INITIAL_WIDTH = 360
+const DESKTOP_SIDEBAR_COMPACT_THRESHOLD = 280
+const DESKTOP_SIDEBAR_MAX_WIDTH = 360
 
-function clampSidebarWidth(width: number, viewportWidth: number) {
-  // Keep the sidebar wide enough to remain useful, but cap it at half the available viewport so the editor and preview always keep room.
-  const maxWidth = Math.max(DESKTOP_SIDEBAR_MIN_WIDTH, Math.floor(viewportWidth * 0.5))
-
-  return Math.min(maxWidth, Math.max(DESKTOP_SIDEBAR_MIN_WIDTH, width))
+function clampSidebarWidth(width: number) {
+  // Keep the sidebar within the fixed Figma-inspired bounds so it can get compact without swallowing the workspace.
+  return Math.min(DESKTOP_SIDEBAR_MAX_WIDTH, Math.max(DESKTOP_SIDEBAR_MIN_WIDTH, width))
 }
 
 export function WorkspaceShellClient({
@@ -46,7 +46,7 @@ export function WorkspaceShellClient({
   // Initialize the sidebar width from the current viewport so the desktop split starts close to the Figma ratio.
   useEffect(() => {
     const syncSidebarWidth = () => {
-      setSidebarWidth((currentWidth) => clampSidebarWidth(currentWidth, window.innerWidth))
+      setSidebarWidth((currentWidth) => clampSidebarWidth(currentWidth))
     }
 
     syncSidebarWidth()
@@ -70,7 +70,7 @@ export function WorkspaceShellClient({
         return
       }
 
-      setSidebarWidth(clampSidebarWidth(dragState.startWidth + (event.clientX - dragState.startX), window.innerWidth))
+      setSidebarWidth(clampSidebarWidth(dragState.startWidth + (event.clientX - dragState.startX)))
     }
 
     const stopResizing = () => {
@@ -112,6 +112,7 @@ export function WorkspaceShellClient({
             helperText={snapshot.selection?.helperText ?? 'Hold Ctrl to select many'}
             onToggleAllSelection={setAllSelected}
             onToggleDocument={toggleDocument}
+            compact={sidebarWidth <= DESKTOP_SIDEBAR_COMPACT_THRESHOLD}
           />
         </div>
 
