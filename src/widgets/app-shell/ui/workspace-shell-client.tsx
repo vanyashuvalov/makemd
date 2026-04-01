@@ -16,12 +16,14 @@ import { useDocumentSelection } from '@/features/document-selection/model/use-do
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { cn } from '@/shared/lib/cn'
 
-const DESKTOP_SIDEBAR_MIN_WIDTH = 280
-const DESKTOP_SIDEBAR_MAX_WIDTH = 480
+const DESKTOP_SIDEBAR_MIN_WIDTH = 240
 const DESKTOP_SIDEBAR_INITIAL_WIDTH = 384
 
-function clampSidebarWidth(width: number) {
-  return Math.min(DESKTOP_SIDEBAR_MAX_WIDTH, Math.max(DESKTOP_SIDEBAR_MIN_WIDTH, width))
+function clampSidebarWidth(width: number, viewportWidth: number) {
+  // Keep the sidebar wide enough to remain useful, but cap it at half the available viewport so the editor and preview always keep room.
+  const maxWidth = Math.max(DESKTOP_SIDEBAR_MIN_WIDTH, Math.floor(viewportWidth * 0.5))
+
+  return Math.min(maxWidth, Math.max(DESKTOP_SIDEBAR_MIN_WIDTH, width))
 }
 
 export function WorkspaceShellClient({
@@ -44,7 +46,7 @@ export function WorkspaceShellClient({
   // Initialize the sidebar width from the current viewport so the desktop split starts close to the Figma ratio.
   useEffect(() => {
     const syncSidebarWidth = () => {
-      setSidebarWidth((currentWidth) => clampSidebarWidth(currentWidth))
+      setSidebarWidth((currentWidth) => clampSidebarWidth(currentWidth, window.innerWidth))
     }
 
     syncSidebarWidth()
@@ -68,7 +70,7 @@ export function WorkspaceShellClient({
         return
       }
 
-      setSidebarWidth(clampSidebarWidth(dragState.startWidth + (event.clientX - dragState.startX)))
+      setSidebarWidth(clampSidebarWidth(dragState.startWidth + (event.clientX - dragState.startX), window.innerWidth))
     }
 
     const stopResizing = () => {
