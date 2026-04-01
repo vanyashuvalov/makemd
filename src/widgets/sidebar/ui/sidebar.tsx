@@ -17,7 +17,6 @@ import { Separator } from '@/shared/ui/separator'
 import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
 import { DocumentList } from './document-list'
 import type { DocumentRecord, WorkspaceSnapshot } from '@/entities/document/model/types'
-import { cn } from '@/shared/lib/cn'
 import {
   IconAlertTriangle,
   IconClipboardList,
@@ -35,7 +34,6 @@ export interface SidebarProps {
   helperText?: string
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
-  compact?: boolean
 }
 
 export function Sidebar({
@@ -47,23 +45,20 @@ export function Sidebar({
   helperText = 'Hold Ctrl to select many',
   onToggleAllSelection,
   onToggleDocument,
-  compact = false,
 }: SidebarProps) {
-  // Render the dense navigation rail used in the Figma side-bar states, switching to a more compact arrangement when the rail gets narrow.
+  // Render the fixed-width navigation rail used in the Figma sidebar states without a compact or resizable variant.
   return (
     <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground">
-      <div className={cn('flex-1', compact ? 'space-y-4 px-4 py-4' : 'space-y-6 px-6 py-6')}>
-        <div className={cn('flex items-center', compact ? 'gap-2' : 'gap-3')}>
+      <div className="flex-1 space-y-6 px-6 py-6">
+        <div className="flex items-center gap-3">
           {snapshot.account ? (
             <>
-              <Avatar name={snapshot.account.name} className={compact ? 'h-9 w-9' : 'h-10 w-10'} />
+              <Avatar name={snapshot.account.name} className="h-10 w-10" />
               <div className="min-w-0">
-                <p className={cn('truncate font-medium text-sidebar-foreground', compact ? 'text-[0.8rem]' : 'text-sm')}>
+                <p className="truncate text-sm font-medium text-sidebar-foreground">
                   {snapshot.account.email}
                 </p>
-                <p className={cn('text-sidebar-muted-foreground', compact ? 'text-[0.68rem]' : 'text-xs')}>
-                  Signed in
-                </p>
+                <p className="text-xs text-sidebar-muted-foreground">Signed in</p>
               </div>
             </>
           ) : (
@@ -100,7 +95,7 @@ export function Sidebar({
             title={snapshot.warning.title}
             description={snapshot.warning.description}
             icon={<Icon icon={IconAlertTriangle} size="sm" className="text-[#f2c46f]" />}
-            className={compact ? 'border-[#5a4823] bg-[#40321b] px-4 py-3' : 'border-[#5a4823] bg-[#40321b]'}
+            className="border-[#5a4823] bg-[#40321b]"
           />
         ) : null}
 
@@ -115,7 +110,7 @@ export function Sidebar({
         />
       </div>
 
-      <div className={cn('space-y-4', compact ? 'px-4 py-3' : 'px-6 py-4')}>
+      <div className="space-y-4 px-6 py-4">
         <Separator className="bg-sidebar-border" />
         <div className="flex items-center justify-between text-sm text-sidebar-muted-foreground">
           <span>makemd &copy; 2026</span>
