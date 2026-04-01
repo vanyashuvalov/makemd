@@ -5,6 +5,7 @@
  * What it does: renders markdown through react-markdown with GFM support and applies the workspace visual system to every block type.
  * Connected to: `EditorPreview`, the markdown tokenizer shared with the source mirror, and the export-ready document preview.
  */
+import { Children, isValidElement, type ReactElement, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/shared/lib/cn'
@@ -98,11 +99,22 @@ const markdownComponents: Components = {
       {children}
     </ol>
   ),
-  li: ({ children, ...props }) => (
-    <li {...props} className="pl-1">
-      {children}
-    </li>
-  ),
+  li: ({ children, className, ...props }) => {
+    // Flatten task list items so GFM checkboxes render without the default bullet marker and keep the checkbox aligned with the text.
+    const isTaskListItem = typeof className === 'string' && className.includes('task-list-item')
+
+    return (
+      <li
+        {...props}
+        className={cn(
+          'pl-1',
+          isTaskListItem && 'list-none flex items-start gap-2 pl-0 [&>p]:my-0'
+        )}
+      >
+        {children}
+      </li>
+    )
+  },
   table: ({ children, ...props }) => (
     <div className="my-4 overflow-x-auto">
       <table {...props} className="w-full border-collapse text-sm">
@@ -166,18 +178,47 @@ const markdownComponents: Components = {
       </code>
     )
   },
-  pre: ({ children, ...props }) => (
-    <pre {...props} className="my-4 overflow-x-auto rounded-[14px] bg-muted p-0">
-      {children}
-    </pre>
-  ),
+  pre: ({ children, ...props }) => {
+    // Render fenced code blocks with a language chip so the preview stays informative without adding extra chrome to inline code.
+    const child = Children.only(children) as ReactElement<{ className?: string; children?: ReactNode }>
+
+    if (isValidElement(child)) {
+      const codeClassName = typeof child.props.className === 'string' ? child.props.className : ''
+      const codeLanguageMatch = /language-([\w-]+)/.exec(codeClassName)
+
+      if (codeLanguageMatch) {
+        const codeLanguage = codeLanguageMatch[1]
+
+        return (
+          <div className="my-4 overflow-hidden rounded-[14px] border border-border bg-muted">
+            <div className="border-b border-border/70 px-4 py-2">
+              <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-muted-foreground">
+                {codeLanguage}
+              </span>
+            </div>
+            <div className="overflow-x-auto px-4 py-3">
+              <code className="font-mono text-[0.95rem] leading-6 text-foreground">
+                {child.props.children}
+              </code>
+            </div>
+          </div>
+        )
+      }
+    }
+
+    return (
+      <pre {...props} className="my-4 overflow-x-auto rounded-[14px] bg-muted p-0">
+        {children}
+      </pre>
+    )
+  },
   input: ({ checked, ...props }) => (
     <input
       {...props}
       type="checkbox"
       checked={checked}
       readOnly
-      className="mr-2 h-4 w-4 translate-y-[1px] rounded border-border accent-primary"
+      className="mr-2 h-4 w-4 translate-y-[1px] rounded border-black/50 accent-black"
     />
   ),
   img: ({ alt, src, ...props }) => (

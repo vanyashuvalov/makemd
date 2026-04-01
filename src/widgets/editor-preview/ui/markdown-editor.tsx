@@ -83,6 +83,7 @@ function createMarkdownEditorTheme(isMobile: boolean) {
       },
       '.cm-lineNumbers .cm-gutterElement': {
         minWidth: '2.5rem',
+        opacity: '0.6',
       },
       '.cm-placeholder': {
         color: 'var(--color-muted-foreground)',
