@@ -72,6 +72,33 @@ export async function copyTextToClipboard(text: string) {
   await navigator.clipboard.writeText(text)
 }
 
+// Export a rendered markdown preview surface to a PDF download so row actions and the preview chrome can share the same visual output path.
+export async function downloadElementAsPdf(element: HTMLElement, fileName: string) {
+  const { default: html2pdf } = await import('html2pdf.js')
+
+  await html2pdf()
+    .set({
+      filename: fileName,
+      margin: [12, 12, 12, 12],
+      image: {
+        type: 'jpeg',
+        quality: 0.98,
+      },
+      html2canvas: {
+        scale: Math.min(window.devicePixelRatio || 2, 2),
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+      },
+    })
+    .from(element)
+    .save()
+}
+
 // Trigger a file download from an already prepared blob so the current markdown download and the future PDF export can share the same transport path.
 export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   const url = URL.createObjectURL(blob)

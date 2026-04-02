@@ -8,10 +8,11 @@
  * Connected to: `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, `Sidebar`, `AuthModal`, and the workspace snapshot model.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
 import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
+import { PdfPreviewSurface } from '@/widgets/editor-preview/ui/pdf-preview-surface'
 import type {
   DocumentRecord,
   WorkspaceSnapshot,
@@ -22,6 +23,7 @@ import {
   buildDocumentMarkdownBundle,
   copyTextToClipboard,
   downloadBlob,
+  downloadElementAsPdf,
   getDocumentExportTitle,
 } from '@/features/document-actions/model/document-actions'
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
@@ -41,6 +43,11 @@ function createDocumentTitle() {
 
 function createDocumentMarkdown(title: string) {
   return `# ${title}\n`
+}
+
+// Allocate a stable toast identifier so the workspace can add and remove transient feedback without colliding across renders.
+function createToastId() {
+  return 'toast-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
 }
 
 // Restore a starter document when the last file is deleted so the workspace never falls into an empty dead-end state.
@@ -85,7 +92,9 @@ export function WorkspaceShellClient({
   const selectedDocuments = documents.filter((document) => document.selected)
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string } | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
+  const pdfExportRef = useRef<HTMLDivElement | null>(null)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
   const activeExportTitle = getDocumentExportTitle(
     activeDocument,
@@ -93,9 +102,6 @@ export function WorkspaceShellClient({
     snapshot.prompt?.title ?? createDocumentTitle()
   )
   const activeExportFileName = `${activeExportTitle}.pdf`
-
-  // Allocate a stable toast identifier so the stack can add and remove guest-limit feedback without clashing with other transient messages.
-  const createToastId = () => 'toast-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
 
   // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
   const dismissToast = (toastId: string) => {
@@ -110,7 +116,7 @@ export function WorkspaceShellClient({
   }
 
   // Add a new toast to the shared viewport and schedule its automatic dismissal so guest-limit feedback feels immediate but non-blocking.
-  const showToast = (toast: Omit<ToastItem, 'id'>) => {
+  const showToast = useCallback((toast: Omit<ToastItem, 'id'>) => {
     const toastId = createToastId()
 
     setToasts((current) => current.concat({ id: toastId, ...toast }))
@@ -121,7 +127,7 @@ export function WorkspaceShellClient({
     }, 3500)
 
     toastTimersRef.current.set(toastId, timeoutId)
-  }
+  }, [])
 
   // Clean up any scheduled toast timers when the controller unmounts so the guest warning queue never leaks background work.
   useEffect(() => {
@@ -132,6 +138,42 @@ export function WorkspaceShellClient({
       timers.clear()
     }
   }, [])
+
+  // Trigger the PDF export once the hidden preview surface has mounted so html2pdf captures the same rendered markdown the user sees in the right pane.
+  useEffect(() => {
+    if (!pdfExportRequest || !pdfExportRef.current) {
+      return
+    }
+
+    let cancelled = false
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (cancelled || !pdfExportRef.current) {
+        return
+      }
+
+      void downloadElementAsPdf(pdfExportRef.current, pdfExportRequest.fileName)
+        .catch(() => {
+          if (!cancelled) {
+            showToast({
+              tone: 'warning',
+              title: 'PDF export failed',
+              description: 'Unable to generate the PDF right now.',
+            })
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setPdfExportRequest(null)
+          }
+        })
+    })
+
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [pdfExportRequest, showToast])
 
   // Notify guests when they hit the local document cap so the New action explains why it no longer creates files.
   const showGuestLimitToast = () => {
@@ -231,7 +273,7 @@ export function WorkspaceShellClient({
     setMarkdown(nextMarkdown)
   }
 
-  // Download the provided documents through the shared blob transport so the current markdown export and the future PDF export can share one path.
+  // Download the provided documents through the shared blob transport so multi-select actions can still export a merged markdown bundle.
   const downloadDocuments = (documentIds: string[]) => {
     const targetDocuments = documents.filter((document) => documentIds.includes(document.id))
 
@@ -244,6 +286,21 @@ export function WorkspaceShellClient({
     const blob = new Blob([markdownSource], { type: 'text/markdown;charset=utf-8' })
 
     downloadBlob({ blob, fileName })
+  }
+
+  // Prepare a PDF export request for one document so the row menu and the export chip can render the same formatted preview into a downloadable file.
+  const requestDocumentPdfExport = (document: DocumentRecord | undefined) => {
+    if (!document) {
+      return
+    }
+
+    const markdownSource = document.markdown ?? ''
+    const exportTitle = getDocumentExportTitle(document, markdownSource, document.title ?? createDocumentTitle())
+
+    setPdfExportRequest({
+      markdown: markdownSource,
+      fileName: `${exportTitle}.pdf`,
+    })
   }
 
   // Copy the provided documents as a single markdown bundle so the row menu and the bulk rail share the same clipboard contract.
@@ -285,13 +342,20 @@ export function WorkspaceShellClient({
     deleteDocuments(selectedDocuments.map((document) => document.id))
   }
 
-  // Download a single document by delegating to the shared bulk export path so the future PDF switch remains a one-place change.
+  // Download a single document as PDF so the row menu captures the formatted preview instead of a raw markdown bundle.
   const handleDownloadDocument = (documentId: string) => {
-    downloadDocuments([documentId])
+    const targetDocument = documents.find((document) => document.id === documentId)
+
+    requestDocumentPdfExport(targetDocument)
   }
 
-  // Download the current selected set by delegating to the same transport path as the row action.
+  // Download the current selected set, falling back to the legacy markdown bundle when more than one document is selected.
   const handleDownloadSelectedDocuments = () => {
+    if (selectedDocuments.length === 1) {
+      requestDocumentPdfExport(selectedDocuments[0])
+      return
+    }
+
     downloadDocuments(selectedDocuments.map((document) => document.id))
   }
 
@@ -303,6 +367,15 @@ export function WorkspaceShellClient({
   // Copy the currently selected markdown rows by delegating to the same clipboard helper as the row action.
   const handleCopyMarkdownSelectedDocuments = async () => {
     await copyMarkdownDocuments(selectedDocuments.map((document) => document.id))
+  }
+
+  // Copy the active document markdown so the export toolbar can reuse the same clipboard contract as the sidebar actions.
+  const handleCopyActiveDocument = async () => {
+    if (!activeDocument) {
+      return
+    }
+
+    await copyMarkdownDocuments([activeDocument.id])
   }
 
   // Copy a single shareable link by delegating to the shared link bundle path.
@@ -369,6 +442,11 @@ export function WorkspaceShellClient({
     setSidebarSection('history')
   }
 
+  // Export the currently active document to a PDF using the same formatted preview surface the user sees in the right column.
+  const handleDownloadActiveDocument = () => {
+    requestDocumentPdfExport(activeDocument)
+  }
+
   const handleMarkdownChange = (nextMarkdown: string) => {
     syncMarkdownToActiveDocument(nextMarkdown)
   }
@@ -418,7 +496,12 @@ export function WorkspaceShellClient({
 
             <div className="relative min-h-0 min-w-0">
               <PreviewPane markdown={markdown} />
-              <ExportBar fileName={activeExportFileName} onFileNameChange={handleActiveDocumentExportTitleChange} />
+              <ExportBar
+                fileName={activeExportFileName}
+                onFileNameChange={handleActiveDocumentExportTitleChange}
+                onCopyMarkdown={handleCopyActiveDocument}
+                onDownloadPdf={handleDownloadActiveDocument}
+              />
             </div>
           </div>
         </div>
@@ -427,9 +510,18 @@ export function WorkspaceShellClient({
         <EditorPreview
           markdown={markdown}
           onMarkdownChange={handleMarkdownChange}
+          onDownloadPdf={handleDownloadActiveDocument}
           placeholder={snapshot.prompt?.title ?? 'Start writing markdown'}
         />
       </div>
+
+      {pdfExportRequest ? (
+        <div className="pointer-events-none fixed left-[-10000px] top-0 w-[816px]">
+          <div ref={pdfExportRef}>
+            <PdfPreviewSurface markdown={pdfExportRequest.markdown} />
+          </div>
+        </div>
+      ) : null}
 
       <ToastStack items={toasts} onDismiss={dismissToast} />
 

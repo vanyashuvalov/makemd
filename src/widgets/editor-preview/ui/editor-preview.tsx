@@ -19,10 +19,12 @@ import { MarkdownRenderer } from './markdown-renderer'
 export function EditorPreview({
   markdown,
   onMarkdownChange,
+  onDownloadPdf,
   placeholder,
 }: {
   markdown: string
   onMarkdownChange: (value: string) => void
+  onDownloadPdf?: () => void
   placeholder: string
 }) {
   const [mobilePanel, setMobilePanel] = useState<'markdown' | 'preview'>('markdown')
@@ -44,7 +46,7 @@ export function EditorPreview({
           onValueChange={(value) => setMobilePanel(value as 'markdown' | 'preview')}
           className="flex-1"
         />
-        <IconButton aria-label="Download PDF" variant="primary" size="sm">
+        <IconButton aria-label="Download PDF" variant="primary" size="sm" onClick={onDownloadPdf}>
           <Icon icon={IconDownload} size="sm" />
         </IconButton>
       </div>

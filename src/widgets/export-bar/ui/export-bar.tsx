@@ -16,10 +16,14 @@ import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
 export function ExportBar({
   fileName,
   onFileNameChange,
+  onCopyMarkdown,
+  onDownloadPdf,
   className,
 }: {
   fileName: string
   onFileNameChange: (nextBaseName: string) => void
+  onCopyMarkdown?: () => void
+  onDownloadPdf?: () => void
   className?: string
 }) {
   const pdfSuffixMatch = /\.pdf$/i.exec(fileName)
@@ -99,10 +103,22 @@ export function ExportBar({
           <Icon icon={IconPencil} size="md" tone="white" />
         </button>
       )}
-      <IconButton aria-label="Copy document" variant="outline" size="default" className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]">
+      <IconButton
+        aria-label="Copy document"
+        variant="outline"
+        size="default"
+        className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
+        onClick={onCopyMarkdown}
+      >
         <Icon icon={IconCopy} size="md" tone="white" />
       </IconButton>
-      <IconButton aria-label="Download PDF" variant="outline" size="default" className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]">
+      <IconButton
+        aria-label="Download PDF"
+        variant="outline"
+        size="default"
+        className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
+        onClick={onDownloadPdf}
+      >
         <Icon icon={IconDownload} size="md" tone="white" />
       </IconButton>
     </div>
