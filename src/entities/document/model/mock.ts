@@ -72,7 +72,7 @@ const authorizedSnapshot: WorkspaceSnapshot = {
 const unauthorizedSnapshot: WorkspaceSnapshot = {
   state: 'unauthorized',
   prompt: {
-    title: 'Sign up',
+    title: 'Paste text or drop file here',
   },
   warning: {
     title: 'Closing current window will discard unsaved files!',
