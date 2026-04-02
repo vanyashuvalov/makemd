@@ -67,33 +67,56 @@ function createMarkdownComponents(exportMode: boolean): Components {
         {children}
       </em>
     ),
-    del: ({ children, ...props }) => (
-      <del {...props} className="text-foreground decoration-foreground/60">
-        {children}
-      </del>
-    ),
-    a: ({ children, href, ...props }) => (
-      <a
-        {...props}
-        href={href}
-        className={cn(
-          'text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80',
-          exportMode && 'break-words [overflow-wrap:anywhere]'
-        )}
-        target={href?.startsWith('http') ? '_blank' : undefined}
-        rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
-      >
-        {children}
-      </a>
-    ),
-    blockquote: ({ children, ...props }) => (
-      <blockquote
-        {...props}
-        className={cn('border-l-2 border-border pl-4 text-foreground/90', exportMode && 'break-words [overflow-wrap:anywhere]')}
-      >
-        {children}
-      </blockquote>
-    ),
+    del: ({ children, ...props }) =>
+      exportMode ? (
+        <del {...props} className="text-foreground line-through" style={{ textDecorationColor: '#6d6860' }}>
+          {children}
+        </del>
+      ) : (
+        <del {...props} className="text-foreground decoration-foreground/60">
+          {children}
+        </del>
+      ),
+    a: ({ children, href, ...props }) =>
+      exportMode ? (
+        <a
+          {...props}
+          href={href}
+          className="break-words underline underline-offset-4 [overflow-wrap:anywhere]"
+          style={{ color: '#0369a1', textDecorationColor: '#0369a1' }}
+          target={href?.startsWith('http') ? '_blank' : undefined}
+          rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
+        >
+          {children}
+        </a>
+      ) : (
+        <a
+          {...props}
+          href={href}
+          className="text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80"
+          target={href?.startsWith('http') ? '_blank' : undefined}
+          rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
+        >
+          {children}
+        </a>
+      ),
+    blockquote: ({ children, ...props }) =>
+      exportMode ? (
+        <blockquote
+          {...props}
+          className="break-words border-l-2 pl-4 text-foreground [overflow-wrap:anywhere]"
+          style={{ borderLeftColor: '#d6cec1' }}
+        >
+          {children}
+        </blockquote>
+      ) : (
+        <blockquote
+          {...props}
+          className={cn('border-l-2 border-border pl-4 text-foreground/90', exportMode && 'break-words [overflow-wrap:anywhere]')}
+        >
+          {children}
+        </blockquote>
+      ),
     ul: ({ children, ...props }) => (
       <ul
         {...props}
@@ -136,7 +159,7 @@ function createMarkdownComponents(exportMode: boolean): Components {
       </div>
     ),
     thead: ({ children, ...props }) => (
-      <thead {...props} className="bg-muted/50 text-foreground">
+      <thead {...props} className="bg-muted text-foreground">
         {children}
       </thead>
     ),
