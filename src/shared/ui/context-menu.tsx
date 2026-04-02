@@ -45,8 +45,8 @@ export function ContextMenu({ open, anchorRef, items, onOpenChange, className }:
     }
 
     const rect = anchor.getBoundingClientRect()
-    const menuWidth = 224
-    const menuHeight = Math.max(96, items.length * 44 + 8)
+    const menuWidth = 272
+    const menuHeight = Math.max(112, items.length * 56 + 8)
     const viewportPadding = 12
     const topOffset = 8
 
@@ -102,7 +102,7 @@ export function ContextMenu({ open, anchorRef, items, onOpenChange, className }:
       ref={menuRef}
       role="menu"
       className={cn(
-        'fixed z-50 w-56 overflow-hidden rounded-[1rem] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] p-1 text-sidebar-foreground shadow-none',
+        'fixed z-50 w-[17rem] overflow-hidden rounded-[1.1rem] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] p-2 text-sidebar-foreground shadow-none',
         className
       )}
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
@@ -113,7 +113,7 @@ export function ContextMenu({ open, anchorRef, items, onOpenChange, className }:
           type="button"
           role="menuitem"
           className={cn(
-            'flex w-full items-center gap-3 rounded-[0.7rem] px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-white/8',
+            'flex w-full items-center gap-4 rounded-[0.85rem] px-4 py-3 text-left text-[18px] leading-[22px] transition-colors duration-150 hover:bg-white/8',
             item.destructive ? 'text-[#ff8f86] hover:text-[#ff8f86]' : 'text-sidebar-foreground'
           )}
           onClick={() => {
@@ -121,7 +121,7 @@ export function ContextMenu({ open, anchorRef, items, onOpenChange, className }:
             onOpenChange(false)
           }}
         >
-          <Icon icon={item.icon} size="sm" />
+          <Icon icon={item.icon} size="md" />
           <span>{item.label}</span>
         </button>
       ))}
