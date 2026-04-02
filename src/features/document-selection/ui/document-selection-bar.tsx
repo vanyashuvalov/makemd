@@ -19,7 +19,12 @@ export interface DocumentSelectionBarProps {
   selectedCount?: number
   totalCount?: number
   helperText?: string
+  canCopyLink?: boolean
   onToggleAllSelection?: (checked: boolean) => void
+  onDeleteSelected: () => void
+  onDownloadSelected: () => void
+  onCopyMarkdownSelected: () => void
+  onCopyLinkSelected: () => void
   className?: string
 }
 
@@ -28,7 +33,12 @@ export function DocumentSelectionBar({
   selectedCount = 0,
   totalCount = 0,
   helperText = 'Hold Ctrl to select many',
+  canCopyLink = false,
   onToggleAllSelection,
+  onDeleteSelected,
+  onDownloadSelected,
+  onCopyMarkdownSelected,
+  onCopyLinkSelected,
   className,
 }: DocumentSelectionBarProps) {
   const helperTail = helperText.replace(/^Hold Ctrl\s*/, '') || helperText
@@ -58,18 +68,40 @@ export function DocumentSelectionBar({
           <Separator orientation="vertical" className="h-6 w-px bg-white/10" />
 
           <div className="flex items-center gap-4">
-            <IconButton aria-label="Delete selected documents" size="icon" variant="ghost">
-              <Icon icon={IconTrash} size="md" />
-            </IconButton>
-            <IconButton aria-label="Download selected documents" size="icon" variant="ghost">
+            <IconButton
+              aria-label="Download selected documents"
+              size="icon"
+              variant="ghost"
+              onClick={onDownloadSelected}
+            >
               <Icon icon={IconDownload} size="md" />
             </IconButton>
-            <IconButton aria-label="Copy share link" size="icon" variant="ghost">
-              <Icon icon={IconLink} size="md" />
+            <IconButton
+              aria-label="Delete selected documents"
+              size="icon"
+              variant="ghost"
+              onClick={onDeleteSelected}
+            >
+              <Icon icon={IconTrash} size="md" />
             </IconButton>
-            <IconButton aria-label="Copy selected content" size="icon" variant="ghost">
+            <IconButton
+              aria-label="Copy selected content"
+              size="icon"
+              variant="ghost"
+              onClick={onCopyMarkdownSelected}
+            >
               <Icon icon={IconCopy} size="md" />
             </IconButton>
+            {canCopyLink ? (
+              <IconButton
+                aria-label="Copy selected links"
+                size="icon"
+                variant="ghost"
+                onClick={onCopyLinkSelected}
+              >
+                <Icon icon={IconLink} size="md" />
+              </IconButton>
+            ) : null}
           </div>
         </>
       ) : (

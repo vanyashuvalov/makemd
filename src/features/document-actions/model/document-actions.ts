@@ -13,10 +13,39 @@ export type DocumentDownloadBlob = {
   fileName: string
 }
 
+export type DocumentActionSource = {
+  title: string
+  markdown?: string
+}
+
 // Normalize user-provided titles into file-safe names so future exports stay predictable across browser and OS targets.
 export function buildDocumentFileName(title: string, extension: string) {
   const normalizedTitle = title.replace(/[^\w.-]+/g, '-').toLowerCase()
   return `${normalizedTitle}.${extension}`
+}
+
+// Build a stable bundle filename for single-document and multi-document actions so bulk export and copy flows keep the same naming rules.
+export function buildDocumentBundleFileName(documents: DocumentActionSource[], extension: string) {
+  if (documents.length === 1) {
+    return buildDocumentFileName(documents[0].title, extension)
+  }
+
+  return `selected-documents.${extension}`
+}
+
+// Merge one or more markdown documents into a single clipboard-friendly bundle so bulk copy and future PDF export share one content shape.
+export function buildDocumentMarkdownBundle(documents: DocumentActionSource[]) {
+  if (documents.length === 0) {
+    return ''
+  }
+
+  if (documents.length === 1) {
+    return documents[0].markdown ?? ''
+  }
+
+  return documents
+    .map((document) => `# ${document.title}\n\n${document.markdown ?? ''}`.trim())
+    .join('\n\n---\n\n')
 }
 
 // Copy plain text content into the clipboard so row menus can expose a reusable copy action without re-implementing clipboard mechanics.

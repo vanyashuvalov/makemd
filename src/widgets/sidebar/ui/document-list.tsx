@@ -7,9 +7,9 @@
  */
 'use client'
 
+import type { DocumentRecord } from '@/entities/document/model/types'
 import { DocumentHistoryList } from '@/entities/document/ui/document-history-list'
 import { DocumentSelectionBar } from '@/features/document-selection/ui/document-selection-bar'
-import type { DocumentRecord } from '@/entities/document/model/types'
 
 export interface DocumentListProps {
   documents: DocumentRecord[]
@@ -21,10 +21,14 @@ export interface DocumentListProps {
   onOpenDocument?: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
-  onDownloadDocument?: (documentId: string) => void
-  onDeleteDocument?: (documentId: string) => void
-  onCopyMarkdownDocument?: (documentId: string) => void
-  onCopyLinkDocument?: (documentId: string) => void
+  onDownloadDocument: (documentId: string) => void
+  onDeleteDocument: (documentId: string) => void
+  onCopyMarkdownDocument: (documentId: string) => void
+  onCopyLinkDocument: (documentId: string) => void
+  onDeleteSelected: () => void
+  onDownloadSelected: () => void
+  onCopyMarkdownSelected: () => void
+  onCopyLinkSelected: () => void
 }
 
 export function DocumentList({
@@ -41,6 +45,10 @@ export function DocumentList({
   onDeleteDocument,
   onCopyMarkdownDocument,
   onCopyLinkDocument,
+  onDeleteSelected,
+  onDownloadSelected,
+  onCopyMarkdownSelected,
+  onCopyLinkSelected,
 }: DocumentListProps) {
   // Keep the selection rail and history list inside one visual group so the gap and stacking order stay consistent with the Figma document list block.
   return (
@@ -50,7 +58,12 @@ export function DocumentList({
         selectedCount={selectedCount}
         totalCount={totalCount}
         helperText={helperText}
+        canCopyLink={canCopyLink}
         onToggleAllSelection={onToggleAllSelection}
+        onDeleteSelected={onDeleteSelected}
+        onDownloadSelected={onDownloadSelected}
+        onCopyMarkdownSelected={onCopyMarkdownSelected}
+        onCopyLinkSelected={onCopyLinkSelected}
       />
       <DocumentHistoryList
         items={documents}

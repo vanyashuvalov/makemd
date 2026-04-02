@@ -47,6 +47,7 @@ export interface SidebarProps {
   selectedCount: number
   totalCount: number
   helperText?: string
+  canCopyLink: boolean
   onSectionChange: (section: WorkspaceSidebarSection) => void
   onSignUpClick: () => void
   onCreateDocument: () => void
@@ -58,6 +59,10 @@ export interface SidebarProps {
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
   onOpenDocument: (documentId: string) => void
+  onDeleteSelected: () => void
+  onDownloadSelected: () => void
+  onCopyMarkdownSelected: () => void
+  onCopyLinkSelected: () => void
 }
 
 export function Sidebar({
@@ -71,6 +76,7 @@ export function Sidebar({
   selectedCount,
   totalCount,
   helperText = 'Hold Ctrl to select many',
+  canCopyLink,
   onSectionChange,
   onSignUpClick,
   onCreateDocument,
@@ -82,6 +88,10 @@ export function Sidebar({
   onToggleAllSelection,
   onToggleDocument,
   onOpenDocument,
+  onDeleteSelected,
+  onDownloadSelected,
+  onCopyMarkdownSelected,
+  onCopyLinkSelected,
 }: SidebarProps) {
   // Render the fixed-width navigation rail used in the Figma sidebar states without a compact or resizable variant.
   const showHistory = !isAuthenticated || activeSection === 'history'
@@ -148,7 +158,7 @@ export function Sidebar({
             selectedCount={selectedCount}
             totalCount={totalCount}
             helperText={helperText}
-            canCopyLink={isAuthenticated}
+            canCopyLink={canCopyLink}
             onToggleAllSelection={onToggleAllSelection}
             onToggleDocument={onToggleDocument}
             onOpenDocument={onOpenDocument}
@@ -156,6 +166,10 @@ export function Sidebar({
             onDeleteDocument={onDeleteDocument}
             onCopyMarkdownDocument={onCopyMarkdownDocument}
             onCopyLinkDocument={onCopyLinkDocument}
+            onDeleteSelected={onDeleteSelected}
+            onDownloadSelected={onDownloadSelected}
+            onCopyMarkdownSelected={onCopyMarkdownSelected}
+            onCopyLinkSelected={onCopyLinkSelected}
           />
         ) : null}
 
