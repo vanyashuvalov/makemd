@@ -15,6 +15,11 @@ import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
 import { MarkdownEditor } from './markdown-editor'
 import { MarkdownRenderer } from './markdown-renderer'
+import {
+  PREVIEW_BODY_CLASSNAME,
+  PREVIEW_BODY_MOBILE_CLASSNAME,
+  PREVIEW_FRAME_CLASSNAME,
+} from './preview-surface-classes'
 
 export function EditorPreview({
   markdown,
@@ -75,7 +80,7 @@ export function MarkdownPane({
 }) {
   // Keep the markdown editor inside the same framed surface as before so the shell layout and preview column do not need to change.
   return (
-    <section className="relative flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
+    <section className={`relative ${PREVIEW_FRAME_CLASSNAME}`}>
       <MarkdownEditor value={value} onChange={onChange} placeholder={placeholder} mobile={mobile} />
     </section>
   )
@@ -90,13 +95,8 @@ export function PreviewPane({
 }) {
   // Render the markdown preview through the shared renderer so CommonMark and GFM features stay visually consistent with the source editor.
   return (
-    <section className="flex h-full min-h-0 overflow-hidden rounded-[16px] border border-border bg-card">
-      <div
-        className={cn(
-          'h-full min-h-0 w-full overflow-y-auto bg-card px-8 py-8 pb-24',
-          mobile && 'px-6 py-6 pb-20'
-        )}
-      >
+    <section className={PREVIEW_FRAME_CLASSNAME}>
+      <div className={cn(PREVIEW_BODY_CLASSNAME, mobile && PREVIEW_BODY_MOBILE_CLASSNAME)}>
         <MarkdownRenderer markdown={markdown} mobile={mobile} />
       </div>
     </section>

@@ -9,6 +9,7 @@
  */
 
 import { MarkdownRenderer } from './markdown-renderer'
+import { PDF_EXPORT_BODY_CLASSNAME } from './preview-surface-classes'
 
 export function PdfPreviewSurface({
   markdown,
@@ -20,7 +21,7 @@ export function PdfPreviewSurface({
   // Render the same preview content the user sees on the right, but without the card chrome so the PDF reads as exported markdown instead of another UI panel.
   return (
     <div
-      className="bg-white px-8 py-8 text-foreground"
+      className={PDF_EXPORT_BODY_CLASSNAME}
       style={width ? { width: `${width}px` } : undefined}
     >
       <MarkdownRenderer markdown={markdown} />

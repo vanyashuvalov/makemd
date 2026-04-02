@@ -75,6 +75,8 @@ export async function copyTextToClipboard(text: string) {
 // Export a rendered markdown preview surface to a PDF download so row actions and the preview chrome can share the same visual output path.
 export async function downloadElementAsPdf(element: HTMLElement, fileName: string) {
   const { default: html2pdf } = await import('html2pdf.js')
+  const windowWidth = Math.ceil(element.scrollWidth || element.getBoundingClientRect().width)
+  const windowHeight = Math.ceil(element.scrollHeight || element.getBoundingClientRect().height)
 
   await html2pdf()
     .set({
@@ -88,6 +90,10 @@ export async function downloadElementAsPdf(element: HTMLElement, fileName: strin
         scale: Math.min(window.devicePixelRatio || 2, 2),
         useCORS: true,
         backgroundColor: '#ffffff',
+        windowWidth,
+        windowHeight,
+        scrollX: 0,
+        scrollY: 0,
       },
       jsPDF: {
         unit: 'mm',
@@ -109,3 +115,6 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   anchor.click()
   URL.revokeObjectURL(url)
 }
+
+
+
