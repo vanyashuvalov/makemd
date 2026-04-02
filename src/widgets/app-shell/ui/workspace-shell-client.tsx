@@ -8,8 +8,9 @@
  * Connected to: `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, `Sidebar`, `AuthModal`, and the workspace snapshot model.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
+import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
 import type {
   DocumentRecord,
@@ -27,6 +28,7 @@ import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { AuthModal, type AuthModalAccount } from '@/features/auth/ui/auth-modal'
 
 const DESKTOP_SIDEBAR_WIDTH = 360
+const MAX_GUEST_DOCUMENTS = 20
 
 function createDocumentId() {
   return `doc-${Date.now()}`
@@ -69,6 +71,56 @@ export function WorkspaceShellClient({
   const templates = snapshot.templates ?? []
   const selectedDocuments = documents.filter((document) => document.selected)
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+  const toastTimersRef = useRef<Map<string, number>>(new Map())
+
+  // Allocate a stable toast identifier so the stack can add and remove guest-limit feedback without clashing with other transient messages.
+  const createToastId = () => 'toast-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
+
+  // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
+  const dismissToast = (toastId: string) => {
+    const timeoutId = toastTimersRef.current.get(toastId)
+
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId)
+      toastTimersRef.current.delete(toastId)
+    }
+
+    setToasts((current) => current.filter((toast) => toast.id !== toastId))
+  }
+
+  // Add a new toast to the shared viewport and schedule its automatic dismissal so guest-limit feedback feels immediate but non-blocking.
+  const showToast = (toast: Omit<ToastItem, 'id'>) => {
+    const toastId = createToastId()
+
+    setToasts((current) => current.concat({ id: toastId, ...toast }))
+
+    const timeoutId = window.setTimeout(() => {
+      toastTimersRef.current.delete(toastId)
+      setToasts((current) => current.filter((item) => item.id !== toastId))
+    }, 3500)
+
+    toastTimersRef.current.set(toastId, timeoutId)
+  }
+
+  // Clean up any scheduled toast timers when the controller unmounts so the guest warning queue never leaks background work.
+  useEffect(() => {
+    const timers = toastTimersRef.current
+
+    return () => {
+      timers.forEach((timeoutId) => window.clearTimeout(timeoutId))
+      timers.clear()
+    }
+  }, [])
+
+  // Notify guests when they hit the local document cap so the New action explains why it no longer creates files.
+  const showGuestLimitToast = () => {
+    showToast({
+      tone: 'warning',
+      title: 'Guest limit reached',
+      description: 'Guest workspace supports up to 20 files. Sign up to save your history and create more.',
+    })
+  }
 
   // Keep the editor content aligned with the currently active document so opening a history row updates the workspace canvas instead of only the sidebar state.
   const syncMarkdownToActiveDocument = (nextMarkdown: string) => {
@@ -121,6 +173,11 @@ export function WorkspaceShellClient({
 
   // Create a blank draft document so the primary sidebar action now produces a tangible workspace state.
   const handleCreateDocument = () => {
+    if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
+      showGuestLimitToast()
+      return
+    }
+
     const title = createDocumentTitle()
     const nextMarkdown = createDocumentMarkdown(title)
     const nextDocument: DocumentRecord = {
@@ -231,6 +288,11 @@ export function WorkspaceShellClient({
 
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
   const handleUseTemplate = (templateId: string) => {
+    if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
+      showGuestLimitToast()
+      return
+    }
+
     const template = templates.find((item) => item.id === templateId)
 
     if (!template) {
@@ -329,6 +391,8 @@ export function WorkspaceShellClient({
         />
       </div>
 
+      <ToastStack items={toasts} onDismiss={dismissToast} />
+
       <AuthModal
         open={isAuthModalOpen}
         onOpenChange={setIsAuthModalOpen}
@@ -337,3 +401,7 @@ export function WorkspaceShellClient({
     </>
   )
 }
+
+
+
+
