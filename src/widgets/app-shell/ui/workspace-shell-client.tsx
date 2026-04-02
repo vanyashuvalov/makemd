@@ -34,6 +34,11 @@ function createDocumentMarkdown(title: string) {
   return `# ${title}\n`
 }
 
+function getNextActiveDocumentId(documents: DocumentRecord[], removedDocumentId: string) {
+  const remainingDocuments = documents.filter((document) => document.id !== removedDocumentId)
+  return remainingDocuments[0]?.id
+}
+
 export function WorkspaceShellClient({
   snapshot,
 }: {
@@ -111,6 +116,54 @@ export function WorkspaceShellClient({
     setMarkdown(nextMarkdown)
   }
 
+  // Remove a document from the local workspace collection and keep the editor pointed at the next available active row.
+  const handleDeleteDocument = (documentId: string) => {
+    const nextDocuments = documents.filter((document) => document.id !== documentId)
+    const nextActiveDocumentId =
+      nextDocuments.find((document) => document.active)?.id ??
+      getNextActiveDocumentId(documents, documentId)
+    const resolvedDocuments = nextDocuments.map((document) => ({
+      ...document,
+      active: document.id === nextActiveDocumentId,
+      selected: false,
+    }) as DocumentRecord)
+    const nextActiveDocument = resolvedDocuments.find((document) => document.id === nextActiveDocumentId)
+
+    setDocuments(resolvedDocuments)
+    setMarkdown(nextActiveDocument?.markdown ?? snapshot.editor.markdown)
+  }
+
+  // Download the document markdown as a plain .md file so the overflow menu has a tangible export action even before backend storage exists.
+  const handleDownloadDocument = (documentId: string) => {
+    const targetDocument = documents.find((item) => item.id === documentId)
+    const markdownSource = targetDocument?.markdown ?? markdown
+    const fileName = `${(targetDocument?.title ?? 'document').replace(/[^\w.-]+/g, '-').toLowerCase()}.md`
+    const blob = new Blob([markdownSource], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const anchor = window.document.createElement('a')
+
+    anchor.href = url
+    anchor.download = fileName
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Copy the currently resolved markdown into the clipboard so the menu exposes a useful local action without waiting for persistence.
+  const handleCopyMarkdownDocument = async (documentId: string) => {
+    const targetDocument = documents.find((item) => item.id === documentId)
+    const markdownSource = targetDocument?.markdown ?? markdown
+
+    await navigator.clipboard.writeText(markdownSource)
+  }
+
+  // Generate a shareable workspace link for authenticated documents so the menu reflects the future cloud-backed URL contract.
+  const handleCopyLinkDocument = async (documentId: string) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('state', 'authorized')
+    url.searchParams.set('document', documentId)
+    await navigator.clipboard.writeText(url.toString())
+  }
+
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
   const handleUseTemplate = (templateId: string) => {
     const template = templates.find((item) => item.id === templateId)
@@ -173,6 +226,10 @@ export function WorkspaceShellClient({
             onSignUpClick={() => setIsAuthModalOpen(true)}
             onCreateDocument={handleCreateDocument}
             onUseTemplate={handleUseTemplate}
+            onDownloadDocument={handleDownloadDocument}
+            onDeleteDocument={handleDeleteDocument}
+            onCopyMarkdownDocument={handleCopyMarkdownDocument}
+            onCopyLinkDocument={handleCopyLinkDocument}
             onToggleAllSelection={setAllSelected}
             onToggleDocument={toggleDocument}
             onOpenDocument={handleOpenDocument}

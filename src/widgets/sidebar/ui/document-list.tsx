@@ -17,9 +17,14 @@ export interface DocumentListProps {
   selectedCount: number
   totalCount: number
   helperText?: string
+  canCopyLink?: boolean
   onOpenDocument?: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
+  onDownloadDocument?: (documentId: string) => void
+  onDeleteDocument?: (documentId: string) => void
+  onCopyMarkdownDocument?: (documentId: string) => void
+  onCopyLinkDocument?: (documentId: string) => void
 }
 
 export function DocumentList({
@@ -28,9 +33,14 @@ export function DocumentList({
   selectedCount,
   totalCount,
   helperText,
+  canCopyLink = false,
   onOpenDocument,
   onToggleAllSelection,
   onToggleDocument,
+  onDownloadDocument,
+  onDeleteDocument,
+  onCopyMarkdownDocument,
+  onCopyLinkDocument,
 }: DocumentListProps) {
   // Keep the selection rail and history list inside one visual group so the gap and stacking order stay consistent with the Figma document list block.
   return (
@@ -45,8 +55,13 @@ export function DocumentList({
       <DocumentHistoryList
         items={documents}
         selectionMode={selectionMode}
+        canCopyLink={canCopyLink}
         onOpenItem={onOpenDocument}
         onToggleItem={onToggleDocument}
+        onDownloadItem={onDownloadDocument}
+        onDeleteItem={onDeleteDocument}
+        onCopyMarkdownItem={onCopyMarkdownDocument}
+        onCopyLinkItem={onCopyLinkDocument}
       />
     </div>
   )

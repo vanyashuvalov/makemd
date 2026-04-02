@@ -25,6 +25,7 @@ export function Checkbox({
   onCheckedChange,
   className,
   'aria-label': ariaLabel = 'Select row',
+  onClick,
   ...props
 }: CheckboxProps) {
   const isChecked = checked === true
@@ -37,7 +38,15 @@ export function Checkbox({
       role="checkbox"
       aria-checked={isMixed ? 'mixed' : isChecked}
       aria-label={ariaLabel}
-      onClick={() => onCheckedChange?.(!isChecked)}
+      onClick={(event) => {
+        onClick?.(event)
+
+        if (event.defaultPrevented) {
+          return
+        }
+
+        onCheckedChange?.(!isChecked)
+      }}
       className={cn(
         'inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center p-0 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         isChecked || isMixed

@@ -13,15 +13,25 @@ import { DocumentListItem } from './document-list-item'
 export interface DocumentHistoryListProps {
   items: DocumentRecord[]
   selectionMode?: boolean
+  canCopyLink?: boolean
   onOpenItem?: (documentId: string) => void
   onToggleItem?: (documentId: string) => void
+  onDownloadItem?: (documentId: string) => void
+  onDeleteItem?: (documentId: string) => void
+  onCopyMarkdownItem?: (documentId: string) => void
+  onCopyLinkItem?: (documentId: string) => void
 }
 
 export function DocumentHistoryList({
   items,
   selectionMode = false,
+  canCopyLink = false,
   onOpenItem,
   onToggleItem,
+  onDownloadItem,
+  onDeleteItem,
+  onCopyMarkdownItem,
+  onCopyLinkItem,
 }: DocumentHistoryListProps) {
   // Render the repeated history rows with a single source of truth for title, timestamp, and active state.
   return (
@@ -31,8 +41,13 @@ export function DocumentHistoryList({
           key={item.id}
           item={item}
           selectionMode={selectionMode}
+          canCopyLink={canCopyLink}
           onOpenDocument={onOpenItem}
           onToggleSelected={onToggleItem}
+          onDownloadDocument={onDownloadItem}
+          onDeleteDocument={onDeleteItem}
+          onCopyMarkdown={onCopyMarkdownItem}
+          onCopyLink={onCopyLinkItem}
         />
       ))}
     </div>

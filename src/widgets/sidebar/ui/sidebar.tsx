@@ -51,6 +51,10 @@ export interface SidebarProps {
   onSignUpClick: () => void
   onCreateDocument: () => void
   onUseTemplate: (templateId: string) => void
+  onDownloadDocument: (documentId: string) => void
+  onDeleteDocument: (documentId: string) => void
+  onCopyMarkdownDocument: (documentId: string) => void
+  onCopyLinkDocument: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
   onOpenDocument: (documentId: string) => void
@@ -71,6 +75,10 @@ export function Sidebar({
   onSignUpClick,
   onCreateDocument,
   onUseTemplate,
+  onDownloadDocument,
+  onDeleteDocument,
+  onCopyMarkdownDocument,
+  onCopyLinkDocument,
   onToggleAllSelection,
   onToggleDocument,
   onOpenDocument,
@@ -140,9 +148,14 @@ export function Sidebar({
             selectedCount={selectedCount}
             totalCount={totalCount}
             helperText={helperText}
+            canCopyLink={isAuthenticated}
             onToggleAllSelection={onToggleAllSelection}
             onToggleDocument={onToggleDocument}
             onOpenDocument={onOpenDocument}
+            onDownloadDocument={onDownloadDocument}
+            onDeleteDocument={onDeleteDocument}
+            onCopyMarkdownDocument={onCopyMarkdownDocument}
+            onCopyLinkDocument={onCopyLinkDocument}
           />
         ) : null}
 
