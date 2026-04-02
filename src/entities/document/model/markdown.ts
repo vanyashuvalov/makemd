@@ -326,9 +326,9 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
 }
 
 export function getMarkdownTitle(markdown: string, fallback: string) {
-  // Reuse the first level-one heading as the document title when one is available, otherwise fall back to the supplied label.
+  // Reuse the first heading encountered in the markdown source as the document title when one is available, otherwise fall back to the supplied label.
   const blocks = parseMarkdownBlocks(markdown)
-  const h1 = blocks.find((block) => block.type === 'heading' && block.level === 1)
+  const heading = blocks.find((block) => block.type === 'heading')
 
-  return h1 && h1.type === 'heading' ? h1.text.trim() || fallback : fallback
+  return heading && heading.type === 'heading' ? heading.text.trim() || fallback : fallback
 }

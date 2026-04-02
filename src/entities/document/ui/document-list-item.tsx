@@ -119,8 +119,7 @@ export function DocumentListItem({
         ) : (
           <div
             className={cn(
-              'text-sidebar-foreground/60 transition-colors duration-150',
-              !item.selected && !item.active ? 'group-hover:text-sidebar-foreground' : null
+              'text-sidebar-foreground/60 transition-colors duration-150 group-hover:text-sidebar-foreground'
             )}
           >
             <Icon icon={IconFileText} size="md" />

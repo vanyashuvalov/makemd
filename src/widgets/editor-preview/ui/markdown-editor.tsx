@@ -72,7 +72,7 @@ function createMarkdownEditorTheme(isMobile: boolean) {
         padding: isMobile ? '32px 16px 96px 12px' : '32px 24px 96px 16px',
       },
       '.cm-gutters': {
-        backgroundColor: 'transparent',
+        backgroundColor: 'rgba(18, 18, 18, 0.05)',
         border: 'none',
         color: 'var(--color-muted-foreground)',
       },
@@ -84,6 +84,9 @@ function createMarkdownEditorTheme(isMobile: boolean) {
       '.cm-lineNumbers .cm-gutterElement': {
         minWidth: '2.5rem',
         opacity: '0.6',
+      },
+      '.cm-lineNumbers': {
+        borderRight: '1px solid rgba(18, 18, 18, 0.2)',
       },
       '.cm-placeholder': {
         color: 'var(--color-muted-foreground)',

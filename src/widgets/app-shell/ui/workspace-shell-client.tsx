@@ -22,6 +22,7 @@ import {
   buildDocumentMarkdownBundle,
   copyTextToClipboard,
   downloadBlob,
+  getDocumentExportTitle,
 } from '@/features/document-actions/model/document-actions'
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
@@ -85,6 +86,13 @@ export function WorkspaceShellClient({
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const toastTimersRef = useRef<Map<string, number>>(new Map())
+  const activeDocument = documents.find((document) => document.active) ?? documents[0]
+  const activeExportTitle = getDocumentExportTitle(
+    activeDocument,
+    markdown,
+    snapshot.prompt?.title ?? createDocumentTitle()
+  )
+  const activeExportFileName = `${activeExportTitle}.pdf`
 
   // Allocate a stable toast identifier so the stack can add and remove guest-limit feedback without clashing with other transient messages.
   const createToastId = () => 'toast-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
@@ -307,6 +315,17 @@ export function WorkspaceShellClient({
     await copyLinkDocuments(selectedDocuments.map((document) => document.id))
   }
 
+  // Persist a custom export title on the active document so the chip can stop following markdown headings once the user renames it manually.
+  const handleActiveDocumentExportTitleChange = (nextTitle: string) => {
+    const resolvedTitle = nextTitle.trim() || undefined
+
+    setDocuments((current) =>
+      current.map((document) =>
+        document.active ? { ...document, customExportTitle: resolvedTitle } : document
+      )
+    )
+  }
+
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
   const handleUseTemplate = (templateId: string) => {
     if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
@@ -399,7 +418,7 @@ export function WorkspaceShellClient({
 
             <div className="relative min-h-0 min-w-0">
               <PreviewPane markdown={markdown} />
-              <ExportBar fileName={snapshot.exportFileName} />
+              <ExportBar fileName={activeExportFileName} onFileNameChange={handleActiveDocumentExportTitleChange} />
             </div>
           </div>
         </div>

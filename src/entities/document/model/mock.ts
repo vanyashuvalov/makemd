@@ -66,7 +66,7 @@ const authorizedSnapshot: WorkspaceSnapshot = {
   editor: {
     markdown: starterMarkdown,
   },
-  exportFileName: 'Paste text or drop file here.pdf',
+  exportFileName: 'Paste Markdown here.pdf',
 }
 
 const unauthorizedSnapshot: WorkspaceSnapshot = {
@@ -94,7 +94,7 @@ const unauthorizedSnapshot: WorkspaceSnapshot = {
   editor: {
     markdown: `# Paste text or drop file here\n\nStart typing or drop a file to begin.`,
   },
-  exportFileName: 'Paste Markdown here.pdf',
+  exportFileName: 'Paste text or drop file here.pdf',
 }
 
 const emptySnapshot: WorkspaceSnapshot = {
