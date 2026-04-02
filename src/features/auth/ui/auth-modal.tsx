@@ -52,7 +52,7 @@ export function AuthModal({ open, onOpenChange, onAuthenticate }: AuthModalProps
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-2 rounded-[1rem] bg-sidebar-muted p-1">
           <Button
-            variant={mode === 'sign-in' ? 'primary' : 'secondary'}
+            variant={mode === 'sign-in' ? 'primary' : 'sidebar'}
             size="sm"
             className="w-full"
             onClick={() => setMode('sign-in')}
@@ -60,7 +60,7 @@ export function AuthModal({ open, onOpenChange, onAuthenticate }: AuthModalProps
             Sign in
           </Button>
           <Button
-            variant={mode === 'sign-up' ? 'primary' : 'secondary'}
+            variant={mode === 'sign-up' ? 'primary' : 'sidebar'}
             size="sm"
             className="w-full"
             onClick={() => setMode('sign-up')}

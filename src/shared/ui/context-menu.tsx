@@ -102,7 +102,7 @@ export function ContextMenu({ open, anchorRef, items, onOpenChange, className }:
       ref={menuRef}
       role="menu"
       className={cn(
-        'fixed z-50 w-56 overflow-hidden rounded-[1rem] border border-border bg-popover p-1 text-popover-foreground shadow-none',
+        'fixed z-50 w-56 overflow-hidden rounded-[1rem] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] p-1 text-sidebar-foreground shadow-none',
         className
       )}
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
@@ -113,8 +113,8 @@ export function ContextMenu({ open, anchorRef, items, onOpenChange, className }:
           type="button"
           role="menuitem"
           className={cn(
-            'flex w-full items-center gap-3 rounded-[0.7rem] px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-muted',
-            item.destructive ? 'text-destructive hover:text-destructive' : 'text-popover-foreground'
+            'flex w-full items-center gap-3 rounded-[0.7rem] px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-white/8',
+            item.destructive ? 'text-[#ff8f86] hover:text-[#ff8f86]' : 'text-sidebar-foreground'
           )}
           onClick={() => {
             item.onSelect()

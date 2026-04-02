@@ -60,7 +60,7 @@ export function Modal({ open, title, description, onOpenChange, children, classN
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative w-full max-w-[32rem] rounded-[24px] border border-border bg-popover p-6 text-popover-foreground shadow-none',
+          'relative w-full max-w-[32rem] rounded-[24px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] p-6 text-sidebar-foreground shadow-none',
           className
         )}
         onMouseDown={(event) => event.stopPropagation()}
@@ -68,7 +68,7 @@ export function Modal({ open, title, description, onOpenChange, children, classN
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="space-y-1">
             <h2 className="text-[24px] font-medium leading-[28px]">{title}</h2>
-            {description ? <p className="text-sm leading-6 text-muted-foreground">{description}</p> : null}
+            {description ? <p className="text-sm leading-6 text-sidebar-muted-foreground">{description}</p> : null}
           </div>
 
           <IconButton
