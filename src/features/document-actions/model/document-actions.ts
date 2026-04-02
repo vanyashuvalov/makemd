@@ -79,7 +79,7 @@ export async function downloadElementAsPdf(element: HTMLElement, fileName: strin
   await html2pdf()
     .set({
       filename: fileName,
-      margin: [12, 12, 12, 12],
+      margin: [0, 0, 0, 0],
       image: {
         type: 'jpeg',
         quality: 0.98,

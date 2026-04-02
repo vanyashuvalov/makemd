@@ -92,9 +92,10 @@ export function WorkspaceShellClient({
   const selectedDocuments = documents.filter((document) => document.selected)
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
   const [toasts, setToasts] = useState<ToastItem[]>([])
-  const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string } | null>(null)
+  const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string; width?: number } | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const pdfExportRef = useRef<HTMLDivElement | null>(null)
+  const previewPaneRef = useRef<HTMLDivElement | null>(null)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
   const activeExportTitle = getDocumentExportTitle(
     activeDocument,
@@ -296,10 +297,12 @@ export function WorkspaceShellClient({
 
     const markdownSource = document.markdown ?? ''
     const exportTitle = getDocumentExportTitle(document, markdownSource, document.title ?? createDocumentTitle())
+    const previewWidth = previewPaneRef.current?.getBoundingClientRect().width
 
     setPdfExportRequest({
       markdown: markdownSource,
       fileName: `${exportTitle}.pdf`,
+      width: previewWidth,
     })
   }
 
@@ -494,7 +497,7 @@ export function WorkspaceShellClient({
               placeholder={snapshot.prompt?.title ?? 'Start writing markdown'}
             />
 
-            <div className="relative min-h-0 min-w-0">
+            <div ref={previewPaneRef} className="relative min-h-0 min-w-0">
               <PreviewPane markdown={markdown} />
               <ExportBar
                 fileName={activeExportFileName}
@@ -518,7 +521,7 @@ export function WorkspaceShellClient({
       {pdfExportRequest ? (
         <div className="pointer-events-none fixed left-[-10000px] top-0 w-[816px]">
           <div ref={pdfExportRef}>
-            <PdfPreviewSurface markdown={pdfExportRequest.markdown} />
+            <PdfPreviewSurface markdown={pdfExportRequest.markdown} width={pdfExportRequest.width} />
           </div>
         </div>
       ) : null}

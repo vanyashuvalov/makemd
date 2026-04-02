@@ -1,7 +1,5 @@
 'use client'
 
-'use client'
-
 /**
  * File: src/widgets/editor-preview/ui/pdf-preview-surface.tsx
  * Purpose: Export-friendly markdown surface that mirrors the preview styling without layout chrome.
@@ -12,10 +10,19 @@
 
 import { MarkdownRenderer } from './markdown-renderer'
 
-export function PdfPreviewSurface({ markdown }: { markdown: string }) {
-  // Render the same preview content the user sees on the right, but inside a static export frame so the PDF snapshot keeps the visual language without inherited viewport sizing.
+export function PdfPreviewSurface({
+  markdown,
+  width,
+}: {
+  markdown: string
+  width?: number
+}) {
+  // Render the same preview content the user sees on the right, but without the card chrome so the PDF reads as exported markdown instead of another UI panel.
   return (
-    <div className="rounded-[16px] border border-border bg-card px-8 py-8">
+    <div
+      className="bg-white px-8 py-8 text-foreground"
+      style={width ? { width: `${width}px` } : undefined}
+    >
       <MarkdownRenderer markdown={markdown} />
     </div>
   )
