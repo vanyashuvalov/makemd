@@ -72,11 +72,40 @@ export async function copyTextToClipboard(text: string) {
   await navigator.clipboard.writeText(text)
 }
 
+// Wait for the export surface assets to settle so html2canvas captures the same rendered markdown the user already sees instead of a half-loaded image or font state.
+async function waitForRenderableContent(element: HTMLElement) {
+  const fontReady = 'fonts' in document ? document.fonts.ready.catch(() => undefined) : Promise.resolve()
+  const images = Array.from(element.querySelectorAll('img'))
+
+  const imageReady = images.map(
+    (image) =>
+      new Promise<void>((resolve) => {
+        if (image.complete && image.naturalWidth > 0) {
+          resolve()
+          return
+        }
+
+        const settle = () => {
+          image.removeEventListener('load', settle)
+          image.removeEventListener('error', settle)
+          resolve()
+        }
+
+        image.addEventListener('load', settle, { once: true })
+        image.addEventListener('error', settle, { once: true })
+      })
+  )
+
+  await Promise.all([fontReady, ...imageReady])
+}
+
 // Export a rendered markdown preview surface to a PDF download so row actions and the preview chrome can share the same visual output path.
 export async function downloadElementAsPdf(element: HTMLElement, fileName: string) {
   const { default: html2pdf } = await import('html2pdf.js')
   const windowWidth = Math.ceil(element.scrollWidth || element.getBoundingClientRect().width)
   const windowHeight = Math.ceil(element.scrollHeight || element.getBoundingClientRect().height)
+
+  await waitForRenderableContent(element)
 
   await html2pdf()
     .set({
@@ -115,6 +144,8 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   anchor.click()
   URL.revokeObjectURL(url)
 }
+
+
 
 
 

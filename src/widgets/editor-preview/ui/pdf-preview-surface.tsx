@@ -24,7 +24,7 @@ export function PdfPreviewSurface({
       className={PDF_EXPORT_BODY_CLASSNAME}
       style={width ? { width: `${width}px` } : undefined}
     >
-      <MarkdownRenderer markdown={markdown} />
+      <MarkdownRenderer markdown={markdown} exportMode />
     </div>
   )
 }

@@ -10,7 +10,9 @@ import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/shared/lib/cn'
 
-const markdownComponents: Components = {
+function createMarkdownComponents(exportMode: boolean): Components {
+  // Keep the render tree mostly identical between the on-screen preview and PDF export, but relax scroll-only wrappers in export mode so html2canvas can measure the document without clipped containers.
+  return {
   h1: ({ children, ...props }) => (
     <h1
       {...props}
@@ -124,7 +126,7 @@ const markdownComponents: Components = {
     )
   },
   table: ({ children, ...props }) => (
-    <div className="my-4 overflow-x-auto">
+    <div className={cn('my-4', !exportMode && 'overflow-x-auto')}>
       <table {...props} className="w-full border-collapse text-sm">
         {children}
       </table>
@@ -178,7 +180,11 @@ const markdownComponents: Components = {
       <code
         {...props}
         className={cn(
-          'block overflow-x-auto rounded-[14px] border border-border bg-muted px-4 py-3 font-mono text-[0.95rem] leading-6 text-foreground',
+          cn(
+            'block rounded-[14px] border border-border bg-muted px-4 py-3 font-mono text-[0.95rem] leading-6 text-foreground',
+            !exportMode && 'overflow-x-auto',
+            exportMode && 'overflow-visible'
+          ),
           className
         )}
       >
@@ -204,8 +210,13 @@ const markdownComponents: Components = {
                 {codeLanguage}
               </span>
             </div>
-            <div className="overflow-x-auto px-4 py-3">
-              <code className="block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6 text-foreground">
+            <div className={cn('px-4 py-3', !exportMode && 'overflow-x-auto')}>
+              <code
+                className={cn(
+                  'block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6 text-foreground',
+                  exportMode && 'overflow-visible'
+                )}
+              >
                 {child.props.children}
               </code>
             </div>
@@ -215,7 +226,10 @@ const markdownComponents: Components = {
     }
 
     return (
-      <pre {...props} className="my-4 overflow-x-auto rounded-[14px] bg-muted p-0">
+      <pre
+        {...props}
+        className={cn('my-4 rounded-[14px] bg-muted p-0', !exportMode && 'overflow-x-auto', exportMode && 'overflow-visible')}
+      >
         {children}
       </pre>
     )
@@ -237,17 +251,29 @@ const markdownComponents: Components = {
     <img
       {...props}
       alt={alt ?? ''}
+      crossOrigin="anonymous"
+      decoding="async"
+      loading="eager"
       src={src}
       className="my-4 max-w-full rounded-[14px] border border-border"
     />
   ),
+  }
 }
 
-export function MarkdownRenderer({ markdown, mobile = false }: { markdown: string; mobile?: boolean }) {
+export function MarkdownRenderer({
+  markdown,
+  mobile = false,
+  exportMode = false,
+}: {
+  markdown: string
+  mobile?: boolean
+  exportMode?: boolean
+}) {
   // Render the markdown preview using the same GFM dialect that GitHub documents, while applying the workspace typography and surface rules.
   return (
-    <div className={cn('max-w-[43rem]', mobile && 'max-w-none')}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+    <div className={cn('max-w-[43rem]', mobile && 'max-w-none', exportMode && 'max-w-none')}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(exportMode)}>
         {markdown}
       </ReactMarkdown>
     </div>
