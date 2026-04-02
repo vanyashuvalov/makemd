@@ -13,10 +13,16 @@ import { DocumentListItem } from './document-list-item'
 export interface DocumentHistoryListProps {
   items: DocumentRecord[]
   selectionMode?: boolean
+  onOpenItem?: (documentId: string) => void
   onToggleItem?: (documentId: string) => void
 }
 
-export function DocumentHistoryList({ items, selectionMode = false, onToggleItem }: DocumentHistoryListProps) {
+export function DocumentHistoryList({
+  items,
+  selectionMode = false,
+  onOpenItem,
+  onToggleItem,
+}: DocumentHistoryListProps) {
   // Render the repeated history rows with a single source of truth for title, timestamp, and active state.
   return (
     <div className="space-y-1.5">
@@ -25,6 +31,7 @@ export function DocumentHistoryList({ items, selectionMode = false, onToggleItem
           key={item.id}
           item={item}
           selectionMode={selectionMode}
+          onOpenDocument={onOpenItem}
           onToggleSelected={onToggleItem}
         />
       ))}

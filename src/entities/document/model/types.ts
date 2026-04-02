@@ -6,14 +6,23 @@
  * Connected to: `mock.ts`, document list components, the sidebar, and the editor/preview widgets.
  */
 export type WorkspaceStateKey = 'authorized' | 'unauthorized' | 'empty'
+export type WorkspaceSidebarSection = 'history' | 'templates'
 
 export type DocumentRecord = {
   id: string
   title: string
   updatedLabel: string
+  markdown?: string
   selected?: boolean
   active?: boolean
   withMenu?: boolean
+}
+
+export type WorkspaceTemplate = {
+  id: string
+  title: string
+  description: string
+  markdown: string
 }
 
 export type WorkspacePrompt = {
@@ -46,6 +55,7 @@ export type WorkspaceSnapshot = {
   warning?: WorkspaceWarning
   selection?: WorkspaceSelection
   documents: DocumentRecord[]
+  templates?: WorkspaceTemplate[]
   editor: WorkspaceEditor
   exportFileName: string
 }

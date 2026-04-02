@@ -17,6 +17,7 @@ export interface DocumentListProps {
   selectedCount: number
   totalCount: number
   helperText?: string
+  onOpenDocument?: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
 }
@@ -27,6 +28,7 @@ export function DocumentList({
   selectedCount,
   totalCount,
   helperText,
+  onOpenDocument,
   onToggleAllSelection,
   onToggleDocument,
 }: DocumentListProps) {
@@ -43,6 +45,7 @@ export function DocumentList({
       <DocumentHistoryList
         items={documents}
         selectionMode={selectionMode}
+        onOpenItem={onOpenDocument}
         onToggleItem={onToggleDocument}
       />
     </div>

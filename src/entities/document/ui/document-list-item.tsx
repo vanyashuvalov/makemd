@@ -17,13 +17,27 @@ import type { DocumentRecord } from '../model/types'
 export interface DocumentListItemProps {
   item: DocumentRecord
   selectionMode?: boolean
+  onOpenDocument?: (documentId: string) => void
   onToggleSelected?: (documentId: string) => void
 }
 
-export function DocumentListItem({ item, selectionMode = false, onToggleSelected }: DocumentListItemProps) {
+export function DocumentListItem({
+  item,
+  selectionMode = false,
+  onOpenDocument,
+  onToggleSelected,
+}: DocumentListItemProps) {
   const isSelected = Boolean(item.selected)
   const rowTone = item.selected || item.active ? 'bg-white/[0.15]' : 'bg-transparent'
   const showOverflow = !item.selected
+  const handleRowClick = () => {
+    if (selectionMode) {
+      onToggleSelected?.(item.id)
+      return
+    }
+
+    onOpenDocument?.(item.id)
+  }
 
   // Render a single history row that can visually switch between the default, selected, and active states from the mockup.
   return (
@@ -33,11 +47,13 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
         rowTone,
         !item.selected && !item.active ? 'hover:bg-white/[0.05]' : null
       )}
+      onClick={handleRowClick}
     >
       {selectionMode ? (
         <Checkbox
           checked={isSelected}
           aria-label={`Select ${item.title}`}
+          onClick={(event) => event.stopPropagation()}
           onCheckedChange={() => onToggleSelected?.(item.id)}
         />
       ) : (
@@ -65,6 +81,7 @@ export function DocumentListItem({ item, selectionMode = false, onToggleSelected
           aria-label={`Open actions for ${item.title}`}
           size="icon"
           variant="ghost"
+          onClick={(event) => event.stopPropagation()}
           className={cn(
             'opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-sidebar-foreground',
             item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'

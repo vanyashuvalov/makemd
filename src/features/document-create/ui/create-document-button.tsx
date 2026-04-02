@@ -11,7 +11,11 @@ import { Button } from '@/shared/ui/button'
 import { Icon } from '@/shared/ui/icon'
 import { IconPlus } from '@tabler/icons-react'
 
-export function CreateDocumentButton() {
+export interface CreateDocumentButtonProps {
+  onClick?: () => void
+}
+
+export function CreateDocumentButton({ onClick }: CreateDocumentButtonProps) {
   // Render the primary new-document action with the same pill proportion shown in the design board.
   return (
     <Button
@@ -19,6 +23,7 @@ export function CreateDocumentButton() {
       size="primary"
       className="w-full"
       before={<Icon icon={IconPlus} size="md" />}
+      onClick={onClick}
     >
       New
     </Button>

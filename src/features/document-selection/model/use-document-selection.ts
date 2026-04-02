@@ -7,7 +7,7 @@
  */
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DocumentRecord } from '@/entities/document/model/types'
 
 export interface UseDocumentSelectionResult {
@@ -18,6 +18,7 @@ export interface UseDocumentSelectionResult {
   selectedCount: number
   selectionMode: boolean
   setAllSelected: (checked: boolean) => void
+  setDocuments: Dispatch<SetStateAction<DocumentRecord[]>>
   toggleDocument: (documentId: string) => void
 }
 
@@ -88,6 +89,9 @@ export function useDocumentSelection(initialDocuments: DocumentRecord[]): UseDoc
     selectedCount,
     selectionMode,
     setAllSelected,
+    setDocuments,
     toggleDocument,
   }
 }
+
+

@@ -21,19 +21,18 @@ const authorizedSnapshot: WorkspaceSnapshot = {
     name: 'Intjivan',
     email: 'intjivan@gmail.com',
   },
-  selection: {
-    helperText: 'Hold Ctrl to select many',
-  },
   documents: [
     {
       id: 'doc-1',
       title: 'Heading line here',
       updatedLabel: `23 Mar \u2022 12:32`,
+      markdown: starterMarkdown,
     },
     {
       id: 'doc-2',
       title: 'Heading line here',
       updatedLabel: `23 Mar \u2022 12:32`,
+      markdown: starterMarkdown,
     },
     {
       id: 'doc-3',
@@ -41,11 +40,27 @@ const authorizedSnapshot: WorkspaceSnapshot = {
       updatedLabel: `23 Mar \u2022 12:32`,
       active: true,
       withMenu: true,
+      markdown: starterMarkdown,
     },
     {
       id: 'doc-4',
       title: 'Heading line here',
       updatedLabel: `23 Mar \u2022 12:32`,
+      markdown: starterMarkdown,
+    },
+  ],
+  templates: [
+    {
+      id: 'template-1',
+      title: 'Resume starter',
+      description: 'Clean one-page resume layout with headings and compact sections.',
+      markdown: `# Resume starter\n\n## Summary\n\nWrite your summary here.\n\n## Experience\n\n- Role\n- Impact\n`,
+    },
+    {
+      id: 'template-2',
+      title: 'Project brief',
+      description: 'Simple structure for product specs, outcomes, and action items.',
+      markdown: `# Project brief\n\n## Problem\n\nDescribe the problem.\n\n## Plan\n\n- Step one\n- Step two\n`,
     },
   ],
   editor: {
@@ -68,19 +83,19 @@ const unauthorizedSnapshot: WorkspaceSnapshot = {
       id: 'doc-1',
       title: 'Heading line here',
       updatedLabel: `23 Mar \u2022 12:32`,
-      selected: true,
+      markdown: starterMarkdown,
     },
     {
       id: 'doc-2',
       title: 'Heading line here',
       updatedLabel: `23 Mar \u2022 12:32`,
-      selected: true,
       active: true,
       withMenu: true,
+      markdown: starterMarkdown,
     },
   ],
   selection: {
-    selectedCount: 2,
+    helperText: 'Hold Ctrl to select many',
   },
   editor: {
     markdown: starterMarkdown,
@@ -100,6 +115,7 @@ const emptySnapshot: WorkspaceSnapshot = {
       updatedLabel: `Today \u2022 12:32`,
       active: true,
       withMenu: true,
+      markdown: '# Paste text or drop file here',
     },
   ],
   editor: {
