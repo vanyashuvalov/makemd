@@ -66,7 +66,7 @@ const authorizedSnapshot: WorkspaceSnapshot = {
   editor: {
     markdown: starterMarkdown,
   },
-  exportFileName: 'Paste Markdown here.pdf',
+  exportFileName: 'Paste text or drop file here.pdf',
 }
 
 const unauthorizedSnapshot: WorkspaceSnapshot = {
@@ -81,24 +81,18 @@ const unauthorizedSnapshot: WorkspaceSnapshot = {
   documents: [
     {
       id: 'doc-1',
-      title: 'Heading line here',
-      updatedLabel: `23 Mar \u2022 12:32`,
-      markdown: starterMarkdown,
-    },
-    {
-      id: 'doc-2',
-      title: 'Heading line here',
-      updatedLabel: `23 Mar \u2022 12:32`,
+      title: 'Paste text or drop file here',
+      updatedLabel: `Today \u2022 12:32`,
       active: true,
       withMenu: true,
-      markdown: starterMarkdown,
+      markdown: `# Paste text or drop file here\n\nStart typing or drop a file to begin.`,
     },
   ],
   selection: {
     helperText: 'Hold Ctrl to select many',
   },
   editor: {
-    markdown: starterMarkdown,
+    markdown: `# Paste text or drop file here\n\nStart typing or drop a file to begin.`,
   },
   exportFileName: 'Paste Markdown here.pdf',
 }
