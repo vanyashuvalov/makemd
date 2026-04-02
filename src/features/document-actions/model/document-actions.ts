@@ -72,6 +72,22 @@ export async function copyTextToClipboard(text: string) {
   await navigator.clipboard.writeText(text)
 }
 
+// Capture a lightweight diagnostic snapshot of the export surface so temporary PDF debug logs can point at the exact markdown shapes that are likely to fail.
+function getPdfExportDiagnostics(element: HTMLElement) {
+  return {
+    width: Math.ceil(element.getBoundingClientRect().width),
+    height: Math.ceil(element.getBoundingClientRect().height),
+    scrollWidth: element.scrollWidth,
+    scrollHeight: element.scrollHeight,
+    textLength: element.innerText.length,
+    linkCount: element.querySelectorAll('a').length,
+    imageCount: element.querySelectorAll('img').length,
+    taskListCount: element.querySelectorAll('li.task-list-item').length,
+    codeBlockCount: element.querySelectorAll('pre, code[class*="language-"]').length,
+    tableCount: element.querySelectorAll('table').length,
+  }
+}
+
 // Wait for the export surface assets to settle so html2canvas captures the same rendered markdown the user already sees instead of a half-loaded image or font state.
 async function waitForRenderableContent(element: HTMLElement) {
   const fontReady = 'fonts' in document ? document.fonts.ready.catch(() => undefined) : Promise.resolve()
@@ -102,36 +118,52 @@ async function waitForRenderableContent(element: HTMLElement) {
 // Export a rendered markdown preview surface to a PDF download so row actions and the preview chrome can share the same visual output path.
 export async function downloadElementAsPdf(element: HTMLElement, fileName: string) {
   const { default: html2pdf } = await import('html2pdf.js')
-  const windowWidth = Math.ceil(element.scrollWidth || element.getBoundingClientRect().width)
-  const windowHeight = Math.ceil(element.scrollHeight || element.getBoundingClientRect().height)
+  const rect = element.getBoundingClientRect()
+  const windowWidth = Math.ceil(rect.width)
+  const windowHeight = Math.ceil(rect.height)
+
+  // Temporary diagnostic logs for the export failure investigation: keep them until the failing markdown shapes are identified, then remove them.
+  const diagnostics = getPdfExportDiagnostics(element)
+  console.groupCollapsed('[pdf-export] start', fileName)
+  console.debug('[pdf-export] surface', diagnostics)
 
   await waitForRenderableContent(element)
+  console.debug('[pdf-export] assets ready')
 
-  await html2pdf()
-    .set({
-      filename: fileName,
-      margin: [0, 0, 0, 0],
-      image: {
-        type: 'jpeg',
-        quality: 0.98,
-      },
-      html2canvas: {
-        scale: Math.min(window.devicePixelRatio || 2, 2),
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        windowWidth,
-        windowHeight,
-        scrollX: 0,
-        scrollY: 0,
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait',
-      },
-    })
-    .from(element)
-    .save()
+  try {
+    await html2pdf()
+      .set({
+        filename: fileName,
+        margin: [0, 0, 0, 0],
+        image: {
+          type: 'jpeg',
+          quality: 0.98,
+        },
+        html2canvas: {
+          scale: Math.min(window.devicePixelRatio || 2, 2),
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          windowWidth,
+          windowHeight,
+          scrollX: 0,
+          scrollY: 0,
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait',
+        },
+      })
+      .from(element)
+      .save()
+
+    console.debug('[pdf-export] save completed')
+  } catch (error) {
+    console.error('[pdf-export] save failed', error)
+    throw error
+  } finally {
+    console.groupEnd()
+  }
 }
 
 // Trigger a file download from an already prepared blob so the current markdown download and the future PDF export can share the same transport path.
@@ -144,6 +176,9 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   anchor.click()
   URL.revokeObjectURL(url)
 }
+
+
+
 
 
 

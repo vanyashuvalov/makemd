@@ -1,4 +1,4 @@
-/**
+﻿/**
  * File: src/widgets/editor-preview/ui/markdown-renderer.tsx
  * Purpose: CommonMark/GFM renderer for the right-hand preview surface.
  * Why it exists: the preview should understand the same markdown dialect the editor accepts, instead of reimplementing parsing by hand.
@@ -13,251 +13,259 @@ import { cn } from '@/shared/lib/cn'
 function createMarkdownComponents(exportMode: boolean): Components {
   // Keep the render tree mostly identical between the on-screen preview and PDF export, but relax scroll-only wrappers in export mode so html2canvas can measure the document without clipped containers.
   return {
-  h1: ({ children, ...props }) => (
-    <h1
-      {...props}
-      className="mt-0 font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground first:mt-0"
-    >
-      {children}
-    </h1>
-  ),
-  h2: ({ children, ...props }) => (
-    <h2
-      {...props}
-      className="mt-6 font-sans text-[2.25rem] font-semibold tracking-[-0.04em] text-foreground"
-    >
-      {children}
-    </h2>
-  ),
-  h3: ({ children, ...props }) => (
-    <h3
-      {...props}
-      className="mt-5 font-sans text-[1.5rem] font-semibold tracking-[-0.03em] text-foreground"
-    >
-      {children}
-    </h3>
-  ),
-  h4: ({ children, ...props }) => (
-    <h4 {...props} className="mt-4 font-sans text-[1.25rem] font-semibold text-foreground">
-      {children}
-    </h4>
-  ),
-  h5: ({ children, ...props }) => (
-    <h5 {...props} className="mt-4 font-sans text-[1.1rem] font-semibold text-foreground">
-      {children}
-    </h5>
-  ),
-  h6: ({ children, ...props }) => (
-    <h6 {...props} className="mt-4 font-sans text-[1rem] font-semibold text-foreground">
-      {children}
-    </h6>
-  ),
-  p: ({ children, ...props }) => (
-    <p {...props} className="text-sm leading-7 text-foreground">
-      {children}
-    </p>
-  ),
-  strong: ({ children, ...props }) => (
-    <strong {...props} className="font-semibold text-foreground">
-      {children}
-    </strong>
-  ),
-  em: ({ children, ...props }) => (
-    <em {...props} className="italic text-foreground">
-      {children}
-    </em>
-  ),
-  del: ({ children, ...props }) => (
-    <del {...props} className="text-foreground decoration-foreground/60">
-      {children}
-    </del>
-  ),
-  a: ({ children, href, ...props }) => (
-    <a
-      {...props}
-      href={href}
-      className="text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80"
-      target={href?.startsWith('http') ? '_blank' : undefined}
-      rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
-    >
-      {children}
-    </a>
-  ),
-  blockquote: ({ children, ...props }) => (
-    <blockquote
-      {...props}
-      className="border-l-2 border-border pl-4 text-foreground/90"
-    >
-      {children}
-    </blockquote>
-  ),
-  ul: ({ children, ...props }) => (
-    <ul
-      {...props}
-      className={cn(
-        'my-0 space-y-2 pl-6 text-sm leading-7 text-foreground',
-        typeof props.className === 'string' && props.className.includes('contains-task-list')
-          ? 'list-none pl-0'
-          : 'list-disc'
-      )}
-    >
-      {children}
-    </ul>
-  ),
-  ol: ({ children, ...props }) => (
-    <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 text-foreground">
-      {children}
-    </ol>
-  ),
-  li: ({ children, className, ...props }) => {
-    // Flatten task list items so GFM checkboxes render without the default bullet marker and keep the checkbox aligned with the text.
-    const isTaskListItem = typeof className === 'string' && className.includes('task-list-item')
-
-    return (
-      <li
+    h1: ({ children, ...props }) => (
+      <h1
+        {...props}
+        className="mt-0 font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground first:mt-0"
+      >
+        {children}
+      </h1>
+    ),
+    h2: ({ children, ...props }) => (
+      <h2
+        {...props}
+        className="mt-6 font-sans text-[2.25rem] font-semibold tracking-[-0.04em] text-foreground"
+      >
+        {children}
+      </h2>
+    ),
+    h3: ({ children, ...props }) => (
+      <h3
+        {...props}
+        className="mt-5 font-sans text-[1.5rem] font-semibold tracking-[-0.03em] text-foreground"
+      >
+        {children}
+      </h3>
+    ),
+    h4: ({ children, ...props }) => (
+      <h4 {...props} className="mt-4 font-sans text-[1.25rem] font-semibold text-foreground">
+        {children}
+      </h4>
+    ),
+    h5: ({ children, ...props }) => (
+      <h5 {...props} className="mt-4 font-sans text-[1.1rem] font-semibold text-foreground">
+        {children}
+      </h5>
+    ),
+    h6: ({ children, ...props }) => (
+      <h6 {...props} className="mt-4 font-sans text-[1rem] font-semibold text-foreground">
+        {children}
+      </h6>
+    ),
+    p: ({ children, ...props }) => (
+      <p {...props} className={cn('text-sm leading-7 text-foreground', exportMode && 'break-words [overflow-wrap:anywhere]')}>
+        {children}
+      </p>
+    ),
+    strong: ({ children, ...props }) => (
+      <strong {...props} className="font-semibold text-foreground">
+        {children}
+      </strong>
+    ),
+    em: ({ children, ...props }) => (
+      <em {...props} className="italic text-foreground">
+        {children}
+      </em>
+    ),
+    del: ({ children, ...props }) => (
+      <del {...props} className="text-foreground decoration-foreground/60">
+        {children}
+      </del>
+    ),
+    a: ({ children, href, ...props }) => (
+      <a
+        {...props}
+        href={href}
+        className={cn(
+          'text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80',
+          exportMode && 'break-words [overflow-wrap:anywhere]'
+        )}
+        target={href?.startsWith('http') ? '_blank' : undefined}
+        rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
+      >
+        {children}
+      </a>
+    ),
+    blockquote: ({ children, ...props }) => (
+      <blockquote
+        {...props}
+        className={cn('border-l-2 border-border pl-4 text-foreground/90', exportMode && 'break-words [overflow-wrap:anywhere]')}
+      >
+        {children}
+      </blockquote>
+    ),
+    ul: ({ children, ...props }) => (
+      <ul
         {...props}
         className={cn(
-          'pl-1',
-          isTaskListItem && 'list-none flex items-start gap-2 pl-0 leading-7 [&>p]:my-0'
+          'my-0 space-y-2 pl-6 text-sm leading-7 text-foreground break-words',
+          typeof props.className === 'string' && props.className.includes('contains-task-list')
+            ? 'list-none pl-0'
+            : 'list-disc'
         )}
       >
         {children}
-      </li>
-    )
-  },
-  table: ({ children, ...props }) => (
-    <div className={cn('my-4', !exportMode && 'overflow-x-auto')}>
-      <table {...props} className="w-full border-collapse text-sm">
+      </ul>
+    ),
+    ol: ({ children, ...props }) => (
+      <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 text-foreground break-words">
         {children}
-      </table>
-    </div>
-  ),
-  thead: ({ children, ...props }) => (
-    <thead {...props} className="bg-muted/50 text-foreground">
-      {children}
-    </thead>
-  ),
-  tbody: ({ children, ...props }) => (
-    <tbody {...props} className="divide-y divide-border">
-      {children}
-    </tbody>
-  ),
-  tr: ({ children, ...props }) => (
-    <tr {...props} className="border-b border-border">
-      {children}
-    </tr>
-  ),
-  th: ({ children, ...props }) => (
-    <th {...props} className="border border-border px-3 py-2 text-left font-semibold">
-      {children}
-    </th>
-  ),
-  td: ({ children, ...props }) => (
-    <td {...props} className="border border-border px-3 py-2 align-top">
-      {children}
-    </td>
-  ),
-  hr: ({ ...props }) => <hr {...props} className="my-4 border-border" />,
-  code: ({ className, children, ...props }) => {
-    const codeText = String(children).replace(/\n$/, '')
-    const isBlock = Boolean(className?.includes('language-')) || codeText.includes('\n')
+      </ol>
+    ),
+    li: ({ children, className, ...props }) => {
+      // Flatten task list items so GFM checkboxes render without the default bullet marker and keep the checkbox aligned with the text.
+      const isTaskListItem = typeof className === 'string' && className.includes('task-list-item')
 
-    if (!isBlock) {
+      return (
+        <li
+          {...props}
+          className={cn(
+            'pl-1 break-words [overflow-wrap:anywhere]',
+            isTaskListItem && 'list-none flex items-start gap-2 pl-0 leading-7 [&>p]:my-0'
+          )}
+        >
+          {children}
+        </li>
+      )
+    },
+    table: ({ children, ...props }) => (
+      <div className={cn('my-4', !exportMode && 'overflow-x-auto')}>
+        <table {...props} className="w-full border-collapse text-sm">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children, ...props }) => (
+      <thead {...props} className="bg-muted/50 text-foreground">
+        {children}
+      </thead>
+    ),
+    tbody: ({ children, ...props }) => (
+      <tbody {...props} className="divide-y divide-border">
+        {children}
+      </tbody>
+    ),
+    tr: ({ children, ...props }) => (
+      <tr {...props} className="border-b border-border">
+        {children}
+      </tr>
+    ),
+    th: ({ children, ...props }) => (
+      <th {...props} className="border border-border px-3 py-2 text-left font-semibold">
+        {children}
+      </th>
+    ),
+    td: ({ children, ...props }) => (
+      <td {...props} className="border border-border px-3 py-2 align-top break-words [overflow-wrap:anywhere]">
+        {children}
+      </td>
+    ),
+    hr: ({ ...props }) => <hr {...props} className="my-4 border-border" />,
+    code: ({ className, children, ...props }) => {
+      const codeText = String(children).replace(/\n$/, '')
+      const isBlock = Boolean(className?.includes('language-')) || codeText.includes('\n')
+
+      if (!isBlock) {
+        return (
+          <code
+            {...props}
+            className={cn(
+              'rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-foreground',
+              className
+            )}
+          >
+            {children}
+          </code>
+        )
+      }
+
       return (
         <code
           {...props}
           className={cn(
-            'rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-foreground',
+            'block rounded-[14px] border border-border bg-muted px-4 py-3 font-mono text-[0.95rem] leading-6 text-foreground',
+            !exportMode && 'overflow-x-auto',
+            exportMode && 'overflow-visible',
             className
           )}
         >
           {children}
         </code>
       )
-    }
+    },
+    pre: ({ children, ...props }) => {
+      // Render fenced code blocks with a language chip so the preview stays informative without adding extra chrome to inline code.
+      const child = Children.only(children) as ReactElement<{ className?: string; children?: ReactNode }>
 
-    return (
-      <code
-        {...props}
-        className={cn(
-          cn(
-            'block rounded-[14px] border border-border bg-muted px-4 py-3 font-mono text-[0.95rem] leading-6 text-foreground',
-            !exportMode && 'overflow-x-auto',
-            exportMode && 'overflow-visible'
-          ),
-          className
-        )}
-      >
-        {children}
-      </code>
-    )
-  },
-  pre: ({ children, ...props }) => {
-    // Render fenced code blocks with a language chip so the preview stays informative without adding extra chrome to inline code.
-    const child = Children.only(children) as ReactElement<{ className?: string; children?: ReactNode }>
+      if (isValidElement(child)) {
+        const codeClassName = typeof child.props.className === 'string' ? child.props.className : ''
+        const codeLanguageMatch = /language-([\w-]+)/.exec(codeClassName)
 
-    if (isValidElement(child)) {
-      const codeClassName = typeof child.props.className === 'string' ? child.props.className : ''
-      const codeLanguageMatch = /language-([\w-]+)/.exec(codeClassName)
+        if (codeLanguageMatch) {
+          const codeLanguage = codeLanguageMatch[1]
 
-      if (codeLanguageMatch) {
-        const codeLanguage = codeLanguageMatch[1]
-
-        return (
-          <div className="my-4 overflow-hidden rounded-[14px] border border-border bg-muted">
-            <div className="px-4 pt-3">
-              <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-muted-foreground">
-                {codeLanguage}
-              </span>
+          return (
+            <div className="my-4 overflow-hidden rounded-[14px] border border-border bg-muted">
+              <div className="px-4 pt-3">
+                <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-muted-foreground">
+                  {codeLanguage}
+                </span>
+              </div>
+              <div className={cn('px-4 py-3', !exportMode && 'overflow-x-auto')}>
+                <code
+                  className={cn(
+                    'block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6 text-foreground',
+                    exportMode && 'overflow-visible'
+                  )}
+                >
+                  {child.props.children}
+                </code>
+              </div>
             </div>
-            <div className={cn('px-4 py-3', !exportMode && 'overflow-x-auto')}>
-              <code
-                className={cn(
-                  'block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6 text-foreground',
-                  exportMode && 'overflow-visible'
-                )}
-              >
-                {child.props.children}
-              </code>
-            </div>
-          </div>
-        )
+          )
+        }
       }
-    }
 
-    return (
-      <pre
+      return (
+        <pre
+          {...props}
+          className={cn('my-4 rounded-[14px] bg-muted p-0', !exportMode && 'overflow-x-auto', exportMode && 'overflow-visible')}
+        >
+          {children}
+        </pre>
+      )
+    },
+    input: ({ checked }) =>
+      exportMode ? (
+        <span
+          aria-hidden="true"
+          className="inline-flex w-4 shrink-0 items-center justify-center font-mono text-[0.95rem] leading-6 text-foreground"
+        >
+          {checked ? '☑' : '☐'}
+        </span>
+      ) : (
+        <span
+          aria-hidden="true"
+          className={cn(
+            'mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border border-black/50 bg-transparent',
+            checked && 'border-black bg-black'
+          )}
+        >
+          {checked ? <span className="text-[0.7rem] leading-none text-white">✓</span> : null}
+        </span>
+      ),
+    img: ({ alt, src, ...props }) => (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
         {...props}
-        className={cn('my-4 rounded-[14px] bg-muted p-0', !exportMode && 'overflow-x-auto', exportMode && 'overflow-visible')}
-      >
-        {children}
-      </pre>
-    )
-  },
-  input: ({ checked, ...props }) => (
-    <span
-      {...props}
-      aria-hidden="true"
-      className={cn(
-        'mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border border-black/50 bg-transparent',
-        checked && 'border-black bg-black'
-      )}
-    >
-      {checked ? <span className="text-[0.7rem] leading-none text-white">✓</span> : null}
-    </span>
-  ),
-  img: ({ alt, src, ...props }) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      {...props}
-      alt={alt ?? ''}
-      crossOrigin="anonymous"
-      decoding="async"
-      loading="eager"
-      src={src}
-      className="my-4 max-w-full rounded-[14px] border border-border"
-    />
-  ),
+        alt={alt ?? ''}
+        crossOrigin="anonymous"
+        decoding="async"
+        loading="eager"
+        src={src}
+        className="my-4 max-w-full rounded-[14px] border border-border"
+      />
+    ),
   }
 }
 
@@ -272,7 +280,7 @@ export function MarkdownRenderer({
 }) {
   // Render the markdown preview using the same GFM dialect that GitHub documents, while applying the workspace typography and surface rules.
   return (
-    <div className={cn('max-w-[43rem]', mobile && 'max-w-none', exportMode && 'max-w-none')}>
+    <div className={cn('max-w-[43rem]', mobile && 'max-w-none')}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(exportMode)}>
         {markdown}
       </ReactMarkdown>
