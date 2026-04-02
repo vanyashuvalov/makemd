@@ -16,6 +16,11 @@ import type {
   WorkspaceSnapshot,
   WorkspaceSidebarSection,
 } from '@/entities/document/model/types'
+import {
+  buildDocumentFileName,
+  copyTextToClipboard,
+  downloadBlob,
+} from '@/features/document-actions/model/document-actions'
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { AuthModal, type AuthModalAccount } from '@/features/auth/ui/auth-modal'
@@ -137,15 +142,10 @@ export function WorkspaceShellClient({
   const handleDownloadDocument = (documentId: string) => {
     const targetDocument = documents.find((item) => item.id === documentId)
     const markdownSource = targetDocument?.markdown ?? markdown
-    const fileName = `${(targetDocument?.title ?? 'document').replace(/[^\w.-]+/g, '-').toLowerCase()}.md`
+    const fileName = buildDocumentFileName(targetDocument?.title ?? 'document', 'md')
     const blob = new Blob([markdownSource], { type: 'text/markdown;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const anchor = window.document.createElement('a')
 
-    anchor.href = url
-    anchor.download = fileName
-    anchor.click()
-    URL.revokeObjectURL(url)
+    downloadBlob({ blob, fileName })
   }
 
   // Copy the currently resolved markdown into the clipboard so the menu exposes a useful local action without waiting for persistence.
@@ -153,7 +153,7 @@ export function WorkspaceShellClient({
     const targetDocument = documents.find((item) => item.id === documentId)
     const markdownSource = targetDocument?.markdown ?? markdown
 
-    await navigator.clipboard.writeText(markdownSource)
+    await copyTextToClipboard(markdownSource)
   }
 
   // Generate a shareable workspace link for authenticated documents so the menu reflects the future cloud-backed URL contract.
@@ -161,7 +161,7 @@ export function WorkspaceShellClient({
     const url = new URL(window.location.href)
     url.searchParams.set('state', 'authorized')
     url.searchParams.set('document', documentId)
-    await navigator.clipboard.writeText(url.toString())
+    await copyTextToClipboard(url.toString())
   }
 
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
