@@ -99,84 +99,86 @@ export function Sidebar({
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground">
-      <div className="flex-1 space-y-6 px-6 py-6">
-        <div className="flex items-center gap-3">
-          {account ? (
-            <>
-              <Avatar name={account.name} className="h-10 w-10" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-sidebar-foreground">{account.email}</p>
-                <p className="text-xs text-sidebar-muted-foreground">Signed in</p>
-              </div>
-            </>
-          ) : (
-            <Button
-              variant="text"
-              size="text"
-              className="w-full"
-              before={
-                <IconButton as="span" variant="neutral" aria-hidden>
-                  <Icon icon={IconLogin2} size="md" tone="sidebarMuted" />
-                </IconButton>
-              }
-              onClick={onSignUpClick}
-            >
-              Sign up
-            </Button>
-          )}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
+          <div className="flex items-center gap-3">
+            {account ? (
+              <>
+                <Avatar name={account.name} className="h-10 w-10" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-sidebar-foreground">{account.email}</p>
+                  <p className="text-xs text-sidebar-muted-foreground">Signed in</p>
+                </div>
+              </>
+            ) : (
+              <Button
+                variant="text"
+                size="text"
+                className="w-full"
+                before={
+                  <IconButton as="span" variant="neutral" aria-hidden>
+                    <Icon icon={IconLogin2} size="md" tone="sidebarMuted" />
+                  </IconButton>
+                }
+                onClick={onSignUpClick}
+              >
+                Sign up
+              </Button>
+            )}
+          </div>
+
+          <CreateDocumentButton onClick={onCreateDocument} />
+
+          {isAuthenticated ? (
+            <Tabs
+              ariaLabel="Sidebar sections"
+              items={[
+                { value: 'history', label: 'History', icon: IconHistory },
+                { value: 'templates', label: 'Templates', icon: IconClipboardList },
+              ]}
+              value={activeSection}
+              compact
+              onValueChange={(value) => onSectionChange(value as WorkspaceSidebarSection)}
+            />
+          ) : null}
+
+          {warning ? (
+            <Alert
+              tone="warning"
+              title={warning.title}
+              description={warning.description}
+              icon={<Icon icon={IconAlertTriangle} size="sm" className="text-[#f2c46f]" />}
+              className="border-[#5a4823] bg-[#40321b]"
+            />
+          ) : null}
+
+          {showHistory ? (
+            <DocumentList
+              documents={documents}
+              selectionMode={selectionMode}
+              selectedCount={selectedCount}
+              totalCount={totalCount}
+              helperText={helperText}
+              canCopyLink={canCopyLink}
+              onToggleAllSelection={onToggleAllSelection}
+              onToggleDocument={onToggleDocument}
+              onOpenDocument={onOpenDocument}
+              onDownloadDocument={onDownloadDocument}
+              onDeleteDocument={onDeleteDocument}
+              onCopyMarkdownDocument={onCopyMarkdownDocument}
+              onCopyLinkDocument={onCopyLinkDocument}
+              onDeleteSelected={onDeleteSelected}
+              onDownloadSelected={onDownloadSelected}
+              onCopyMarkdownSelected={onCopyMarkdownSelected}
+              onCopyLinkSelected={onCopyLinkSelected}
+            />
+          ) : null}
+
+          {showTemplates ? <TemplateList items={templates} onUseTemplate={onUseTemplate} /> : null}
         </div>
-
-        <CreateDocumentButton onClick={onCreateDocument} />
-
-        {isAuthenticated ? (
-          <Tabs
-            ariaLabel="Sidebar sections"
-            items={[
-              { value: 'history', label: 'History', icon: IconHistory },
-              { value: 'templates', label: 'Templates', icon: IconClipboardList },
-            ]}
-            value={activeSection}
-            compact
-            onValueChange={(value) => onSectionChange(value as WorkspaceSidebarSection)}
-          />
-        ) : null}
-
-        {warning ? (
-          <Alert
-            tone="warning"
-            title={warning.title}
-            description={warning.description}
-            icon={<Icon icon={IconAlertTriangle} size="sm" className="text-[#f2c46f]" />}
-            className="border-[#5a4823] bg-[#40321b]"
-          />
-        ) : null}
-
-        {showHistory ? (
-          <DocumentList
-            documents={documents}
-            selectionMode={selectionMode}
-            selectedCount={selectedCount}
-            totalCount={totalCount}
-            helperText={helperText}
-            canCopyLink={canCopyLink}
-            onToggleAllSelection={onToggleAllSelection}
-            onToggleDocument={onToggleDocument}
-            onOpenDocument={onOpenDocument}
-            onDownloadDocument={onDownloadDocument}
-            onDeleteDocument={onDeleteDocument}
-            onCopyMarkdownDocument={onCopyMarkdownDocument}
-            onCopyLinkDocument={onCopyLinkDocument}
-            onDeleteSelected={onDeleteSelected}
-            onDownloadSelected={onDownloadSelected}
-            onCopyMarkdownSelected={onCopyMarkdownSelected}
-            onCopyLinkSelected={onCopyLinkSelected}
-          />
-        ) : null}
-
-        {showTemplates ? <TemplateList items={templates} onUseTemplate={onUseTemplate} /> : null}
       </div>
 
-      <div className="space-y-4 px-6 py-4">
+      <div className="shrink-0 space-y-4 px-6 py-4">
         <Separator className="bg-sidebar-border" />
         <div className="flex items-center justify-between text-sm text-sidebar-muted-foreground">
           <span>makemd &copy; 2026</span>
