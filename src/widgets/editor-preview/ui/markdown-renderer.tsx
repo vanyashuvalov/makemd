@@ -9,8 +9,9 @@ import { Children, isValidElement, type ReactElement, type ReactNode } from 'rea
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/shared/lib/cn'
+import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
-function createMarkdownComponents(exportMode: boolean): Components {
+function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): Components {
   // Keep the render tree mostly identical between the on-screen preview and PDF export, but relax scroll-only wrappers in export mode so html2canvas can measure the document without clipped containers.
   return {
     h1: ({ children, ...props }) => (
@@ -52,24 +53,39 @@ function createMarkdownComponents(exportMode: boolean): Components {
         {children}
       </h6>
     ),
-    p: ({ children, ...props }) => (
-      <p {...props} className={cn('text-sm leading-7 text-foreground', exportMode && 'break-words [overflow-wrap:anywhere]')}>
-        {children}
-      </p>
-    ),
-    strong: ({ children, ...props }) => (
-      <strong {...props} className="font-semibold text-foreground">
-        {children}
-      </strong>
-    ),
-    em: ({ children, ...props }) => (
-      <em {...props} className="italic text-foreground">
-        {children}
-      </em>
-    ),
+    p: ({ children, ...props }) =>
+      exportMode ? (
+        <p {...props} className="text-sm leading-7 break-words [overflow-wrap:anywhere]" style={{ color: theme.foreground }}>
+          {children}
+        </p>
+      ) : (
+        <p {...props} className="text-sm leading-7 text-foreground">
+          {children}
+        </p>
+      ),
+    strong: ({ children, ...props }) =>
+      exportMode ? (
+        <strong {...props} className="font-semibold" style={{ color: theme.foreground }}>
+          {children}
+        </strong>
+      ) : (
+        <strong {...props} className="font-semibold text-foreground">
+          {children}
+        </strong>
+      ),
+    em: ({ children, ...props }) =>
+      exportMode ? (
+        <em {...props} className="italic" style={{ color: theme.foreground }}>
+          {children}
+        </em>
+      ) : (
+        <em {...props} className="italic text-foreground">
+          {children}
+        </em>
+      ),
     del: ({ children, ...props }) =>
       exportMode ? (
-        <del {...props} className="text-foreground line-through" style={{ textDecorationColor: '#6d6860' }}>
+        <del {...props} className="line-through" style={{ color: theme.foreground, textDecorationColor: theme.mutedForeground }}>
           {children}
         </del>
       ) : (
@@ -83,7 +99,7 @@ function createMarkdownComponents(exportMode: boolean): Components {
           {...props}
           href={href}
           className="break-words underline underline-offset-4 [overflow-wrap:anywhere]"
-          style={{ color: '#0369a1', textDecorationColor: '#0369a1' }}
+          style={{ color: theme.link, textDecorationColor: theme.linkDecoration }}
           target={href?.startsWith('http') ? '_blank' : undefined}
           rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
         >
@@ -104,8 +120,8 @@ function createMarkdownComponents(exportMode: boolean): Components {
       exportMode ? (
         <blockquote
           {...props}
-          className="break-words border-l-2 pl-4 text-foreground [overflow-wrap:anywhere]"
-          style={{ borderLeftColor: '#d6cec1' }}
+          className="break-words border-l-2 pl-4 [overflow-wrap:anywhere]"
+          style={{ borderLeftColor: theme.quoteBorder, color: theme.foreground }}
         >
           {children}
         </blockquote>
@@ -117,24 +133,39 @@ function createMarkdownComponents(exportMode: boolean): Components {
           {children}
         </blockquote>
       ),
-    ul: ({ children, ...props }) => (
-      <ul
-        {...props}
-        className={cn(
-          'my-0 space-y-2 pl-6 text-sm leading-7 text-foreground break-words',
-          typeof props.className === 'string' && props.className.includes('contains-task-list')
-            ? 'list-none pl-0'
-            : 'list-disc'
-        )}
-      >
-        {children}
-      </ul>
-    ),
-    ol: ({ children, ...props }) => (
-      <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 text-foreground break-words">
-        {children}
-      </ol>
-    ),
+    ul: ({ children, ...props }) => {
+      const isTaskList = typeof props.className === 'string' && props.className.includes('contains-task-list')
+
+      return exportMode ? (
+        <ul
+          {...props}
+          className={cn('my-0 space-y-2 pl-6 text-sm leading-7 break-words', isTaskList ? 'list-none pl-0' : 'list-disc')}
+          style={{ color: theme.foreground }}
+        >
+          {children}
+        </ul>
+      ) : (
+        <ul
+          {...props}
+          className={cn(
+            'my-0 space-y-2 pl-6 text-sm leading-7 text-foreground break-words',
+            isTaskList ? 'list-none pl-0' : 'list-disc'
+          )}
+        >
+          {children}
+        </ul>
+      )
+    },
+    ol: ({ children, ...props }) =>
+      exportMode ? (
+        <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 break-words" style={{ color: theme.foreground }}>
+          {children}
+        </ol>
+      ) : (
+        <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 text-foreground break-words">
+          {children}
+        </ol>
+      ),
     li: ({ children, className, ...props }) => {
       // Flatten task list items so GFM checkboxes render without the default bullet marker and keep the checkbox aligned with the text.
       const isTaskListItem = typeof className === 'string' && className.includes('task-list-item')
@@ -146,6 +177,7 @@ function createMarkdownComponents(exportMode: boolean): Components {
             'pl-1 break-words [overflow-wrap:anywhere]',
             isTaskListItem && 'list-none flex items-start gap-2 pl-0 leading-7 [&>p]:my-0'
           )}
+          style={exportMode ? { color: theme.foreground } : undefined}
         >
           {children}
         </li>
@@ -153,56 +185,99 @@ function createMarkdownComponents(exportMode: boolean): Components {
     },
     table: ({ children, ...props }) => (
       <div className={cn('my-4', !exportMode && 'overflow-x-auto')}>
-        <table {...props} className="w-full border-collapse text-sm">
+        <table {...props} className="w-full border-collapse text-sm" style={exportMode ? { color: theme.foreground, borderColor: theme.border } : undefined}>
           {children}
         </table>
       </div>
     ),
-    thead: ({ children, ...props }) => (
-      <thead {...props} className="bg-muted text-foreground">
-        {children}
-      </thead>
-    ),
+    thead: ({ children, ...props }) =>
+      exportMode ? (
+        <thead {...props} style={{ backgroundColor: theme.tableHeaderBackground, color: theme.foreground }}>
+          {children}
+        </thead>
+      ) : (
+        <thead {...props} className="bg-muted text-foreground">
+          {children}
+        </thead>
+      ),
     tbody: ({ children, ...props }) => (
-      <tbody {...props} className="divide-y divide-border">
+      <tbody {...props} className={cn(!exportMode && 'divide-y divide-border')} style={exportMode ? { color: theme.foreground } : undefined}>
         {children}
       </tbody>
     ),
     tr: ({ children, ...props }) => (
-      <tr {...props} className="border-b border-border">
+      <tr {...props} className={!exportMode ? 'border-b border-border' : undefined} style={exportMode ? { borderBottom: `1px solid ${theme.border}` } : undefined}>
         {children}
       </tr>
     ),
     th: ({ children, ...props }) => (
-      <th {...props} className="border border-border px-3 py-2 text-left font-semibold">
+      <th
+        {...props}
+        className={exportMode ? 'px-3 py-2 text-left font-semibold' : 'border border-border px-3 py-2 text-left font-semibold'}
+        style={exportMode ? { border: `1px solid ${theme.border}`, color: theme.foreground } : undefined}
+      >
         {children}
       </th>
     ),
     td: ({ children, ...props }) => (
-      <td {...props} className="border border-border px-3 py-2 align-top break-words [overflow-wrap:anywhere]">
+      <td
+        {...props}
+        className={
+          exportMode
+            ? 'px-3 py-2 align-top break-words [overflow-wrap:anywhere]'
+            : 'border border-border px-3 py-2 align-top break-words [overflow-wrap:anywhere]'
+        }
+        style={exportMode ? { border: `1px solid ${theme.border}`, color: theme.foreground } : undefined}
+      >
         {children}
       </td>
     ),
-    hr: ({ ...props }) => <hr {...props} className="my-4 border-border" />,
+    hr: ({ ...props }) =>
+      exportMode ? (
+        <hr {...props} className="my-4" style={{ borderTop: `1px solid ${theme.border}` }} />
+      ) : (
+        <hr {...props} className="my-4 border-border" />
+      ),
     code: ({ className, children, ...props }) => {
       const codeText = String(children).replace(/\n$/, '')
       const isBlock = Boolean(className?.includes('language-')) || codeText.includes('\n')
 
       if (!isBlock) {
-        return (
+        return exportMode ? (
           <code
             {...props}
-            className={cn(
-              'rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-foreground',
-              className
-            )}
+            className={cn('rounded-md border px-1.5 py-0.5 font-mono text-[0.95em]', className)}
+            style={{
+              backgroundColor: theme.codeBackground,
+              color: theme.codeForeground,
+              borderColor: theme.border,
+            }}
+          >
+            {children}
+          </code>
+        ) : (
+          <code
+            {...props}
+            className={cn('rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.95em] text-foreground', className)}
           >
             {children}
           </code>
         )
       }
 
-      return (
+      return exportMode ? (
+        <code
+          {...props}
+          className={cn('block rounded-[14px] px-4 py-3 font-mono text-[0.95rem] leading-6', className)}
+          style={{
+            backgroundColor: theme.codeBackground,
+            color: theme.codeForeground,
+            borderColor: theme.border,
+          }}
+        >
+          {children}
+        </code>
+      ) : (
         <code
           {...props}
           className={cn(
@@ -228,18 +303,30 @@ function createMarkdownComponents(exportMode: boolean): Components {
           const codeLanguage = codeLanguageMatch[1]
 
           return (
-            <div className="my-4 overflow-hidden rounded-[14px] border border-border bg-muted">
+            <div className="my-4 overflow-hidden rounded-[14px] border border-border bg-muted" style={exportMode ? { borderColor: theme.border, backgroundColor: theme.surface } : undefined}>
               <div className="px-4 pt-3">
-                <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-muted-foreground">
+                <span
+                  className="inline-flex items-center rounded-full border px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em]"
+                  style={
+                    exportMode
+                      ? {
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          color: theme.mutedForeground,
+                        }
+                      : undefined
+                  }
+                >
                   {codeLanguage}
                 </span>
               </div>
               <div className={cn('px-4 py-3', !exportMode && 'overflow-x-auto')}>
                 <code
                   className={cn(
-                    'block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6 text-foreground',
+                    'block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6',
                     exportMode && 'overflow-visible'
                   )}
+                  style={exportMode ? { color: theme.codeForeground } : undefined}
                 >
                   {child.props.children}
                 </code>
@@ -253,6 +340,7 @@ function createMarkdownComponents(exportMode: boolean): Components {
         <pre
           {...props}
           className={cn('my-4 rounded-[14px] bg-muted p-0', !exportMode && 'overflow-x-auto', exportMode && 'overflow-visible')}
+          style={exportMode ? { backgroundColor: theme.surface } : undefined}
         >
           {children}
         </pre>
@@ -262,7 +350,8 @@ function createMarkdownComponents(exportMode: boolean): Components {
       exportMode ? (
         <span
           aria-hidden="true"
-          className="inline-flex w-4 shrink-0 items-center justify-center font-mono text-[0.95rem] leading-6 text-foreground"
+          className="inline-flex w-4 shrink-0 items-center justify-center font-mono text-[0.95rem] leading-6"
+          style={{ color: theme.foreground }}
         >
           {checked ? '☑' : '☐'}
         </span>
@@ -277,18 +366,31 @@ function createMarkdownComponents(exportMode: boolean): Components {
           {checked ? <span className="text-[0.7rem] leading-none text-white">✓</span> : null}
         </span>
       ),
-    img: ({ alt, src, ...props }) => (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        {...props}
-        alt={alt ?? ''}
-        crossOrigin="anonymous"
-        decoding="async"
-        loading="eager"
-        src={src}
-        className="my-4 max-w-full rounded-[14px] border border-border"
-      />
-    ),
+    img: ({ alt, src, ...props }) =>
+      exportMode ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          {...props}
+          alt={alt ?? ''}
+          crossOrigin="anonymous"
+          decoding="async"
+          loading="eager"
+          src={src}
+          className="my-4 max-w-full rounded-[14px] border"
+          style={{ borderColor: theme.border }}
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          {...props}
+          alt={alt ?? ''}
+          crossOrigin="anonymous"
+          decoding="async"
+          loading="eager"
+          src={src}
+          className="my-4 max-w-full rounded-[14px] border border-border"
+        />
+      ),
   }
 }
 
@@ -296,15 +398,17 @@ export function MarkdownRenderer({
   markdown,
   mobile = false,
   exportMode = false,
+  theme = defaultPdfPreviewTheme,
 }: {
   markdown: string
   mobile?: boolean
   exportMode?: boolean
+  theme?: PdfPreviewTheme
 }) {
   // Render the markdown preview using the same GFM dialect that GitHub documents, while applying the workspace typography and surface rules.
   return (
-    <div className={cn('max-w-[43rem]', mobile && 'max-w-none')}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(exportMode)}>
+    <div className={cn('max-w-[43rem]', mobile && 'max-w-none', exportMode && 'max-w-none')} style={exportMode ? { color: theme.foreground } : undefined}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(exportMode, theme)}>
         {markdown}
       </ReactMarkdown>
     </div>

@@ -10,21 +10,31 @@
 
 import { MarkdownRenderer } from './markdown-renderer'
 import { PDF_EXPORT_BODY_CLASSNAME } from './preview-surface-classes'
+import {
+  defaultPdfPreviewTheme,
+  type PdfPreviewTheme,
+} from '../model/pdf-theme'
 
 export function PdfPreviewSurface({
   markdown,
   width,
+  theme = defaultPdfPreviewTheme,
 }: {
   markdown: string
   width?: number
+  theme?: PdfPreviewTheme
 }) {
   // Render the same preview content the user sees on the right, but without the card chrome so the PDF reads as exported markdown instead of another UI panel.
   return (
     <div
       className={PDF_EXPORT_BODY_CLASSNAME}
-      style={width ? { width: `${width}px` } : undefined}
+      style={{
+        width: width ? `${width}px` : undefined,
+        backgroundColor: theme.background,
+        color: theme.foreground,
+      }}
     >
-      <MarkdownRenderer markdown={markdown} exportMode />
+      <MarkdownRenderer markdown={markdown} exportMode theme={theme} />
     </div>
   )
 }

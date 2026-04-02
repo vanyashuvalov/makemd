@@ -13,6 +13,7 @@ import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-previ
 import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
 import { PdfPreviewSurface } from '@/widgets/editor-preview/ui/pdf-preview-surface'
+import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
 import type {
   DocumentRecord,
   WorkspaceSnapshot,
@@ -521,7 +522,11 @@ export function WorkspaceShellClient({
       {pdfExportRequest ? (
         <div className="pointer-events-none fixed left-[-10000px] top-0 w-[816px]">
           <div ref={pdfExportRef}>
-            <PdfPreviewSurface markdown={pdfExportRequest.markdown} width={pdfExportRequest.width} />
+            <PdfPreviewSurface
+              markdown={pdfExportRequest.markdown}
+              width={pdfExportRequest.width}
+              theme={defaultPdfPreviewTheme}
+            />
           </div>
         </div>
       ) : null}
