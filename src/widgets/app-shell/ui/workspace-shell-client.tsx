@@ -42,6 +42,18 @@ function createDocumentMarkdown(title: string) {
   return `# ${title}\n`
 }
 
+// Restore a starter document when the last file is deleted so the workspace never falls into an empty dead-end state.
+function createStarterDocument(snapshot: WorkspaceSnapshot): DocumentRecord {
+  return {
+    id: createDocumentId(),
+    title: snapshot.prompt?.title ?? snapshot.documents[0]?.title ?? createDocumentTitle(),
+    updatedLabel: 'Just now',
+    markdown: snapshot.editor.markdown,
+    active: true,
+    withMenu: true,
+  }
+}
+
 // Resolve the next active document after one or more rows are deleted so multi-select and single-row deletion share the same fallback behavior.
 function getNextActiveDocumentId(documents: DocumentRecord[], removedDocumentIds: string[]) {
   const removedDocumentIdSet = new Set(removedDocumentIds)
@@ -140,6 +152,15 @@ export function WorkspaceShellClient({
 
     const removedDocumentIdSet = new Set(documentIds)
     const nextDocuments = documents.filter((document) => !removedDocumentIdSet.has(document.id))
+
+    if (nextDocuments.length === 0) {
+      const starterDocument = createStarterDocument(snapshot)
+
+      setDocuments([starterDocument])
+      setMarkdown(starterDocument.markdown ?? snapshot.editor.markdown)
+      return
+    }
+
     const nextActiveDocumentId = getNextActiveDocumentId(documents, documentIds)
     const resolvedDocuments = nextDocuments.map((document) => ({
       ...document,
@@ -336,7 +357,7 @@ export function WorkspaceShellClient({
   // Keep the live markdown and selection state isolated to the client surface while the sidebar stays a fixed 360px anchor in the shell.
   return (
     <>
-      <div className="hidden h-full min-h-0 lg:flex lg:gap-0">
+      <div className="hidden h-full min-h-0 lg:flex lg:gap-2">
         <div className="min-h-0 shrink-0" style={{ width: `${DESKTOP_SIDEBAR_WIDTH}px` }}>
           <Sidebar
             account={isAuthenticated ? account : undefined}
@@ -401,6 +422,7 @@ export function WorkspaceShellClient({
     </>
   )
 }
+
 
 
 
