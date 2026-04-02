@@ -16,13 +16,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Inp
   { className, type = 'text', ...props },
   ref
 ) {
-  // Render a minimal form field that matches the dark workspace surfaces used by the auth flow and any future modal forms.
+  // Render a larger, translucent form field that matches the dark workspace surfaces used by the auth flow and any future modal forms.
   return (
     <input
       ref={ref}
       type={type}
       className={cn(
-        'flex h-11 w-full rounded-[0.9rem] border border-sidebar-border bg-sidebar-muted px-4 text-sm text-sidebar-foreground shadow-none outline-none transition-[border-color,background-color,color] duration-150 placeholder:text-sidebar-muted-foreground focus:border-ring focus:bg-[color:var(--color-sidebar-surface)] focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-12 w-full rounded-[1rem] border border-white/10 bg-white/[0.06] px-5 text-[18px] leading-[25px] text-sidebar-foreground shadow-none outline-none transition-[border-color,background-color,color] duration-150 placeholder:text-sidebar-muted-foreground focus:border-white/20 focus:bg-white/10 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       {...props}

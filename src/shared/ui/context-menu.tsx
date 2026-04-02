@@ -102,7 +102,7 @@ export function ContextMenu({ open, anchorRef, items, onOpenChange, className }:
       ref={menuRef}
       role="menu"
       className={cn(
-        'fixed z-50 w-[17rem] overflow-hidden rounded-[1.1rem] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] p-2 text-sidebar-foreground shadow-none',
+        'fixed z-50 w-[17rem] overflow-hidden rounded-[1.1rem] border border-sidebar-border bg-[color:var(--color-background)] p-2 text-sidebar-foreground shadow-none',
         className
       )}
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
