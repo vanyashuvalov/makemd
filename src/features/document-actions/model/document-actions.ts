@@ -8,6 +8,10 @@
  * Connected to: document row menus, the workspace controller, and future PDF/markdown export implementations.
  */
 import { getMarkdownTitle } from '@/entities/document/model/markdown'
+import {
+  DEFAULT_PDF_PAGEBREAK_AVOID_SELECTORS,
+  DEFAULT_PDF_PAGEBREAK_MODE,
+} from '@/widgets/editor-preview/model/pdf-export-layout'
 
 export type DocumentDownloadBlob = {
   blob: Blob
@@ -131,29 +135,36 @@ export async function downloadElementAsPdf(element: HTMLElement, fileName: strin
   console.debug('[pdf-export] assets ready')
 
   try {
+    // html2pdf's runtime accepts pagebreak settings, but the bundled TypeScript declarations lag behind, so we cast the options once here instead of duplicating page-splitting logic in another helper.
+    const pdfOptions = {
+      filename: fileName,
+      margin: [0, 0, 0, 0],
+      pagebreak: {
+        mode: [...DEFAULT_PDF_PAGEBREAK_MODE],
+        avoid: [...DEFAULT_PDF_PAGEBREAK_AVOID_SELECTORS],
+      },
+      image: {
+        type: 'jpeg',
+        quality: 0.98,
+      },
+      html2canvas: {
+        scale: Math.min(window.devicePixelRatio || 2, 2),
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth,
+        windowHeight,
+        scrollX: 0,
+        scrollY: 0,
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+      },
+    }
+
     await html2pdf()
-      .set({
-        filename: fileName,
-        margin: [0, 0, 0, 0],
-        image: {
-          type: 'jpeg',
-          quality: 0.98,
-        },
-        html2canvas: {
-          scale: Math.min(window.devicePixelRatio || 2, 2),
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          windowWidth,
-          windowHeight,
-          scrollX: 0,
-          scrollY: 0,
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-        },
-      })
+      .set(pdfOptions as never)
       .from(element)
       .save()
 
@@ -176,6 +187,12 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   anchor.click()
   URL.revokeObjectURL(url)
 }
+
+
+
+
+
+
 
 
 

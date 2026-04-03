@@ -17,5 +17,5 @@ export const PREVIEW_BODY_CLASSNAME =
 // Keep the mobile preview body on the same rhythm as the desktop preview while using slightly tighter padding for the smaller viewport.
 export const PREVIEW_BODY_MOBILE_CLASSNAME = 'px-6 py-6 pb-20'
 
-// Keep the export-only markdown surface on the same card background and padding as the preview body so html2pdf captures the same document geometry the user sees on the right.
-export const PDF_EXPORT_BODY_CLASSNAME = 'bg-card px-8 py-8 pb-24 text-foreground'
+// Keep the export-only markdown surface on the same card background and padding as the preview body while letting the outer export wrapper decide the actual PDF page width.
+export const PDF_EXPORT_BODY_CLASSNAME = 'w-full max-w-none bg-card px-8 py-8 pb-24 text-foreground'

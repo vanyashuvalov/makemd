@@ -13,6 +13,7 @@ import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-previ
 import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
 import { PdfPreviewSurface } from '@/widgets/editor-preview/ui/pdf-preview-surface'
+import { DEFAULT_PDF_PAGE_WIDTH_PX } from '@/widgets/editor-preview/model/pdf-export-layout'
 import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
 import type {
   DocumentRecord,
@@ -93,10 +94,9 @@ export function WorkspaceShellClient({
   const selectedDocuments = documents.filter((document) => document.selected)
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
   const [toasts, setToasts] = useState<ToastItem[]>([])
-  const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string; width?: number } | null>(null)
+  const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string } | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const pdfExportRef = useRef<HTMLDivElement | null>(null)
-  const previewPaneRef = useRef<HTMLDivElement | null>(null)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
   const activeExportTitle = getDocumentExportTitle(
     activeDocument,
@@ -298,12 +298,10 @@ export function WorkspaceShellClient({
 
     const markdownSource = document.markdown ?? ''
     const exportTitle = getDocumentExportTitle(document, markdownSource, document.title ?? createDocumentTitle())
-    const previewWidth = previewPaneRef.current?.getBoundingClientRect().width
 
     setPdfExportRequest({
       markdown: markdownSource,
       fileName: `${exportTitle}.pdf`,
-      width: previewWidth,
     })
   }
 
@@ -498,7 +496,7 @@ export function WorkspaceShellClient({
               placeholder={snapshot.prompt?.title ?? 'Start writing markdown'}
             />
 
-            <div ref={previewPaneRef} className="relative min-h-0 min-w-0">
+            <div className="relative min-h-0 min-w-0">
               <PreviewPane markdown={markdown} />
               <ExportBar
                 fileName={activeExportFileName}
@@ -520,13 +518,9 @@ export function WorkspaceShellClient({
       </div>
 
       {pdfExportRequest ? (
-        <div className="pointer-events-none fixed left-[-10000px] top-0 w-[816px]">
+        <div className="pointer-events-none fixed left-[-10000px] top-0" style={{ width: `${DEFAULT_PDF_PAGE_WIDTH_PX}px` }}>
           <div ref={pdfExportRef}>
-            <PdfPreviewSurface
-              markdown={pdfExportRequest.markdown}
-              width={pdfExportRequest.width}
-              theme={defaultPdfPreviewTheme}
-            />
+            <PdfPreviewSurface markdown={pdfExportRequest.markdown} theme={defaultPdfPreviewTheme} />
           </div>
         </div>
       ) : null}

@@ -55,7 +55,11 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
     ),
     p: ({ children, ...props }) =>
       exportMode ? (
-        <p {...props} className="text-sm leading-7 break-words [overflow-wrap:anywhere]" style={{ color: theme.foreground }}>
+        <p
+          {...props}
+          className="page-break-avoid text-sm leading-7 break-words [overflow-wrap:anywhere]"
+          style={{ color: theme.foreground, breakInside: 'avoid', pageBreakInside: 'avoid' }}
+        >
           {children}
         </p>
       ) : (
@@ -120,8 +124,8 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       exportMode ? (
         <blockquote
           {...props}
-          className="break-words border-l-2 pl-4 [overflow-wrap:anywhere]"
-          style={{ borderLeftColor: theme.quoteBorder, color: theme.foreground }}
+          className="page-break-avoid break-words border-l-2 pl-4 [overflow-wrap:anywhere]"
+          style={{ borderLeftColor: theme.quoteBorder, color: theme.foreground, breakInside: 'avoid', pageBreakInside: 'avoid' }}
         >
           {children}
         </blockquote>
@@ -174,10 +178,10 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         <li
           {...props}
           className={cn(
-            'pl-1 break-words [overflow-wrap:anywhere]',
+            'page-break-avoid pl-1 break-words [overflow-wrap:anywhere]',
             isTaskListItem && 'list-none flex items-start gap-2 pl-0 leading-7 [&>p]:my-0'
           )}
-          style={exportMode ? { color: theme.foreground } : undefined}
+          style={exportMode ? { color: theme.foreground, breakInside: 'avoid', pageBreakInside: 'avoid' } : undefined}
         >
           {children}
         </li>
@@ -185,7 +189,15 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
     },
     table: ({ children, ...props }) => (
       <div className={cn('my-4', !exportMode && 'overflow-x-auto')}>
-        <table {...props} className="w-full border-collapse text-sm" style={exportMode ? { color: theme.foreground, borderColor: theme.border } : undefined}>
+        <table
+          {...props}
+          className="page-break-avoid w-full border-collapse text-sm"
+          style={
+            exportMode
+              ? { color: theme.foreground, borderColor: theme.border, breakInside: 'avoid', pageBreakInside: 'avoid' }
+              : undefined
+          }
+        >
           {children}
         </table>
       </div>
@@ -214,7 +226,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       <th
         {...props}
         className={exportMode ? 'px-3 py-2 text-left font-semibold' : 'border border-border px-3 py-2 text-left font-semibold'}
-        style={exportMode ? { border: `1px solid ${theme.border}`, color: theme.foreground } : undefined}
+        style={exportMode ? { border: `1px solid ${theme.border}`, color: theme.foreground, breakInside: 'avoid', pageBreakInside: 'avoid' } : undefined}
       >
         {children}
       </th>
@@ -224,10 +236,10 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         {...props}
         className={
           exportMode
-            ? 'px-3 py-2 align-top break-words [overflow-wrap:anywhere]'
+            ? 'page-break-avoid px-3 py-2 align-top break-words [overflow-wrap:anywhere]'
             : 'border border-border px-3 py-2 align-top break-words [overflow-wrap:anywhere]'
         }
-        style={exportMode ? { border: `1px solid ${theme.border}`, color: theme.foreground } : undefined}
+        style={exportMode ? { border: `1px solid ${theme.border}`, color: theme.foreground, breakInside: 'avoid', pageBreakInside: 'avoid' } : undefined}
       >
         {children}
       </td>
@@ -246,7 +258,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         return exportMode ? (
           <code
             {...props}
-            className={cn('rounded-md border px-1.5 py-0.5 font-mono text-[0.95em]', className)}
+            className={cn('page-break-avoid rounded-md border px-1.5 py-0.5 font-mono text-[0.95em]', className)}
             style={{
               backgroundColor: theme.codeBackground,
               color: theme.codeForeground,
@@ -268,7 +280,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       return exportMode ? (
         <code
           {...props}
-          className={cn('block rounded-[14px] px-4 py-3 font-mono text-[0.95rem] leading-6', className)}
+          className={cn('page-break-avoid block rounded-[14px] px-4 py-3 font-mono text-[0.95rem] leading-6', className)}
           style={{
             backgroundColor: theme.codeBackground,
             color: theme.codeForeground,
@@ -302,8 +314,11 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         if (codeLanguageMatch) {
           const codeLanguage = codeLanguageMatch[1]
 
-          return (
-            <div className="my-4 overflow-hidden rounded-[14px] border border-border bg-muted" style={exportMode ? { borderColor: theme.border, backgroundColor: theme.surface } : undefined}>
+            return (
+            <div
+              className="page-break-avoid my-4 overflow-hidden rounded-[14px] border border-border bg-muted"
+              style={exportMode ? { borderColor: theme.border, backgroundColor: theme.surface, breakInside: 'avoid', pageBreakInside: 'avoid' } : undefined}
+            >
               <div className="px-4 pt-3">
                 <span
                   className="inline-flex items-center rounded-full border px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em]"
@@ -376,8 +391,8 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
           decoding="async"
           loading="eager"
           src={src}
-          className="my-4 max-w-full rounded-[14px] border"
-          style={{ borderColor: theme.border }}
+          className="page-break-avoid my-4 max-w-full rounded-[14px] border"
+          style={{ borderColor: theme.border, breakInside: 'avoid', pageBreakInside: 'avoid' }}
         />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
