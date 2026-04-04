@@ -41,7 +41,7 @@ export function DocumentDeleteConfirmationModal({
       }}
     >
       <div className="flex items-center justify-end gap-3 pt-4">
-        <Button variant="text" size="text" onClick={onCancel}>
+        <Button variant="text" size="text" className="font-normal" onClick={onCancel}>
           Cancel
         </Button>
         <Button

@@ -60,7 +60,7 @@ export function Modal({ open, title, description, onOpenChange, children, classN
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative w-full max-w-[32rem] rounded-[24px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] p-6 text-sidebar-foreground shadow-none',
+          'relative w-full max-w-[32rem] rounded-[24px] border border-sidebar-border bg-background p-6 text-sidebar-foreground shadow-none',
           className
         )}
         onMouseDown={(event) => event.stopPropagation()}
