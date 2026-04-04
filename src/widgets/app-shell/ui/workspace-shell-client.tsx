@@ -91,6 +91,7 @@ export function WorkspaceShellClient({
   const selectedDocuments = documents.filter((document) => document.selected)
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const hasHydratedGuestTitleRef = useRef(false)
@@ -164,6 +165,24 @@ export function WorkspaceShellClient({
       tone: 'success',
       title: 'Markdown copied',
       description: 'The document content is now in your clipboard.',
+    })
+  }
+
+  // Announce the start of a PDF export so the user gets immediate feedback before Chromium finishes the server-side render.
+  const showPdfProcessingToast = () => {
+    showToast({
+      tone: 'info',
+      title: 'Preparing PDF',
+      description: 'The file is being processed. Please wait a couple of seconds.',
+    })
+  }
+
+  // Confirm the PDF export once the browser has received the generated blob so the workspace gives a clear completion signal.
+  const showPdfDownloadedToast = () => {
+    showToast({
+      tone: 'success',
+      title: 'PDF downloaded',
+      description: 'The file has been saved to your downloads.',
     })
   }
 
@@ -289,7 +308,7 @@ export function WorkspaceShellClient({
     downloadBlob({ blob, fileName })
   }
 
-  // Send a single document markdown payload to the server PDF route and surface a toast if the browser cannot save the generated file.
+  // Send a single document markdown payload to the server PDF route so the shared export flow can print the current document as a real PDF.
   const downloadDocumentPdf = async (document: DocumentRecord | undefined) => {
     if (!document) {
       return
@@ -297,17 +316,32 @@ export function WorkspaceShellClient({
 
     const markdownSource = document.markdown ?? ''
 
+    await downloadMarkdownAsPdf({
+      title: document.title ?? createDocumentTitle(),
+      markdown: markdownSource,
+    })
+  }
+
+  // Run a PDF download with shared loading and feedback state so desktop and mobile export controls stay in sync while the browser saves the file.
+  const handleDownloadPdfDocument = async (document: DocumentRecord | undefined) => {
+    if (!document || isDownloadingPdf) {
+      return
+    }
+
+    setIsDownloadingPdf(true)
+    showPdfProcessingToast()
+
     try {
-      await downloadMarkdownAsPdf({
-        title: document.title ?? createDocumentTitle(),
-        markdown: markdownSource,
-      })
+      await downloadDocumentPdf(document)
+      showPdfDownloadedToast()
     } catch {
       showToast({
         tone: 'warning',
         title: 'PDF export failed',
         description: 'Unable to generate the PDF right now.',
       })
+    } finally {
+      setIsDownloadingPdf(false)
     }
   }
 
@@ -355,13 +389,13 @@ export function WorkspaceShellClient({
   const handleDownloadDocument = (documentId: string) => {
     const targetDocument = documents.find((document) => document.id === documentId)
 
-    void downloadDocumentPdf(targetDocument)
+    void handleDownloadPdfDocument(targetDocument)
   }
 
   // Download the current selected set, falling back to the legacy markdown bundle when more than one document is selected.
   const handleDownloadSelectedDocuments = () => {
     if (selectedDocuments.length === 1) {
-      void downloadDocumentPdf(selectedDocuments[0])
+      void handleDownloadPdfDocument(selectedDocuments[0])
       return
     }
 
@@ -462,7 +496,7 @@ export function WorkspaceShellClient({
 
   // Export the currently active document to a PDF through the server-side print route so the browser receives a real selectable document instead of a canvas capture.
   const handleDownloadActiveDocument = () => {
-    void downloadDocumentPdf(activeDocument)
+    void handleDownloadPdfDocument(activeDocument)
   }
 
   // Route textarea edits through the shared sync helper so the active document markdown stays in sync with the current editor value.
@@ -521,6 +555,7 @@ export function WorkspaceShellClient({
                 onTitleChange={handleActiveDocumentTitleChange}
                 onCopyMarkdown={handleCopyActiveDocument}
                 onDownloadPdf={handleDownloadActiveDocument}
+                isDownloadingPdf={isDownloadingPdf}
               />
             </div>
           </div>
@@ -531,6 +566,7 @@ export function WorkspaceShellClient({
           markdown={markdown}
           onMarkdownChange={handleMarkdownChange}
           onDownloadPdf={handleDownloadActiveDocument}
+          isDownloadingPdf={isDownloadingPdf}
           placeholder={snapshot.prompt?.title ?? 'Start writing markdown'}
         />
       </div>

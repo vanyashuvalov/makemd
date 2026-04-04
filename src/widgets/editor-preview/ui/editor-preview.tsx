@@ -8,7 +8,7 @@
 'use client'
 
 import { useState } from 'react'
-import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
+import { IconDownload, IconEye, IconFileCode2, IconLoader2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
@@ -25,11 +25,13 @@ export function EditorPreview({
   markdown,
   onMarkdownChange,
   onDownloadPdf,
+  isDownloadingPdf,
   placeholder,
 }: {
   markdown: string
   onMarkdownChange: (value: string) => void
   onDownloadPdf?: () => void
+  isDownloadingPdf?: boolean
   placeholder: string
 }) {
   const [mobilePanel, setMobilePanel] = useState<'markdown' | 'preview'>('markdown')
@@ -51,8 +53,18 @@ export function EditorPreview({
           onValueChange={(value) => setMobilePanel(value as 'markdown' | 'preview')}
           className="flex-1"
         />
-        <IconButton aria-label="Download PDF" variant="primary" size="sm" onClick={onDownloadPdf}>
-          <Icon icon={IconDownload} size="sm" />
+        <IconButton
+          aria-label="Download PDF"
+          variant="primary"
+          size="sm"
+          disabled={isDownloadingPdf}
+          onClick={onDownloadPdf}
+        >
+          {isDownloadingPdf ? (
+            <Icon icon={IconLoader2} size="sm" className="animate-spin" />
+          ) : (
+            <Icon icon={IconDownload} size="sm" />
+          )}
         </IconButton>
       </div>
 

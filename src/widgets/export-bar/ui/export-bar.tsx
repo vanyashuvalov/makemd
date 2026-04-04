@@ -8,10 +8,10 @@
  * Connected to: the editor/preview widget and the current document snapshot.
  */
 import * as React from 'react'
+import { IconDownload, IconLoader2, IconPencil, IconCopy } from '@tabler/icons-react'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
-import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
 
 const MAX_TITLE_CHARS = 20
 
@@ -30,12 +30,14 @@ export function ExportBar({
   onTitleChange,
   onCopyMarkdown,
   onDownloadPdf,
+  isDownloadingPdf,
   className,
 }: {
   title: string
   onTitleChange: (nextTitle: string) => void
   onCopyMarkdown?: () => void
   onDownloadPdf?: () => void
+  isDownloadingPdf?: boolean
   className?: string
 }) {
   const [isEditing, setIsEditing] = React.useState(false)
@@ -125,9 +127,14 @@ export function ExportBar({
         variant="outline"
         size="default"
         className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
+        disabled={isDownloadingPdf}
         onClick={onDownloadPdf}
       >
-        <Icon icon={IconDownload} size="md" tone="white" />
+        {isDownloadingPdf ? (
+          <Icon icon={IconLoader2} size="md" tone="white" className="animate-spin" />
+        ) : (
+          <Icon icon={IconDownload} size="md" tone="white" />
+        )}
       </IconButton>
     </div>
   )
