@@ -81,7 +81,7 @@ export function Modal({ open, title, description, onOpenChange, children, classN
           </IconButton>
         </div>
 
-        {children}
+        <div className="mt-8">{children}</div>
       </div>
     </div>,
     document.body

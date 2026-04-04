@@ -200,6 +200,15 @@ export function WorkspaceShellClient({
     })
   }
 
+  // Announce successful markdown clipboard copies through the shared toast stack so every copy entry point gives the same confirmation.
+  const showMarkdownCopiedToast = () => {
+    showToast({
+      tone: 'success',
+      title: 'Markdown copied',
+      description: 'The document content is now in your clipboard.',
+    })
+  }
+
   // Keep the editor content aligned with the currently active document so opening a history row updates the workspace canvas instead of only the sidebar state.
   const syncMarkdownToActiveDocument = (nextMarkdown: string) => {
     setMarkdown(nextMarkdown)
@@ -347,6 +356,7 @@ export function WorkspaceShellClient({
     const markdownSource = buildDocumentMarkdownBundle(targetDocuments)
 
     await copyTextToClipboard(markdownSource)
+    showMarkdownCopiedToast()
   }
 
   // Copy a shareable URL for one or more documents so the row menu and the bulk rail stay aligned with the cloud-backed workflow.
