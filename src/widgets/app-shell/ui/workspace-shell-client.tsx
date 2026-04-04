@@ -12,9 +12,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
 import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
-import { PdfPreviewSurface } from '@/widgets/editor-preview/ui/pdf-preview-surface'
-import { DEFAULT_PDF_PAGE_WIDTH_PX } from '@/widgets/editor-preview/model/pdf-export-layout'
-import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
 import type {
   DocumentRecord,
   WorkspaceSnapshot,
@@ -26,11 +23,10 @@ import {
 } from '@/entities/document/model/document-title'
 import {
   buildDocumentBundleFileName,
-  buildDocumentFileName,
   buildDocumentMarkdownBundle,
   copyTextToClipboard,
+  downloadMarkdownAsPdf,
   downloadBlob,
-  downloadElementAsPdf,
 } from '@/features/document-actions/model/document-actions'
 import { shouldConfirmDocumentDeletion } from '@/features/document-delete-confirmation/model/document-delete-confirmation'
 import { DocumentDeleteConfirmationModal } from '@/features/document-delete-confirmation/ui/document-delete-confirmation-modal'
@@ -95,10 +91,8 @@ export function WorkspaceShellClient({
   const selectedDocuments = documents.filter((document) => document.selected)
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
   const [toasts, setToasts] = useState<ToastItem[]>([])
-  const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string } | null>(null)
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
-  const pdfExportRef = useRef<HTMLDivElement | null>(null)
   const hasHydratedGuestTitleRef = useRef(false)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
   const activeExportTitle = activeDocument?.title ?? createDocumentTitle()
@@ -154,42 +148,6 @@ export function WorkspaceShellClient({
       )
     )
   }, [setDocuments, snapshot.state])
-
-  // Trigger the PDF export once the hidden preview surface has mounted so html2pdf captures the same rendered markdown the user sees in the right pane.
-  useEffect(() => {
-    if (!pdfExportRequest || !pdfExportRef.current) {
-      return
-    }
-
-    let cancelled = false
-
-    const frameId = window.requestAnimationFrame(() => {
-      if (cancelled || !pdfExportRef.current) {
-        return
-      }
-
-      void downloadElementAsPdf(pdfExportRef.current, pdfExportRequest.fileName)
-        .catch(() => {
-          if (!cancelled) {
-            showToast({
-              tone: 'warning',
-              title: 'PDF export failed',
-              description: 'Unable to generate the PDF right now.',
-            })
-          }
-        })
-        .finally(() => {
-          if (!cancelled) {
-            setPdfExportRequest(null)
-          }
-        })
-    })
-
-    return () => {
-      cancelled = true
-      window.cancelAnimationFrame(frameId)
-    }
-  }, [pdfExportRequest, showToast])
 
   // Notify guests when they hit the local document cap so the New action explains why it no longer creates files.
   const showGuestLimitToast = () => {
@@ -331,18 +289,26 @@ export function WorkspaceShellClient({
     downloadBlob({ blob, fileName })
   }
 
-  // Prepare a PDF export request for one document so the row menu and the export chip can render the same formatted preview into a downloadable file.
-  const requestDocumentPdfExport = (document: DocumentRecord | undefined) => {
+  // Send a single document markdown payload to the server PDF route and surface a toast if the browser cannot save the generated file.
+  const downloadDocumentPdf = async (document: DocumentRecord | undefined) => {
     if (!document) {
       return
     }
 
     const markdownSource = document.markdown ?? ''
 
-    setPdfExportRequest({
-      markdown: markdownSource,
-      fileName: buildDocumentFileName(document.title ?? createDocumentTitle(), 'pdf'),
-    })
+    try {
+      await downloadMarkdownAsPdf({
+        title: document.title ?? createDocumentTitle(),
+        markdown: markdownSource,
+      })
+    } catch {
+      showToast({
+        tone: 'warning',
+        title: 'PDF export failed',
+        description: 'Unable to generate the PDF right now.',
+      })
+    }
   }
 
   // Copy the provided documents as a single markdown bundle so the row menu and the bulk rail share the same clipboard contract.
@@ -389,13 +355,13 @@ export function WorkspaceShellClient({
   const handleDownloadDocument = (documentId: string) => {
     const targetDocument = documents.find((document) => document.id === documentId)
 
-    requestDocumentPdfExport(targetDocument)
+    void downloadDocumentPdf(targetDocument)
   }
 
   // Download the current selected set, falling back to the legacy markdown bundle when more than one document is selected.
   const handleDownloadSelectedDocuments = () => {
     if (selectedDocuments.length === 1) {
-      requestDocumentPdfExport(selectedDocuments[0])
+      void downloadDocumentPdf(selectedDocuments[0])
       return
     }
 
@@ -494,9 +460,9 @@ export function WorkspaceShellClient({
     setSidebarSection('history')
   }
 
-  // Export the currently active document to a PDF using the same formatted preview surface the user sees in the right column.
+  // Export the currently active document to a PDF through the server-side print route so the browser receives a real selectable document instead of a canvas capture.
   const handleDownloadActiveDocument = () => {
-    requestDocumentPdfExport(activeDocument)
+    void downloadDocumentPdf(activeDocument)
   }
 
   // Route textarea edits through the shared sync helper so the active document markdown stays in sync with the current editor value.
@@ -568,14 +534,6 @@ export function WorkspaceShellClient({
           placeholder={snapshot.prompt?.title ?? 'Start writing markdown'}
         />
       </div>
-
-      {pdfExportRequest ? (
-        <div className="pointer-events-none fixed left-[-10000px] top-0" style={{ width: `${DEFAULT_PDF_PAGE_WIDTH_PX}px` }}>
-          <div ref={pdfExportRef}>
-            <PdfPreviewSurface markdown={pdfExportRequest.markdown} theme={defaultPdfPreviewTheme} />
-          </div>
-        </div>
-      ) : null}
 
       <ToastStack items={toasts} onDismiss={dismissToast} />
 
