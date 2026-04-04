@@ -22,6 +22,8 @@ const CHROMIUM_PACK_VERSION =
   packageLock.packages?.['node_modules/@sparticuz/chromium-min']?.version ??
   process.env.PDF_CHROMIUM_PACK_VERSION ??
   '143.0.4'
+let cachedBrowser: Browser | null = null
+let cachedBrowserPromise: Promise<Browser> | null = null
 
 // Build the remote Brotli pack URL from the package version so serverless deployments can download the exact matching Chromium bundle without depending on a local node_modules bin directory.
 function resolveChromiumPackUrl() {
@@ -29,6 +31,12 @@ function resolveChromiumPackUrl() {
 
   if (configuredPackUrl) {
     return configuredPackUrl
+  }
+
+  const deploymentHost = process.env.VERCEL_URL
+
+  if (deploymentHost) {
+    return `https://${deploymentHost}/chromium-pack.tar`
   }
 
   const arch = process.arch === 'arm64' ? 'arm64' : 'x64'
@@ -104,8 +112,38 @@ async function resolvePdfBrowserLaunchOptions(): Promise<LaunchOptions> {
   }
 }
 
-// Launch a short-lived browser instance for PDF generation so the route can render markdown with actual print layout semantics.
-export async function launchPdfBrowser(): Promise<Browser> {
+// Launch a browser instance for PDF generation and keep it warm across serverless invocations so repeated exports avoid paying the Chromium startup cost on every request.
+async function createPdfBrowser(): Promise<Browser> {
   const launchOptions = await resolvePdfBrowserLaunchOptions()
   return playwrightChromium.launch(launchOptions)
+}
+
+// Return the shared browser instance, relaunching it only when the previous process has disconnected so PDF exports can reuse the expensive Chromium startup work.
+export async function getPdfBrowser(): Promise<Browser> {
+  if (cachedBrowser?.isConnected()) {
+    return cachedBrowser
+  }
+
+  if (!cachedBrowserPromise) {
+    cachedBrowserPromise = createPdfBrowser()
+      .then((browser) => {
+        cachedBrowser = browser
+        return browser
+      })
+      .catch((error) => {
+        cachedBrowser = null
+        cachedBrowserPromise = null
+        throw error
+      })
+  }
+
+  const browser = await cachedBrowserPromise
+
+  if (!browser.isConnected()) {
+    cachedBrowser = null
+    cachedBrowserPromise = null
+    return getPdfBrowser()
+  }
+
+  return browser
 }
