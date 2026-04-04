@@ -39,15 +39,14 @@ export function DocumentDeleteConfirmationModal({
           onCancel()
         }
       }}
-    >
+      >
       <div className="flex items-center justify-end gap-3 pt-4">
-        <Button variant="text" size="text" className="font-normal" onClick={onCancel}>
+        <Button variant="text" size="primary" onClick={onCancel}>
           Cancel
         </Button>
         <Button
-          variant="primary"
-          size="default"
-          className="border border-transparent bg-[color:var(--color-destructive)] text-white hover:bg-[#b94e40] active:bg-[#a9473b]"
+          variant="destructive"
+          size="primary"
           onClick={onConfirm}
         >
           Delete

@@ -18,6 +18,8 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary: 'border border-white/20 bg-[#3C64FF] text-white hover:bg-[#355cf2] active:bg-[#3458ec]',
+        destructive:
+          'border border-transparent bg-[color:var(--color-destructive)] text-white hover:bg-[#b94e40] active:bg-[#a9473b]',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'bg-transparent text-foreground hover:bg-muted active:bg-muted/80',
         outline: 'border border-border bg-card text-card-foreground hover:bg-muted active:bg-muted/80',
@@ -31,8 +33,7 @@ export const buttonVariants = cva(
         lg: 'h-14 px-6 text-base',
         icon: 'h-10 w-10 p-0',
         iconSm: 'h-8 w-8 p-0',
-        primary:
-          'h-14 px-4 text-[18px] font-normal leading-[25px] border border-white/20 bg-[#3C64FF]',
+        primary: 'h-14 px-4 text-[18px] font-normal leading-[25px]',
         text: 'h-10 px-0 text-[18px] font-medium leading-[25px]',
       },
     },
