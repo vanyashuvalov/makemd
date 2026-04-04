@@ -32,6 +32,8 @@ import {
   downloadBlob,
   downloadElementAsPdf,
 } from '@/features/document-actions/model/document-actions'
+import { shouldConfirmDocumentDeletion } from '@/features/document-delete-confirmation/model/document-delete-confirmation'
+import { DocumentDeleteConfirmationModal } from '@/features/document-delete-confirmation/ui/document-delete-confirmation-modal'
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { AuthModal, type AuthModalAccount } from '@/features/auth/ui/auth-modal'
@@ -94,6 +96,7 @@ export function WorkspaceShellClient({
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string } | null>(null)
+  const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const pdfExportRef = useRef<HTMLDivElement | null>(null)
   const hasHydratedGuestTitleRef = useRef(false)
@@ -234,6 +237,26 @@ export function WorkspaceShellClient({
     setMarkdown(nextActiveDocument?.markdown ?? snapshot.editor.markdown)
   }
 
+  // Decide whether a delete request needs a confirmation step so long documents do not disappear without an extra warning.
+  const requestDeleteDocuments = (documentIds: string[]) => {
+    if (documentIds.length === 0) {
+      return
+    }
+
+    const targetDocuments = documents.filter((document) => documentIds.includes(document.id))
+
+    if (targetDocuments.length === 0) {
+      return
+    }
+
+    if (shouldConfirmDocumentDeletion(targetDocuments)) {
+      setPendingDeleteDocumentIds(documentIds)
+      return
+    }
+
+    deleteDocuments(documentIds)
+  }
+
   // Promote a document to active history state and clear selection so the sidebar behaves like a real document navigator rather than a static preview.
   const handleOpenDocument = (documentId: string) => {
     const nextDocument = documents.find((document) => document.id === documentId)
@@ -344,12 +367,12 @@ export function WorkspaceShellClient({
 
   // Remove a document from the local workspace collection and keep the editor pointed at the next available active row.
   const handleDeleteDocument = (documentId: string) => {
-    deleteDocuments([documentId])
+    requestDeleteDocuments([documentId])
   }
 
   // Remove the currently selected rows from the workspace collection so the bulk rail performs the same action as the row menu, only at batch scope.
   const handleDeleteSelectedDocuments = () => {
-    deleteDocuments(selectedDocuments.map((document) => document.id))
+    requestDeleteDocuments(selectedDocuments.map((document) => document.id))
   }
 
   // Download a single document as PDF so the row menu captures the formatted preview instead of a raw markdown bundle.
@@ -545,6 +568,20 @@ export function WorkspaceShellClient({
       ) : null}
 
       <ToastStack items={toasts} onDismiss={dismissToast} />
+
+      <DocumentDeleteConfirmationModal
+        open={pendingDeleteDocumentIds !== null}
+        documentCount={pendingDeleteDocumentIds?.length ?? 0}
+        onCancel={() => setPendingDeleteDocumentIds(null)}
+        onConfirm={() => {
+          if (!pendingDeleteDocumentIds) {
+            return
+          }
+
+          deleteDocuments(pendingDeleteDocumentIds)
+          setPendingDeleteDocumentIds(null)
+        }}
+      />
 
       <AuthModal
         open={isAuthModalOpen}
