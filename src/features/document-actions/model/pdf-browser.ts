@@ -33,10 +33,10 @@ function resolveChromiumPackUrl() {
     return configuredPackUrl
   }
 
-  const deploymentHost = process.env.VERCEL_URL
+  const localPackDirectory = join(process.cwd(), 'public', 'chromium-pack')
 
-  if (deploymentHost) {
-    return `https://${deploymentHost}/chromium-pack.tar`
+  if (existsSync(localPackDirectory)) {
+    return localPackDirectory
   }
 
   const arch = process.arch === 'arm64' ? 'arm64' : 'x64'

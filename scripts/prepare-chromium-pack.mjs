@@ -1,18 +1,20 @@
 /**
  * File: scripts/prepare-chromium-pack.mjs
  * Purpose: Build-time Chromium pack downloader for the PDF export pipeline.
- * Why it exists: the serverless PDF route now points to a pack hosted by this deployment, so the browser bundle can be fetched from Vercel instead of GitHub on every cold start.
- * What it does: downloads the Chromium Brotli pack into `public/chromium-pack.tar` if it is missing and keeps the version aligned with the installed `@sparticuz/chromium-min` dependency.
- * Connected to: `src/features/document-actions/model/pdf-browser.ts`, which resolves the pack URL at runtime and points Chromium at the hosted tarball.
+ * Why it exists: the serverless PDF route needs a local Brotli directory so Chromium can inflate its binary without fetching the pack over the network on every cold start.
+ * What it does: downloads the Chromium Brotli pack, extracts it into `public/chromium-pack`, and keeps the version aligned with the installed `@sparticuz/chromium-min` dependency.
+ * Connected to: `src/features/document-actions/model/pdf-browser.ts`, which resolves the pack directory at runtime and points Chromium at the extracted Brotli files.
  */
 
-import { createWriteStream, existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { pipeline } from 'node:stream/promises'
 import { Readable } from 'node:stream'
 
 const ROOT_DIR = process.cwd()
-const OUTPUT_FILE = join(ROOT_DIR, 'public', 'chromium-pack.tar')
+const OUTPUT_DIR = join(ROOT_DIR, 'public', 'chromium-pack')
+const TEMP_ARCHIVE_FILE = join(ROOT_DIR, '.tmp', 'chromium-pack.tar')
 const LOCK_FILE = join(ROOT_DIR, 'package-lock.json')
 
 // Read the installed Chromium pack version from the lockfile so build-time and runtime always target the same tarball without duplicating version strings.
@@ -41,16 +43,17 @@ function resolveChromiumPackUrl(version) {
 
 // Download the tarball only when it is missing so local and CI builds avoid paying the transfer cost more than once per workspace state.
 async function main() {
-  if (existsSync(OUTPUT_FILE)) {
-    console.log(`[chromium-pack] already present at ${OUTPUT_FILE}`)
+  if (existsSync(join(OUTPUT_DIR, 'chromium.br'))) {
+    console.log(`[chromium-pack] already present at ${OUTPUT_DIR}`)
     return
   }
 
   const version = resolveChromiumPackVersion()
   const sourceUrl = resolveChromiumPackUrl(version)
-  const outputDirectory = dirname(OUTPUT_FILE)
+  const tempDirectory = dirname(TEMP_ARCHIVE_FILE)
 
-  mkdirSync(outputDirectory, { recursive: true })
+  mkdirSync(tempDirectory, { recursive: true })
+  mkdirSync(OUTPUT_DIR, { recursive: true })
 
   console.log(`[chromium-pack] downloading ${sourceUrl}`)
   const response = await fetch(sourceUrl)
@@ -59,8 +62,19 @@ async function main() {
     throw new Error(`[chromium-pack] failed to download pack: ${response.status} ${response.statusText}`)
   }
 
-  await pipeline(Readable.fromWeb(response.body), createWriteStream(OUTPUT_FILE))
-  console.log(`[chromium-pack] wrote ${OUTPUT_FILE}`)
+  await pipeline(Readable.fromWeb(response.body), createWriteStream(TEMP_ARCHIVE_FILE))
+  console.log(`[chromium-pack] extracting into ${OUTPUT_DIR}`)
+
+  const extraction = spawnSync('tar', ['-xf', TEMP_ARCHIVE_FILE, '-C', OUTPUT_DIR], {
+    stdio: 'inherit',
+  })
+
+  if (extraction.status !== 0) {
+    throw new Error(`[chromium-pack] failed to extract pack archive with exit code ${extraction.status ?? 'unknown'}`)
+  }
+
+  rmSync(TEMP_ARCHIVE_FILE, { force: true })
+  console.log(`[chromium-pack] wrote ${OUTPUT_DIR}`)
 }
 
 main().catch((error) => {
