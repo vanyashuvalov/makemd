@@ -13,6 +13,17 @@ import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
 import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
 
+const MAX_TITLE_CHARS = 20
+
+// Shorten the visible chip label so the lower-right cluster stays compact while the full title remains available in state and on hover.
+function formatDisplayTitle(title: string) {
+  if (title.length <= MAX_TITLE_CHARS) {
+    return title
+  }
+
+  return `${title.slice(0, MAX_TITLE_CHARS - 3).trimEnd()}...`
+}
+
 // Render the lower-right document title chip and the adjacent export actions so the timestamp-based name stays visible beside copy and download.
 export function ExportBar({
   title,
@@ -89,13 +100,14 @@ export function ExportBar({
       ) : (
         <button
           type="button"
+          title={title}
           className="flex h-11 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
           onClick={() => {
             setDraftTitle(title)
             setIsEditing(true)
           }}
         >
-          <span className="min-w-0 truncate font-normal">{title}</span>
+          <span className="min-w-0 truncate font-normal">{formatDisplayTitle(title)}</span>
           <Icon icon={IconPencil} size="md" tone="white" />
         </button>
       )}
