@@ -9,7 +9,8 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { chromium as playwrightChromium, type Browser, type LaunchOptions } from 'playwright-core'
-import chromium from '@sparticuz/chromium'
+import packageLock from '../../../../package-lock.json'
+import chromium from '@sparticuz/chromium-min'
 
 const CHROMIUM_EXECUTABLE_ENV_KEYS = [
   'PDF_BROWSER_EXECUTABLE_PATH',
@@ -17,6 +18,22 @@ const CHROMIUM_EXECUTABLE_ENV_KEYS = [
   'CHROME_EXECUTABLE_PATH',
   'PUPPETEER_EXECUTABLE_PATH',
 ]
+const CHROMIUM_PACK_VERSION =
+  packageLock.packages?.['node_modules/@sparticuz/chromium-min']?.version ??
+  process.env.PDF_CHROMIUM_PACK_VERSION ??
+  '143.0.4'
+
+// Build the remote Brotli pack URL from the package version so serverless deployments can download the exact matching Chromium bundle without depending on a local node_modules bin directory.
+function resolveChromiumPackUrl() {
+  const configuredPackUrl = process.env.PDF_CHROMIUM_PACK_URL
+
+  if (configuredPackUrl) {
+    return configuredPackUrl
+  }
+
+  const arch = process.arch === 'arm64' ? 'arm64' : 'x64'
+  return `https://github.com/Sparticuz/chromium/releases/download/v${CHROMIUM_PACK_VERSION}/chromium-v${CHROMIUM_PACK_VERSION}-pack.${arch}.tar`
+}
 
 // Check common local browser locations so the route can work on a developer machine without requiring a bespoke environment variable.
 function findLocalChromiumExecutablePath() {
@@ -68,7 +85,7 @@ async function resolvePdfBrowserLaunchOptions(): Promise<LaunchOptions> {
   if (isServerless) {
     return {
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(resolveChromiumPackUrl()),
       headless: true,
     }
   }
