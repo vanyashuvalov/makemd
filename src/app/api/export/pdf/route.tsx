@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { renderToStaticMarkup } from 'react-dom/server'
 import { createDocumentTitle } from '@/entities/document/model/document-title'
 import { buildDocumentFileName } from '@/shared/lib/document-file-name'
 import { launchPdfBrowser } from '@/features/document-actions/model/pdf-browser'
@@ -35,6 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     browser = await launchPdfBrowser()
     const page = await browser.newPage()
+    const { renderToStaticMarkup } = await import('react-dom/server')
     const html = renderToStaticMarkup(
       <PdfMarkdownDocument title={title} markdown={markdown} theme={defaultPdfPreviewTheme} />
     )
