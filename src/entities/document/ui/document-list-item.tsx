@@ -14,6 +14,7 @@ import {
   IconDownload,
   IconFileText,
   IconLink,
+  IconPencil,
   IconTrash,
 } from '@tabler/icons-react'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -31,6 +32,7 @@ export interface DocumentListItemProps {
   onToggleSelected?: (documentId: string) => void
   onDownloadDocument?: (documentId: string) => void
   onDeleteDocument?: (documentId: string) => void
+  onRenameDocument?: (documentId: string, nextTitle: string) => void
   onCopyMarkdown?: (documentId: string) => void
   onCopyLink?: (documentId: string) => void
 }
@@ -43,17 +45,55 @@ export function DocumentListItem({
   onToggleSelected,
   onDownloadDocument,
   onDeleteDocument,
+  onRenameDocument,
   onCopyMarkdown,
   onCopyLink,
 }: DocumentListItemProps) {
   const menuButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+  const [isRenaming, setIsRenaming] = React.useState(false)
+  const [draftTitle, setDraftTitle] = React.useState(item.title)
+  const inputRef = React.useRef<HTMLInputElement | null>(null)
   const isSelected = Boolean(item.selected)
   const rowTone = item.selected || item.active ? 'bg-white/[0.15]' : 'bg-transparent'
   const showOverflow = !item.selected
 
+  // Keep the inline editor aligned with the current row title unless the user is actively renaming the document.
+  React.useEffect(() => {
+    if (!isRenaming) {
+      setDraftTitle(item.title)
+    }
+  }, [isRenaming, item.title])
+
+  // Focus the inline title field when rename mode opens so the user can type immediately inside the list row.
+  React.useEffect(() => {
+    if (!isRenaming) {
+      return
+    }
+
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [isRenaming])
+
+  // Commit the renamed title back to the shared workspace state so the sidebar, export chip, and document model stay in sync.
+  const commitRename = () => {
+    const nextTitle = draftTitle.trim() || item.title
+    onRenameDocument?.(item.id, nextTitle)
+    setIsRenaming(false)
+  }
+
+  // Cancel rename mode and restore the current document title when the user dismisses the inline editor.
+  const cancelRename = () => {
+    setDraftTitle(item.title)
+    setIsRenaming(false)
+  }
+
   // Route document clicks through the selection mode first so bulk selection stays consistent with the Figma interaction model.
   const handleRowClick = () => {
+    if (isRenaming) {
+      return
+    }
+
     if (isMenuOpen) {
       return
     }
@@ -67,6 +107,12 @@ export function DocumentListItem({
   }
 
   const menuItems: ContextMenuItem[] = [
+    {
+      key: 'rename',
+      label: 'Rename',
+      icon: IconPencil,
+      onSelect: () => setIsRenaming(true),
+    },
     {
       key: 'download',
       label: 'Download',
@@ -127,9 +173,32 @@ export function DocumentListItem({
         )}
 
         <div className="min-w-0 flex-1 space-y-1">
-          <h3 className="truncate text-[18px] font-normal leading-[22px] text-sidebar-foreground">
-            {item.title}
-          </h3>
+          {isRenaming ? (
+            <input
+              ref={inputRef}
+              value={draftTitle}
+              onClick={(event) => event.stopPropagation()}
+              onChange={(event) => setDraftTitle(event.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  commitRename()
+                }
+
+                if (event.key === 'Escape') {
+                  event.preventDefault()
+                  cancelRename()
+                }
+              }}
+              className="w-full border-none bg-transparent p-0 text-[18px] leading-[22px] font-normal text-sidebar-foreground outline-none placeholder:text-sidebar-muted-foreground"
+              aria-label={`Rename ${item.title}`}
+            />
+          ) : (
+            <h3 className="truncate text-[18px] font-normal leading-[22px] text-sidebar-foreground">
+              {item.title}
+            </h3>
+          )}
           <p className="text-[14px] leading-[17px] text-sidebar-muted-foreground">
             {item.updatedLabel}
           </p>

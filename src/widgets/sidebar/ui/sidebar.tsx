@@ -54,6 +54,7 @@ export interface SidebarProps {
   onUseTemplate: (templateId: string) => void
   onDownloadDocument: (documentId: string) => void
   onDeleteDocument: (documentId: string) => void
+  onRenameDocument: (documentId: string, nextTitle: string) => void
   onCopyMarkdownDocument: (documentId: string) => void
   onCopyLinkDocument: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
@@ -83,6 +84,7 @@ export function Sidebar({
   onUseTemplate,
   onDownloadDocument,
   onDeleteDocument,
+  onRenameDocument,
   onCopyMarkdownDocument,
   onCopyLinkDocument,
   onToggleAllSelection,
@@ -165,6 +167,7 @@ export function Sidebar({
               onOpenDocument={onOpenDocument}
               onDownloadDocument={onDownloadDocument}
               onDeleteDocument={onDeleteDocument}
+              onRenameDocument={onRenameDocument}
               onCopyMarkdownDocument={onCopyMarkdownDocument}
               onCopyLinkDocument={onCopyLinkDocument}
               onDeleteSelected={onDeleteSelected}

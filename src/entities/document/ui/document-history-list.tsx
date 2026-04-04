@@ -18,6 +18,7 @@ export interface DocumentHistoryListProps {
   onToggleItem?: (documentId: string) => void
   onDownloadItem?: (documentId: string) => void
   onDeleteItem?: (documentId: string) => void
+  onRenameItem?: (documentId: string, nextTitle: string) => void
   onCopyMarkdownItem?: (documentId: string) => void
   onCopyLinkItem?: (documentId: string) => void
 }
@@ -30,6 +31,7 @@ export function DocumentHistoryList({
   onToggleItem,
   onDownloadItem,
   onDeleteItem,
+  onRenameItem,
   onCopyMarkdownItem,
   onCopyLinkItem,
 }: DocumentHistoryListProps) {
@@ -46,6 +48,7 @@ export function DocumentHistoryList({
           onToggleSelected={onToggleItem}
           onDownloadDocument={onDownloadItem}
           onDeleteDocument={onDeleteItem}
+          onRenameDocument={onRenameItem}
           onCopyMarkdown={onCopyMarkdownItem}
           onCopyLink={onCopyLinkItem}
         />

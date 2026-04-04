@@ -23,6 +23,7 @@ export interface DocumentListProps {
   onToggleDocument: (documentId: string) => void
   onDownloadDocument: (documentId: string) => void
   onDeleteDocument: (documentId: string) => void
+  onRenameDocument: (documentId: string, nextTitle: string) => void
   onCopyMarkdownDocument: (documentId: string) => void
   onCopyLinkDocument: (documentId: string) => void
   onDeleteSelected: () => void
@@ -43,6 +44,7 @@ export function DocumentList({
   onToggleDocument,
   onDownloadDocument,
   onDeleteDocument,
+  onRenameDocument,
   onCopyMarkdownDocument,
   onCopyLinkDocument,
   onDeleteSelected,
@@ -73,6 +75,7 @@ export function DocumentList({
         onToggleItem={onToggleDocument}
         onDownloadItem={onDownloadDocument}
         onDeleteItem={onDeleteDocument}
+        onRenameItem={onRenameDocument}
         onCopyMarkdownItem={onCopyMarkdownDocument}
         onCopyLinkItem={onCopyLinkDocument}
       />

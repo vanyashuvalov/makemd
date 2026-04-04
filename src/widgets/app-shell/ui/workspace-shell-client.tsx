@@ -380,19 +380,24 @@ export function WorkspaceShellClient({
     await copyLinkDocuments(selectedDocuments.map((document) => document.id))
   }
 
+  // Update a single document title without touching its markdown so the sidebar row and the export chip can be renamed independently of content.
+  const handleRenameDocument = (documentId: string, nextTitle: string) => {
+    const resolvedTitle = nextTitle.trim() || createDocumentTitle()
+
+    setDocuments((current) =>
+      current.map((document) =>
+        document.id === documentId ? { ...document, title: resolvedTitle } : document
+      )
+    )
+  }
+
   // Persist the active document title only, so the sidebar row and the export chip can rename together without tying the title to markdown content.
   const handleActiveDocumentTitleChange = (nextTitle: string) => {
     if (!activeDocument) {
       return
     }
 
-    const resolvedTitle = nextTitle.trim() || activeExportTitle
-
-    setDocuments((current) =>
-      current.map((document) =>
-        document.id === activeDocument.id ? { ...document, title: resolvedTitle } : document
-      )
-    )
+    handleRenameDocument(activeDocument.id, nextTitle)
   }
 
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
@@ -478,6 +483,7 @@ export function WorkspaceShellClient({
             onOpenDocument={handleOpenDocument}
             onDeleteSelected={handleDeleteSelectedDocuments}
             onDownloadSelected={handleDownloadSelectedDocuments}
+            onRenameDocument={handleRenameDocument}
             onCopyMarkdownSelected={handleCopyMarkdownSelectedDocuments}
             onCopyLinkSelected={handleCopyLinkSelectedDocuments}
           />
