@@ -61,55 +61,39 @@ const authorizedSnapshot: WorkspaceSnapshot = {
   },
 }
 
-const unauthorizedSnapshot: WorkspaceSnapshot = {
-  state: 'unauthorized',
-  prompt: {
-    title: 'Paste text or drop file here',
-  },
-  warning: {
-    title: 'Closing current window will discard unsaved files!',
-    description: 'Sign up to save your history',
-  },
-  documents: [
-    createMockDocument(
-      'doc-1',
-      new Date(2026, 3, 4, 12, 32),
-      `Today \u2022 12:32`,
-      `# Paste text or drop file here\n\nStart typing or drop a file to begin.`,
-      {
+// Create the guest workspace snapshot from the current moment so the first document looks freshly created rather than copied from static mock data.
+function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot {
+  const now = new Date()
+  const sharedMarkdown = state === 'unauthorized'
+    ? `# Paste text or drop file here\n\nStart typing or drop a file to begin.`
+    : '# Paste text or drop file here'
+
+  return {
+    state,
+    prompt: {
+      title: 'Paste text or drop file here',
+    },
+    ...(state === 'unauthorized'
+      ? {
+          warning: {
+            title: 'Closing current window will discard unsaved files!',
+            description: 'Sign up to save your history',
+          },
+          selection: {
+            helperText: 'Hold Ctrl to select many',
+          },
+        }
+      : {}),
+    documents: [
+      createMockDocument('doc-1', now, 'Just now', sharedMarkdown, {
         active: true,
         withMenu: true,
-      }
-    ),
-  ],
-  selection: {
-    helperText: 'Hold Ctrl to select many',
-  },
-  editor: {
-    markdown: `# Paste text or drop file here\n\nStart typing or drop a file to begin.`,
-  },
-}
-
-const emptySnapshot: WorkspaceSnapshot = {
-  state: 'empty',
-  prompt: {
-    title: 'Paste text or drop file here',
-  },
-  documents: [
-    createMockDocument('doc-1', new Date(2026, 3, 4, 12, 32), `Today \u2022 12:32`, '# Paste text or drop file here', {
-      active: true,
-      withMenu: true,
-    }),
-  ],
-  editor: {
-    markdown: '# Paste text or drop file here',
-  },
-}
-
-const workspaceSnapshots: Record<WorkspaceStateKey, WorkspaceSnapshot> = {
-  authorized: authorizedSnapshot,
-  unauthorized: unauthorizedSnapshot,
-  empty: emptySnapshot,
+      }),
+    ],
+    editor: {
+      markdown: sharedMarkdown,
+    },
+  }
 }
 
 export function normalizeWorkspaceState(state: string | undefined): WorkspaceStateKey {
@@ -123,5 +107,9 @@ export function normalizeWorkspaceState(state: string | undefined): WorkspaceSta
 
 export function getWorkspaceSnapshot(state: WorkspaceStateKey): WorkspaceSnapshot {
   // Return the in-repo mock snapshot that the UI widgets use for the current design-state preview.
-  return workspaceSnapshots[state]
+  if (state === 'authorized') {
+    return authorizedSnapshot
+  }
+
+  return createGuestSnapshot(state)
 }

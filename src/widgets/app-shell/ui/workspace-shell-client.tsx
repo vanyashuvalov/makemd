@@ -380,6 +380,21 @@ export function WorkspaceShellClient({
     await copyLinkDocuments(selectedDocuments.map((document) => document.id))
   }
 
+  // Persist the active document title only, so the sidebar row and the export chip can rename together without tying the title to markdown content.
+  const handleActiveDocumentTitleChange = (nextTitle: string) => {
+    if (!activeDocument) {
+      return
+    }
+
+    const resolvedTitle = nextTitle.trim() || activeExportTitle
+
+    setDocuments((current) =>
+      current.map((document) =>
+        document.id === activeDocument.id ? { ...document, title: resolvedTitle } : document
+      )
+    )
+  }
+
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
   const handleUseTemplate = (templateId: string) => {
     if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
@@ -480,6 +495,7 @@ export function WorkspaceShellClient({
               <PreviewPane markdown={markdown} />
               <ExportBar
                 title={activeExportTitle}
+                onTitleChange={handleActiveDocumentTitleChange}
                 onCopyMarkdown={handleCopyActiveDocument}
                 onDownloadPdf={handleDownloadActiveDocument}
               />
