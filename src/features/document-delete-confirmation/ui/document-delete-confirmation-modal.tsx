@@ -40,7 +40,7 @@ export function DocumentDeleteConfirmationModal({
         }
       }}
       >
-      <div className="flex items-center justify-end gap-3 pt-4">
+      <div className="flex items-center justify-end gap-3">
         <Button variant="text" size="primary" onClick={onCancel}>
           Cancel
         </Button>
