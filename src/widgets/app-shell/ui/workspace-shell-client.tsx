@@ -20,13 +20,14 @@ import type {
   WorkspaceSnapshot,
   WorkspaceSidebarSection,
 } from '@/entities/document/model/types'
+import { getMarkdownTitle, replaceMarkdownTitle } from '@/entities/document/model/markdown'
 import {
   buildDocumentBundleFileName,
+  buildDocumentFileName,
   buildDocumentMarkdownBundle,
   copyTextToClipboard,
   downloadBlob,
   downloadElementAsPdf,
-  getDocumentExportTitle,
 } from '@/features/document-actions/model/document-actions'
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
@@ -35,14 +36,17 @@ import { AuthModal, type AuthModalAccount } from '@/features/auth/ui/auth-modal'
 const DESKTOP_SIDEBAR_WIDTH = 360
 const MAX_GUEST_DOCUMENTS = 20
 
+// Generate a local identifier for newly created workspace documents so each draft can be tracked independently in the sidebar state.
 function createDocumentId() {
   return `doc-${Date.now()}`
 }
 
+// Provide the default fallback title used when the workspace creates a blank document or needs a safe title placeholder.
 function createDocumentTitle() {
   return 'Untitled document'
 }
 
+// Seed a new document with a matching markdown heading so the title, sidebar row, and editor content start from the same label.
 function createDocumentMarkdown(title: string) {
   return `# ${title}\n`
 }
@@ -64,6 +68,11 @@ function createStarterDocument(snapshot: WorkspaceSnapshot): DocumentRecord {
   }
 }
 
+// Resolve the active document title from the current markdown source so the editor heading and the sidebar label stay in sync while the user types.
+function getResolvedDocumentTitle(markdown: string, fallbackTitle: string) {
+  return getMarkdownTitle(markdown, fallbackTitle)
+}
+
 // Resolve the next active document after one or more rows are deleted so multi-select and single-row deletion share the same fallback behavior.
 function getNextActiveDocumentId(documents: DocumentRecord[], removedDocumentIds: string[]) {
   const removedDocumentIdSet = new Set(removedDocumentIds)
@@ -71,6 +80,7 @@ function getNextActiveDocumentId(documents: DocumentRecord[], removedDocumentIds
   return remainingDocuments.find((document) => document.active)?.id ?? remainingDocuments[0]?.id
 }
 
+// Render the interactive workspace controller that keeps the sidebar, markdown editor, and export bar synchronized around one document model.
 export function WorkspaceShellClient({
   snapshot,
 }: {
@@ -98,12 +108,7 @@ export function WorkspaceShellClient({
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const pdfExportRef = useRef<HTMLDivElement | null>(null)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
-  const activeExportTitle = getDocumentExportTitle(
-    activeDocument,
-    markdown,
-    snapshot.prompt?.title ?? createDocumentTitle()
-  )
-  const activeExportFileName = `${activeExportTitle}.pdf`
+  const activeExportTitle = activeDocument?.title ?? snapshot.prompt?.title ?? createDocumentTitle()
 
   // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
   const dismissToast = (toastId: string) => {
@@ -188,10 +193,12 @@ export function WorkspaceShellClient({
 
   // Keep the editor content aligned with the currently active document so opening a history row updates the workspace canvas instead of only the sidebar state.
   const syncMarkdownToActiveDocument = (nextMarkdown: string) => {
+    const resolvedTitle = getResolvedDocumentTitle(nextMarkdown, activeDocument?.title ?? createDocumentTitle())
+
     setMarkdown(nextMarkdown)
     setDocuments((current) =>
       current.map((document) =>
-        document.active ? { ...document, markdown: nextMarkdown } : document
+        document.active ? { ...document, markdown: nextMarkdown, title: resolvedTitle } : document
       )
     )
   }
@@ -297,11 +304,10 @@ export function WorkspaceShellClient({
     }
 
     const markdownSource = document.markdown ?? ''
-    const exportTitle = getDocumentExportTitle(document, markdownSource, document.title ?? createDocumentTitle())
 
     setPdfExportRequest({
       markdown: markdownSource,
-      fileName: `${exportTitle}.pdf`,
+      fileName: buildDocumentFileName(document.title ?? createDocumentTitle(), 'pdf'),
     })
   }
 
@@ -390,15 +396,26 @@ export function WorkspaceShellClient({
     await copyLinkDocuments(selectedDocuments.map((document) => document.id))
   }
 
-  // Persist a custom export title on the active document so the chip can stop following markdown headings once the user renames it manually.
-  const handleActiveDocumentExportTitleChange = (nextTitle: string) => {
+  // Persist the active document title and rewrite the leading markdown heading so sidebar navigation and the editable chip always show the same name.
+  const handleActiveDocumentTitleChange = (nextTitle: string) => {
     const resolvedTitle = nextTitle.trim() || undefined
+
+    if (!activeDocument) {
+      return
+    }
 
     setDocuments((current) =>
       current.map((document) =>
-        document.active ? { ...document, customExportTitle: resolvedTitle } : document
+        document.id === activeDocument.id
+          ? {
+              ...document,
+              title: resolvedTitle ?? document.title,
+              markdown: replaceMarkdownTitle(document.markdown ?? '', resolvedTitle ?? document.title),
+            }
+          : document
       )
     )
+    setMarkdown((currentMarkdown) => replaceMarkdownTitle(currentMarkdown, resolvedTitle ?? activeDocument.title))
   }
 
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
@@ -449,6 +466,7 @@ export function WorkspaceShellClient({
     requestDocumentPdfExport(activeDocument)
   }
 
+  // Route textarea edits through the shared sync helper so the active document title follows the visible markdown heading whenever the user changes it.
   const handleMarkdownChange = (nextMarkdown: string) => {
     syncMarkdownToActiveDocument(nextMarkdown)
   }
@@ -499,8 +517,8 @@ export function WorkspaceShellClient({
             <div className="relative min-h-0 min-w-0">
               <PreviewPane markdown={markdown} />
               <ExportBar
-                fileName={activeExportFileName}
-                onFileNameChange={handleActiveDocumentExportTitleChange}
+                title={activeExportTitle}
+                onTitleChange={handleActiveDocumentTitleChange}
                 onCopyMarkdown={handleCopyActiveDocument}
                 onDownloadPdf={handleDownloadActiveDocument}
               />

@@ -13,34 +13,32 @@ import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
 import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
 
+// Render the lower-right document title chip and the adjacent export actions so renaming stays in the same visual cluster as download and copy.
 export function ExportBar({
-  fileName,
-  onFileNameChange,
+  title,
+  onTitleChange,
   onCopyMarkdown,
   onDownloadPdf,
   className,
 }: {
-  fileName: string
-  onFileNameChange: (nextBaseName: string) => void
+  title: string
+  onTitleChange: (nextTitle: string) => void
   onCopyMarkdown?: () => void
   onDownloadPdf?: () => void
   className?: string
 }) {
-  const pdfSuffixMatch = /\.pdf$/i.exec(fileName)
-  const baseFileName = pdfSuffixMatch ? fileName.slice(0, -pdfSuffixMatch[0].length) : fileName
-  const fileSuffix = pdfSuffixMatch ? pdfSuffixMatch[0] : ''
   const [isEditing, setIsEditing] = React.useState(false)
-  const [draftFileName, setDraftFileName] = React.useState(baseFileName)
+  const [draftTitle, setDraftTitle] = React.useState(title)
   const inputRef = React.useRef<HTMLInputElement | null>(null)
 
   // Keep the inline editor aligned with the currently active document title unless the user is actively renaming the chip.
   React.useEffect(() => {
     if (!isEditing) {
-      setDraftFileName(baseFileName)
+      setDraftTitle(title)
     }
-  }, [baseFileName, isEditing])
+  }, [isEditing, title])
 
-  // Focus the chip input as soon as the user enters rename mode so the filename can be edited in place without an extra click.
+  // Focus the chip input as soon as the user enters rename mode so the document title can be edited in place without an extra click.
   React.useEffect(() => {
     if (!isEditing) {
       return
@@ -50,10 +48,10 @@ export function ExportBar({
     inputRef.current?.select()
   }, [isEditing])
 
-  // Commit the in-place filename edit back to the workspace controller so the active document keeps the custom title until the user changes it again.
+  // Commit the in-place title edit back to the workspace controller so the active document keeps the same visible name across the sidebar and the editor shell.
   const commitEdit = () => {
-    const nextValue = draftFileName.trim() || baseFileName
-    onFileNameChange(nextValue)
+    const nextValue = draftTitle.trim() || title
+    onTitleChange(nextValue)
     setIsEditing(false)
   }
 
@@ -69,8 +67,8 @@ export function ExportBar({
         <div className="flex h-11 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white">
           <input
             ref={inputRef}
-            value={draftFileName}
-            onChange={(event) => setDraftFileName(event.target.value)}
+            value={draftTitle}
+            onChange={(event) => setDraftTitle(event.target.value)}
             onBlur={commitEdit}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
@@ -80,26 +78,24 @@ export function ExportBar({
 
               if (event.key === 'Escape') {
                 event.preventDefault()
-                setDraftFileName(baseFileName)
+                setDraftTitle(title)
                 setIsEditing(false)
               }
             }}
             className="min-w-0 flex-1 border-none bg-transparent p-0 text-[18px] leading-[25px] font-normal text-white outline-none placeholder:text-white/60"
-            aria-label="Edit export file name"
+            aria-label="Edit document title"
           />
-          {fileSuffix ? <span className="shrink-0 opacity-60">{fileSuffix}</span> : null}
         </div>
       ) : (
         <button
           type="button"
           className="flex h-11 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
           onClick={() => {
-            setDraftFileName(baseFileName)
+            setDraftTitle(title)
             setIsEditing(true)
           }}
         >
-          <span className="min-w-0 truncate font-normal">{baseFileName}</span>
-          {fileSuffix ? <span className="shrink-0 opacity-60">{fileSuffix}</span> : null}
+          <span className="min-w-0 truncate font-normal">{title}</span>
           <Icon icon={IconPencil} size="md" tone="white" />
         </button>
       )}

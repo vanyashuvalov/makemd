@@ -7,7 +7,6 @@
  * What it does: provides reusable helpers for copying text, downloading blobs, and building stable document filenames.
  * Connected to: document row menus, the workspace controller, and future PDF/markdown export implementations.
  */
-import { getMarkdownTitle } from '@/entities/document/model/markdown'
 import {
   DEFAULT_PDF_PAGEBREAK_AVOID_SELECTORS,
   DEFAULT_PDF_PAGEBREAK_MODE,
@@ -21,20 +20,6 @@ export type DocumentDownloadBlob = {
 export type DocumentActionSource = {
   title: string
   markdown?: string
-  customExportTitle?: string
-}
-
-// Resolve the display title for exports and chips so the controller can reuse one rule for derived markdown headings and user-pinned overrides.
-export function getDocumentExportTitle(
-  document: DocumentActionSource | undefined,
-  markdown: string,
-  fallback: string
-) {
-  if (document?.customExportTitle) {
-    return document.customExportTitle
-  }
-
-  return getMarkdownTitle(markdown, document?.title ?? fallback)
 }
 
 // Normalize user-provided titles into file-safe names so future exports stay predictable across browser and OS targets.
@@ -46,7 +31,7 @@ export function buildDocumentFileName(title: string, extension: string) {
 // Build a stable bundle filename for single-document and multi-document actions so bulk export and copy flows keep the same naming rules.
 export function buildDocumentBundleFileName(documents: DocumentActionSource[], extension: string) {
   if (documents.length === 1) {
-    return buildDocumentFileName(documents[0].customExportTitle ?? documents[0].title, extension)
+    return buildDocumentFileName(documents[0].title, extension)
   }
 
   return `selected-documents.${extension}`

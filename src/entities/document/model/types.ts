@@ -13,7 +13,6 @@ export type DocumentRecord = {
   title: string
   updatedLabel: string
   markdown?: string
-  customExportTitle?: string
   selected?: boolean
   active?: boolean
   withMenu?: boolean
@@ -58,5 +57,4 @@ export type WorkspaceSnapshot = {
   documents: DocumentRecord[]
   templates?: WorkspaceTemplate[]
   editor: WorkspaceEditor
-  exportFileName: string
 }
