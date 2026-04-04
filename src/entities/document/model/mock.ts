@@ -16,11 +16,12 @@ function createMockDocument(
   date: Date,
   updatedLabel: string,
   markdown: string,
-  options: Partial<Pick<DocumentRecord, 'active' | 'withMenu'>> = {}
+  options: Partial<Pick<DocumentRecord, 'active' | 'withMenu'>> = {},
+  title = createDocumentTitle(date)
 ) {
   return {
     id,
-    title: createDocumentTitle(date),
+    title,
     updatedLabel,
     markdown,
     ...options,
@@ -88,7 +89,7 @@ function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot
       createMockDocument('doc-1', now, 'Just now', sharedMarkdown, {
         active: true,
         withMenu: true,
-      }),
+      }, 'Just now'),
     ],
     editor: {
       markdown: sharedMarkdown,

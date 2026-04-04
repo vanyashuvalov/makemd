@@ -8,7 +8,7 @@
  * Connected to: `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, `Sidebar`, `AuthModal`, and the workspace snapshot model.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
 import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
@@ -38,6 +38,7 @@ import { AuthModal, type AuthModalAccount } from '@/features/auth/ui/auth-modal'
 
 const DESKTOP_SIDEBAR_WIDTH = 360
 const MAX_GUEST_DOCUMENTS = 20
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 // Generate a local identifier for newly created workspace documents so each draft can be tracked independently in the sidebar state.
 function createDocumentId() {
@@ -95,6 +96,7 @@ export function WorkspaceShellClient({
   const [pdfExportRequest, setPdfExportRequest] = useState<{ markdown: string; fileName: string } | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const pdfExportRef = useRef<HTMLDivElement | null>(null)
+  const hasHydratedGuestTitleRef = useRef(false)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
   const activeExportTitle = activeDocument?.title ?? createDocumentTitle()
 
@@ -133,6 +135,22 @@ export function WorkspaceShellClient({
       timers.clear()
     }
   }, [])
+
+  // Replace the server-rendered guest document title with a client-local timestamp once the workspace hydrates so the first visible document uses the user's clock instead of the server clock.
+  useIsomorphicLayoutEffect(() => {
+    if (snapshot.state === 'authorized' || hasHydratedGuestTitleRef.current) {
+      return
+    }
+
+    hasHydratedGuestTitleRef.current = true
+    const hydratedTitle = createDocumentTitle()
+
+    setDocuments((current) =>
+      current.map((document) =>
+        document.active ? { ...document, title: hydratedTitle } : document
+      )
+    )
+  }, [setDocuments, snapshot.state])
 
   // Trigger the PDF export once the hidden preview surface has mounted so html2pdf captures the same rendered markdown the user sees in the right pane.
   useEffect(() => {
