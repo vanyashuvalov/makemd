@@ -17,7 +17,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
     h1: ({ children, ...props }) => (
       <h1
         {...props}
-        className="mt-0 font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground first:mt-0"
+        className="mt-0 break-words font-sans text-[3.5rem] font-semibold tracking-[-0.05em] text-foreground [overflow-wrap:anywhere] first:mt-0"
       >
         {children}
       </h1>
@@ -25,7 +25,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
     h2: ({ children, ...props }) => (
       <h2
         {...props}
-        className="mt-6 font-sans text-[2.25rem] font-semibold tracking-[-0.04em] text-foreground"
+        className="mt-6 break-words font-sans text-[2.25rem] font-semibold tracking-[-0.04em] text-foreground [overflow-wrap:anywhere]"
       >
         {children}
       </h2>
@@ -33,23 +33,23 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
     h3: ({ children, ...props }) => (
       <h3
         {...props}
-        className="mt-5 font-sans text-[1.5rem] font-semibold tracking-[-0.03em] text-foreground"
+        className="mt-5 break-words font-sans text-[1.5rem] font-semibold tracking-[-0.03em] text-foreground [overflow-wrap:anywhere]"
       >
         {children}
       </h3>
     ),
     h4: ({ children, ...props }) => (
-      <h4 {...props} className="mt-4 font-sans text-[1.25rem] font-semibold text-foreground">
+      <h4 {...props} className="mt-4 break-words font-sans text-[1.25rem] font-semibold text-foreground [overflow-wrap:anywhere]">
         {children}
       </h4>
     ),
     h5: ({ children, ...props }) => (
-      <h5 {...props} className="mt-4 font-sans text-[1.1rem] font-semibold text-foreground">
+      <h5 {...props} className="mt-4 break-words font-sans text-[1.1rem] font-semibold text-foreground [overflow-wrap:anywhere]">
         {children}
       </h5>
     ),
     h6: ({ children, ...props }) => (
-      <h6 {...props} className="mt-4 font-sans text-[1rem] font-semibold text-foreground">
+      <h6 {...props} className="mt-4 break-words font-sans text-[1rem] font-semibold text-foreground [overflow-wrap:anywhere]">
         {children}
       </h6>
     ),
@@ -63,7 +63,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
           {children}
         </p>
       ) : (
-        <p {...props} className="text-sm leading-7 text-foreground">
+        <p {...props} className="break-words text-sm leading-7 text-foreground [overflow-wrap:anywhere]">
           {children}
         </p>
       ),
@@ -73,7 +73,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
           {children}
         </strong>
       ) : (
-        <strong {...props} className="font-semibold text-foreground">
+        <strong {...props} className="font-semibold text-foreground [overflow-wrap:anywhere]">
           {children}
         </strong>
       ),
@@ -83,7 +83,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
           {children}
         </em>
       ) : (
-        <em {...props} className="italic text-foreground">
+        <em {...props} className="italic text-foreground [overflow-wrap:anywhere]">
           {children}
         </em>
       ),
@@ -93,7 +93,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
           {children}
         </del>
       ) : (
-        <del {...props} className="text-foreground decoration-foreground/60">
+        <del {...props} className="text-foreground decoration-foreground/60 [overflow-wrap:anywhere]">
           {children}
         </del>
       ),
@@ -113,7 +113,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         <a
           {...props}
           href={href}
-          className="text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80"
+          className="break-words text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80 [overflow-wrap:anywhere]"
           target={href?.startsWith('http') ? '_blank' : undefined}
           rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
         >
@@ -132,7 +132,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       ) : (
         <blockquote
           {...props}
-          className={cn('border-l-2 border-border pl-4 text-foreground/90', exportMode && 'break-words [overflow-wrap:anywhere]')}
+          className="border-l-2 border-border pl-4 text-foreground/90 break-words [overflow-wrap:anywhere]"
         >
           {children}
         </blockquote>
@@ -151,10 +151,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       ) : (
         <ul
           {...props}
-          className={cn(
-            'my-0 space-y-2 pl-6 text-sm leading-7 text-foreground break-words',
-            isTaskList ? 'list-none pl-0' : 'list-disc'
-          )}
+          className={cn('my-0 space-y-2 pl-6 text-sm leading-7 text-foreground break-words [overflow-wrap:anywhere]', isTaskList ? 'list-none pl-0' : 'list-disc')}
         >
           {children}
         </ul>
@@ -162,11 +159,15 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
     },
     ol: ({ children, ...props }) =>
       exportMode ? (
-        <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 break-words" style={{ color: theme.foreground }}>
+        <ol
+          {...props}
+          className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 break-words [overflow-wrap:anywhere]"
+          style={{ color: theme.foreground }}
+        >
           {children}
         </ol>
       ) : (
-        <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 text-foreground break-words">
+        <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 text-foreground break-words [overflow-wrap:anywhere]">
           {children}
         </ol>
       ),
@@ -188,10 +189,10 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       )
     },
     table: ({ children, ...props }) => (
-      <div className={cn('my-4', !exportMode && 'overflow-x-auto')}>
+      <div className="my-4 overflow-x-hidden">
         <table
           {...props}
-          className="page-break-avoid w-full border-collapse text-sm"
+          className="page-break-avoid w-full table-fixed border-collapse text-sm"
           style={
             exportMode
               ? { color: theme.foreground, borderColor: theme.border, breakInside: 'avoid', pageBreakInside: 'avoid' }
@@ -293,8 +294,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         <code
           {...props}
           className={cn(
-            'block rounded-[14px] border border-border bg-muted px-4 py-3 font-mono text-[0.95rem] leading-6 text-foreground',
-            !exportMode && 'overflow-x-auto',
+            'block rounded-[14px] border border-border bg-muted px-4 py-3 font-mono text-[0.95rem] leading-6 text-foreground break-words whitespace-pre-wrap',
             exportMode && 'overflow-visible',
             className
           )}
@@ -314,7 +314,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         if (codeLanguageMatch) {
           const codeLanguage = codeLanguageMatch[1]
 
-            return (
+          return (
             <div
               className="page-break-avoid my-4 overflow-hidden rounded-[14px] border border-border bg-muted"
               style={exportMode ? { borderColor: theme.border, backgroundColor: theme.surface, breakInside: 'avoid', pageBreakInside: 'avoid' } : undefined}
@@ -335,7 +335,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
                   {codeLanguage}
                 </span>
               </div>
-              <div className={cn('px-4 py-3', !exportMode && 'overflow-x-auto')}>
+              <div className="px-4 py-3 overflow-hidden">
                 <code
                   className={cn(
                     'block whitespace-pre-wrap break-words font-mono text-[0.95rem] leading-6',
@@ -421,8 +421,8 @@ export function MarkdownRenderer({
   theme?: PdfPreviewTheme
 }) {
   // Render the markdown preview using the same GFM dialect that GitHub documents, while applying the workspace typography and surface rules.
-  return (
-    <div className={cn('max-w-[43rem]', mobile && 'max-w-none', exportMode && 'max-w-none')} style={exportMode ? { color: theme.foreground } : undefined}>
+    return (
+    <div className={cn('max-w-[43rem] break-words [overflow-wrap:anywhere]', mobile && 'max-w-none', exportMode && 'max-w-none')} style={exportMode ? { color: theme.foreground } : undefined}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(exportMode, theme)}>
         {markdown}
       </ReactMarkdown>

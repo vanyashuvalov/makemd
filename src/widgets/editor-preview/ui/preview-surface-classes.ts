@@ -12,7 +12,7 @@ export const PREVIEW_FRAME_CLASSNAME =
 
 // Keep the live preview body spacing identical across the desktop preview and the export-only surface so the markdown text lands at the same offsets.
 export const PREVIEW_BODY_CLASSNAME =
-  'h-full min-h-0 w-full overflow-y-auto bg-card px-8 py-8 pb-24'
+  'h-full min-h-0 w-full overflow-y-auto overflow-x-hidden bg-card px-8 py-8 pb-24'
 
 // Keep the mobile preview body on the same rhythm as the desktop preview while using slightly tighter padding for the smaller viewport.
 export const PREVIEW_BODY_MOBILE_CLASSNAME = 'px-6 py-6 pb-20'
