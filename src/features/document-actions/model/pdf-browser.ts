@@ -8,7 +8,13 @@
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { chromium as playwrightChromium, type Browser, type LaunchOptions } from 'playwright-core'
+import {
+  chromium as playwrightChromium,
+  type Browser,
+  type BrowserContext,
+  type LaunchOptions,
+  type Page,
+} from 'playwright-core'
 import packageLock from '../../../../package-lock.json'
 import chromium from '@sparticuz/chromium-min'
 
@@ -24,6 +30,14 @@ const CHROMIUM_PACK_VERSION =
   '143.0.4'
 let cachedBrowser: Browser | null = null
 let cachedBrowserPromise: Promise<Browser> | null = null
+type PdfBrowserSession = {
+  browser: Browser
+  context: BrowserContext
+  page: Page
+}
+let cachedPdfBrowserSession: PdfBrowserSession | null = null
+let cachedPdfBrowserSessionPromise: Promise<PdfBrowserSession> | null = null
+let pdfTaskQueue: Promise<void> = Promise.resolve()
 
 // Build the remote Brotli pack URL from the package version so serverless deployments can download the exact matching Chromium bundle without depending on a local node_modules bin directory.
 function resolveChromiumPackUrl() {
@@ -119,7 +133,7 @@ async function createPdfBrowser(): Promise<Browser> {
 }
 
 // Return the shared browser instance, relaunching it only when the previous process has disconnected so PDF exports can reuse the expensive Chromium startup work.
-export async function getPdfBrowser(): Promise<Browser> {
+async function getPdfBrowser(): Promise<Browser> {
   if (cachedBrowser?.isConnected()) {
     return cachedBrowser
   }
@@ -146,4 +160,52 @@ export async function getPdfBrowser(): Promise<Browser> {
   }
 
   return browser
+}
+
+// Create or reuse a single browser context and page so repeated PDF exports on the same warm function avoid paying the page/bootstrap cost every time.
+async function getPdfBrowserSession(): Promise<PdfBrowserSession> {
+  if (cachedPdfBrowserSession?.browser.isConnected() && cachedPdfBrowserSession.page.isClosed() === false) {
+    return cachedPdfBrowserSession
+  }
+
+  if (!cachedPdfBrowserSessionPromise) {
+    cachedPdfBrowserSessionPromise = (async () => {
+      const browser = await getPdfBrowser()
+      const context = await browser.newContext()
+      const page = await context.newPage()
+      const session = { browser, context, page }
+
+      cachedPdfBrowserSession = session
+      return session
+    })().catch((error) => {
+      cachedPdfBrowserSession = null
+      cachedPdfBrowserSessionPromise = null
+      throw error
+    })
+  }
+
+  const session = await cachedPdfBrowserSessionPromise
+
+  if (session.browser.isConnected() && session.page.isClosed() === false) {
+    return session
+  }
+
+  cachedPdfBrowserSession = null
+  cachedPdfBrowserSessionPromise = null
+  return getPdfBrowserSession()
+}
+
+// Run the export work serially so a reused page is never touched by two requests at the same time.
+export async function runPdfTask<T>(task: (session: PdfBrowserSession) => Promise<T>): Promise<T> {
+  const nextTask = pdfTaskQueue.then(async () => {
+    const session = await getPdfBrowserSession()
+    return task(session)
+  })
+
+  pdfTaskQueue = nextTask.then(
+    () => undefined,
+    () => undefined
+  )
+
+  return nextTask
 }

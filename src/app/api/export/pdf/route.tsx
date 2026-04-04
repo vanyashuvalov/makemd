@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { BrowserContext } from 'playwright-core'
 import { createDocumentTitle } from '@/entities/document/model/document-title'
 import { buildDocumentFileName } from '@/shared/lib/document-file-name'
-import { getPdfBrowser } from '@/features/document-actions/model/pdf-browser'
+import { runPdfTask } from '@/features/document-actions/model/pdf-browser'
 import { PdfMarkdownDocument } from '@/widgets/editor-preview/ui/pdf-markdown-document'
 import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
 
@@ -30,32 +29,30 @@ export async function POST(request: NextRequest) {
 
   const title = typeof body?.title === 'string' && body.title.trim() ? body.title.trim() : createDocumentTitle()
   const fileName = buildDocumentFileName(title, 'pdf')
-  let context: BrowserContext | null = null
 
   try {
-    const browser = await getPdfBrowser()
-    context = await browser.newContext()
-    const page = await context.newPage()
     const { renderToStaticMarkup } = await import('react-dom/server')
     const html = renderToStaticMarkup(
       <PdfMarkdownDocument title={title} markdown={markdown} theme={defaultPdfPreviewTheme} />
     )
 
-    // Feed Chromium a complete HTML document so print mode can calculate page breaks against the same semantic markdown tree the app shows on screen.
-    await page.setContent(`<!doctype html>${html}`, {
-      waitUntil: 'load',
-    })
+    const pdfBuffer = await runPdfTask(async ({ page }) => {
+      // Feed Chromium a complete HTML document so print mode can calculate page breaks against the same semantic markdown tree the app shows on screen.
+      await page.setContent(`<!doctype html>${html}`, {
+        waitUntil: 'load',
+      })
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: {
-        top: '18mm',
-        right: '16mm',
-        bottom: '20mm',
-        left: '16mm',
-      },
+      return page.pdf({
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: {
+          top: '18mm',
+          right: '16mm',
+          bottom: '20mm',
+          left: '16mm',
+        },
+      })
     })
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
@@ -67,7 +64,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[pdf-export] route failed', error)
     return NextResponse.json({ error: 'Unable to generate PDF.' }, { status: 500 })
-  } finally {
-    await context?.close()
   }
 }
