@@ -52,7 +52,7 @@ export function Modal({ open, title, description, onOpenChange, children, classN
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/80 p-4"
       onMouseDown={() => onOpenChange(false)}
     >
       <div
@@ -65,7 +65,7 @@ export function Modal({ open, title, description, onOpenChange, children, classN
         )}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="mb-8 flex items-start justify-between gap-4">
           <div className="space-y-2">
             <h2 className="text-[24px] font-medium leading-[28px]">{title}</h2>
             {description ? <p className="text-sm leading-6 text-sidebar-muted-foreground">{description}</p> : null}
