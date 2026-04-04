@@ -7,54 +7,23 @@
  * What it does: shows the document chip plus copy and download actions in a floating cluster.
  * Connected to: the editor/preview widget and the current document snapshot.
  */
-import * as React from 'react'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
 import { cn } from '@/shared/lib/cn'
-import { IconCopy, IconDownload, IconPencil } from '@tabler/icons-react'
+import { IconCopy, IconDownload } from '@tabler/icons-react'
 
-// Render the lower-right document title chip and the adjacent export actions so renaming stays in the same visual cluster as download and copy.
+// Render the lower-right document title chip and the adjacent export actions so the timestamp-based name stays visible beside copy and download.
 export function ExportBar({
   title,
-  onTitleChange,
   onCopyMarkdown,
   onDownloadPdf,
   className,
 }: {
   title: string
-  onTitleChange: (nextTitle: string) => void
   onCopyMarkdown?: () => void
   onDownloadPdf?: () => void
   className?: string
 }) {
-  const [isEditing, setIsEditing] = React.useState(false)
-  const [draftTitle, setDraftTitle] = React.useState(title)
-  const inputRef = React.useRef<HTMLInputElement | null>(null)
-
-  // Keep the inline editor aligned with the currently active document title unless the user is actively renaming the chip.
-  React.useEffect(() => {
-    if (!isEditing) {
-      setDraftTitle(title)
-    }
-  }, [isEditing, title])
-
-  // Focus the chip input as soon as the user enters rename mode so the document title can be edited in place without an extra click.
-  React.useEffect(() => {
-    if (!isEditing) {
-      return
-    }
-
-    inputRef.current?.focus()
-    inputRef.current?.select()
-  }, [isEditing])
-
-  // Commit the in-place title edit back to the workspace controller so the active document keeps the same visible name across the sidebar and the editor shell.
-  const commitEdit = () => {
-    const nextValue = draftTitle.trim() || title
-    onTitleChange(nextValue)
-    setIsEditing(false)
-  }
-
   // Keep the export controls as separate chips so the lower-right corner matches the Figma treatment more closely.
   return (
     <div
@@ -63,42 +32,9 @@ export function ExportBar({
         className
       )}
     >
-      {isEditing ? (
-        <div className="flex h-11 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white">
-          <input
-            ref={inputRef}
-            value={draftTitle}
-            onChange={(event) => setDraftTitle(event.target.value)}
-            onBlur={commitEdit}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault()
-                commitEdit()
-              }
-
-              if (event.key === 'Escape') {
-                event.preventDefault()
-                setDraftTitle(title)
-                setIsEditing(false)
-              }
-            }}
-            className="min-w-0 flex-1 border-none bg-transparent p-0 text-[18px] leading-[25px] font-normal text-white outline-none placeholder:text-white/60"
-            aria-label="Edit document title"
-          />
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="flex h-11 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
-          onClick={() => {
-            setDraftTitle(title)
-            setIsEditing(true)
-          }}
-        >
-          <span className="min-w-0 truncate font-normal">{title}</span>
-          <Icon icon={IconPencil} size="md" tone="white" />
-        </button>
-      )}
+      <div className="flex h-11 items-center rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white">
+        <span className="min-w-0 truncate font-normal">{title}</span>
+      </div>
       <IconButton
         aria-label="Copy document"
         variant="outline"

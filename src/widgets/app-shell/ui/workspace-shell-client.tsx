@@ -20,7 +20,10 @@ import type {
   WorkspaceSnapshot,
   WorkspaceSidebarSection,
 } from '@/entities/document/model/types'
-import { getMarkdownTitle, replaceMarkdownTitle } from '@/entities/document/model/markdown'
+import {
+  createDocumentTitle,
+  getDocumentStarterMarkdown,
+} from '@/entities/document/model/document-title'
 import {
   buildDocumentBundleFileName,
   buildDocumentFileName,
@@ -41,16 +44,6 @@ function createDocumentId() {
   return `doc-${Date.now()}`
 }
 
-// Provide the default fallback title used when the workspace creates a blank document or needs a safe title placeholder.
-function createDocumentTitle() {
-  return 'Untitled document'
-}
-
-// Seed a new document with a matching markdown heading so the title, sidebar row, and editor content start from the same label.
-function createDocumentMarkdown(title: string) {
-  return `# ${title}\n`
-}
-
 // Allocate a stable toast identifier so the workspace can add and remove transient feedback without colliding across renders.
 function createToastId() {
   return 'toast-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
@@ -60,17 +53,12 @@ function createToastId() {
 function createStarterDocument(snapshot: WorkspaceSnapshot): DocumentRecord {
   return {
     id: createDocumentId(),
-    title: snapshot.prompt?.title ?? snapshot.documents[0]?.title ?? createDocumentTitle(),
+    title: createDocumentTitle(),
     updatedLabel: 'Just now',
     markdown: snapshot.editor.markdown,
     active: true,
     withMenu: true,
   }
-}
-
-// Resolve the active document title from the current markdown source so the editor heading and the sidebar label stay in sync while the user types.
-function getResolvedDocumentTitle(markdown: string, fallbackTitle: string) {
-  return getMarkdownTitle(markdown, fallbackTitle)
 }
 
 // Resolve the next active document after one or more rows are deleted so multi-select and single-row deletion share the same fallback behavior.
@@ -108,7 +96,7 @@ export function WorkspaceShellClient({
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const pdfExportRef = useRef<HTMLDivElement | null>(null)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
-  const activeExportTitle = activeDocument?.title ?? snapshot.prompt?.title ?? createDocumentTitle()
+  const activeExportTitle = activeDocument?.title ?? createDocumentTitle()
 
   // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
   const dismissToast = (toastId: string) => {
@@ -193,13 +181,9 @@ export function WorkspaceShellClient({
 
   // Keep the editor content aligned with the currently active document so opening a history row updates the workspace canvas instead of only the sidebar state.
   const syncMarkdownToActiveDocument = (nextMarkdown: string) => {
-    const resolvedTitle = getResolvedDocumentTitle(nextMarkdown, activeDocument?.title ?? createDocumentTitle())
-
     setMarkdown(nextMarkdown)
     setDocuments((current) =>
-      current.map((document) =>
-        document.active ? { ...document, markdown: nextMarkdown, title: resolvedTitle } : document
-      )
+      current.map((document) => (document.active ? { ...document, markdown: nextMarkdown } : document))
     )
   }
 
@@ -259,7 +243,7 @@ export function WorkspaceShellClient({
     }
 
     const title = createDocumentTitle()
-    const nextMarkdown = createDocumentMarkdown(title)
+    const nextMarkdown = getDocumentStarterMarkdown()
     const nextDocument: DocumentRecord = {
       id: createDocumentId(),
       title,
@@ -396,28 +380,6 @@ export function WorkspaceShellClient({
     await copyLinkDocuments(selectedDocuments.map((document) => document.id))
   }
 
-  // Persist the active document title and rewrite the leading markdown heading so sidebar navigation and the editable chip always show the same name.
-  const handleActiveDocumentTitleChange = (nextTitle: string) => {
-    const resolvedTitle = nextTitle.trim() || undefined
-
-    if (!activeDocument) {
-      return
-    }
-
-    setDocuments((current) =>
-      current.map((document) =>
-        document.id === activeDocument.id
-          ? {
-              ...document,
-              title: resolvedTitle ?? document.title,
-              markdown: replaceMarkdownTitle(document.markdown ?? '', resolvedTitle ?? document.title),
-            }
-          : document
-      )
-    )
-    setMarkdown((currentMarkdown) => replaceMarkdownTitle(currentMarkdown, resolvedTitle ?? activeDocument.title))
-  }
-
   // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
   const handleUseTemplate = (templateId: string) => {
     if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
@@ -433,7 +395,7 @@ export function WorkspaceShellClient({
 
     const nextDocument: DocumentRecord = {
       id: createDocumentId(),
-      title: template.title,
+      title: createDocumentTitle(),
       updatedLabel: 'Just now',
       markdown: template.markdown,
       active: true,
@@ -466,7 +428,7 @@ export function WorkspaceShellClient({
     requestDocumentPdfExport(activeDocument)
   }
 
-  // Route textarea edits through the shared sync helper so the active document title follows the visible markdown heading whenever the user changes it.
+  // Route textarea edits through the shared sync helper so the active document markdown stays in sync with the current editor value.
   const handleMarkdownChange = (nextMarkdown: string) => {
     syncMarkdownToActiveDocument(nextMarkdown)
   }
@@ -518,7 +480,6 @@ export function WorkspaceShellClient({
               <PreviewPane markdown={markdown} />
               <ExportBar
                 title={activeExportTitle}
-                onTitleChange={handleActiveDocumentTitleChange}
                 onCopyMarkdown={handleCopyActiveDocument}
                 onDownloadPdf={handleDownloadActiveDocument}
               />

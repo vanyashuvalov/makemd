@@ -324,39 +324,3 @@ export function tokenizeMarkdownLine(line: string): MarkdownSyntaxToken[] {
 
   return tokenizeMarkdownInline(line)
 }
-
-export function getMarkdownTitle(markdown: string, fallback: string) {
-  // Reuse the first heading encountered in the markdown source as the document title when one is available, otherwise fall back to the supplied label.
-  const blocks = parseMarkdownBlocks(markdown)
-  const heading = blocks.find((block) => block.type === 'heading')
-
-  return heading && heading.type === 'heading' ? heading.text.trim() || fallback : fallback
-}
-
-export function replaceMarkdownTitle(markdown: string, nextTitle: string) {
-  // Keep the first markdown heading aligned with the document title so renaming in the shell updates the visible document content instead of creating a second source of truth.
-  const normalizedMarkdown = markdown.replace(/\r\n/g, '\n')
-  const resolvedTitle = nextTitle.trim()
-
-  if (!resolvedTitle) {
-    return normalizedMarkdown
-  }
-
-  const lines = normalizedMarkdown.split('\n')
-  const headingIndex = lines.findIndex((line) => /^(#{1,6})\s+(.*)$/.test(line.trim()))
-
-  if (headingIndex >= 0) {
-    const headingMatch = /^(#{1,6})\s+(.*)$/.exec(lines[headingIndex].trim())
-
-    if (headingMatch) {
-      lines[headingIndex] = `${headingMatch[1]} ${resolvedTitle}`
-      return lines.join('\n')
-    }
-  }
-
-  if (!normalizedMarkdown) {
-    return `# ${resolvedTitle}\n`
-  }
-
-  return `# ${resolvedTitle}\n\n${normalizedMarkdown}`
-}

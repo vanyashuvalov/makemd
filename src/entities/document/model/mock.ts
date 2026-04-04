@@ -5,15 +5,27 @@
  * What it does: normalizes the requested workspace state and returns the corresponding snapshot for rendering.
  * Connected to: the home page, sidebar, editor/preview widgets, and the state-switch links.
  */
-import type { WorkspaceSnapshot, WorkspaceStateKey } from './types'
+import { createDocumentTitle, getDocumentStarterMarkdown } from './document-title'
+import type { DocumentRecord, WorkspaceSnapshot, WorkspaceStateKey } from './types'
 
-const starterMarkdown = `# Paste Markdown here
+const starterMarkdown = getDocumentStarterMarkdown()
 
-**tip:** click on the pencil icon on the left to clear the editor
-
----
-
-ok`
+// Build a mocked document row from a fixed local date so the fixture titles stay timestamp-based without duplicating the formatting rule.
+function createMockDocument(
+  id: string,
+  date: Date,
+  updatedLabel: string,
+  markdown: string,
+  options: Partial<Pick<DocumentRecord, 'active' | 'withMenu'>> = {}
+) {
+  return {
+    id,
+    title: createDocumentTitle(date),
+    updatedLabel,
+    markdown,
+    ...options,
+  }
+}
 
 const authorizedSnapshot: WorkspaceSnapshot = {
   state: 'authorized',
@@ -22,32 +34,13 @@ const authorizedSnapshot: WorkspaceSnapshot = {
     email: 'intjivan@gmail.com',
   },
   documents: [
-    {
-      id: 'doc-1',
-      title: 'Heading line here',
-      updatedLabel: `23 Mar \u2022 12:32`,
-      markdown: starterMarkdown,
-    },
-    {
-      id: 'doc-2',
-      title: 'Heading line here',
-      updatedLabel: `23 Mar \u2022 12:32`,
-      markdown: starterMarkdown,
-    },
-    {
-      id: 'doc-3',
-      title: 'Heading line here',
-      updatedLabel: `23 Mar \u2022 12:32`,
+    createMockDocument('doc-1', new Date(2026, 2, 23, 12, 32), `23 Mar \u2022 12:32`, starterMarkdown),
+    createMockDocument('doc-2', new Date(2026, 2, 23, 12, 45), `23 Mar \u2022 12:45`, starterMarkdown),
+    createMockDocument('doc-3', new Date(2026, 2, 23, 13, 1), `23 Mar \u2022 13:01`, starterMarkdown, {
       active: true,
       withMenu: true,
-      markdown: starterMarkdown,
-    },
-    {
-      id: 'doc-4',
-      title: 'Heading line here',
-      updatedLabel: `23 Mar \u2022 12:32`,
-      markdown: starterMarkdown,
-    },
+    }),
+    createMockDocument('doc-4', new Date(2026, 2, 23, 13, 12), `23 Mar \u2022 13:12`, starterMarkdown),
   ],
   templates: [
     {
@@ -78,14 +71,16 @@ const unauthorizedSnapshot: WorkspaceSnapshot = {
     description: 'Sign up to save your history',
   },
   documents: [
-    {
-      id: 'doc-1',
-      title: 'Paste text or drop file here',
-      updatedLabel: `Today \u2022 12:32`,
-      active: true,
-      withMenu: true,
-      markdown: `# Paste text or drop file here\n\nStart typing or drop a file to begin.`,
-    },
+    createMockDocument(
+      'doc-1',
+      new Date(2026, 3, 4, 12, 32),
+      `Today \u2022 12:32`,
+      `# Paste text or drop file here\n\nStart typing or drop a file to begin.`,
+      {
+        active: true,
+        withMenu: true,
+      }
+    ),
   ],
   selection: {
     helperText: 'Hold Ctrl to select many',
@@ -101,14 +96,10 @@ const emptySnapshot: WorkspaceSnapshot = {
     title: 'Paste text or drop file here',
   },
   documents: [
-    {
-      id: 'doc-1',
-      title: 'Paste text or drop file here',
-      updatedLabel: `Today \u2022 12:32`,
+    createMockDocument('doc-1', new Date(2026, 3, 4, 12, 32), `Today \u2022 12:32`, '# Paste text or drop file here', {
       active: true,
       withMenu: true,
-      markdown: '# Paste text or drop file here',
-    },
+    }),
   ],
   editor: {
     markdown: '# Paste text or drop file here',
