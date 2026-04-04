@@ -89,7 +89,7 @@ function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot
       createMockDocument('doc-1', now, 'Just now', sharedMarkdown, {
         active: true,
         withMenu: true,
-      }, 'Just now'),
+      }),
     ],
     editor: {
       markdown: sharedMarkdown,
