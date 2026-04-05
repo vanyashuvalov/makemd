@@ -27,6 +27,7 @@ import type { DocumentRecord } from '../model/types'
 export interface DocumentListItemProps {
   item: DocumentRecord
   selectionMode?: boolean
+  highlightActiveDocument?: boolean
   canSaveToFavorites?: boolean
   onOpenDocument?: (documentId: string) => void
   onToggleSelected?: (documentId: string) => void
@@ -40,6 +41,7 @@ export interface DocumentListItemProps {
 export function DocumentListItem({
   item,
   selectionMode = false,
+  highlightActiveDocument = true,
   canSaveToFavorites = false,
   onOpenDocument,
   onToggleSelected,
@@ -55,7 +57,8 @@ export function DocumentListItem({
   const [draftTitle, setDraftTitle] = React.useState(item.title)
   const inputRef = React.useRef<HTMLInputElement | null>(null)
   const isSelected = Boolean(item.selected)
-  const rowTone = item.selected || item.active ? 'bg-white/[0.15]' : 'bg-transparent'
+  const isActiveDocumentVisible = highlightActiveDocument && item.active
+  const rowTone = item.selected || isActiveDocumentVisible ? 'bg-white/[0.15]' : 'bg-transparent'
   const showOverflow = !item.selected
 
   // Keep the inline editor aligned with the current row title unless the user is actively renaming the document.
@@ -218,7 +221,7 @@ export function DocumentListItem({
             }}
             className={cn(
               'opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-sidebar-foreground',
-              item.active ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
+              isActiveDocumentVisible ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
             )}
           >
             <Icon icon={IconDotsVertical} size="md" />

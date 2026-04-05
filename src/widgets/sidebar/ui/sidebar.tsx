@@ -49,6 +49,7 @@ export interface SidebarProps {
   selectedCount: number
   totalCount: number
   helperText?: string
+  highlightActiveDocument?: boolean
   onHelpClick: () => void
   onSectionChange: (section: WorkspaceSidebarSection) => void
   onSignUpClick: () => void
@@ -81,6 +82,7 @@ export function Sidebar({
   selectedCount,
   totalCount,
   helperText = 'Hold Ctrl to select many',
+  highlightActiveDocument = true,
   onHelpClick,
   onSectionChange,
   onSignUpClick,
@@ -190,6 +192,7 @@ export function Sidebar({
               selectedCount={selectedCount}
               totalCount={totalCount}
               helperText={helperText}
+              highlightActiveDocument={highlightActiveDocument}
               isLoading={isDocumentsLoading}
               canSaveToFavorites={isAuthenticated}
               onToggleAllSelection={onToggleAllSelection}

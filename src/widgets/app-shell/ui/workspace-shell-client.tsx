@@ -712,6 +712,7 @@ export function WorkspaceShellClient({
             selectedCount={selectedCount}
             totalCount={documents.length}
             helperText={snapshot.selection?.helperText ?? 'Hold Ctrl to select many'}
+            highlightActiveDocument={!isHelpDocumentOpen}
             onHelpClick={toggleHelpDocument}
             onSectionChange={(section) => {
               closeHelpDocument()
@@ -737,7 +738,7 @@ export function WorkspaceShellClient({
 
         <div className="min-h-0 min-w-0 flex-1">
           {isHelpDocumentOpen ? (
-            <HelpDocument markdown={helpMarkdown} onBack={closeHelpDocument} />
+            <HelpDocument markdown={helpMarkdown} />
           ) : (
             <div className="grid h-full min-h-0 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <MarkdownPane
@@ -762,7 +763,7 @@ export function WorkspaceShellClient({
       </div>
       <div className="h-full min-h-0 lg:hidden">
         {isHelpDocumentOpen ? (
-          <HelpDocument markdown={helpMarkdown} onBack={closeHelpDocument} />
+          <HelpDocument markdown={helpMarkdown} />
         ) : (
           <EditorPreview
             markdown={markdown}

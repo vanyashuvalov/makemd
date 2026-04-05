@@ -19,6 +19,7 @@ export interface DocumentListProps {
   selectedCount: number
   totalCount: number
   helperText?: string
+  highlightActiveDocument?: boolean
   canSaveToFavorites?: boolean
   onOpenDocument?: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
@@ -40,6 +41,7 @@ export function DocumentList({
   selectedCount,
   totalCount,
   helperText,
+  highlightActiveDocument = true,
   canSaveToFavorites = false,
   onOpenDocument,
   onToggleAllSelection,
@@ -73,6 +75,7 @@ export function DocumentList({
       <DocumentHistoryList
         items={documents}
         selectionMode={selectionMode}
+        highlightActiveDocument={highlightActiveDocument}
         canSaveToFavorites={canSaveToFavorites}
         onOpenItem={onOpenDocument}
         onToggleItem={onToggleDocument}

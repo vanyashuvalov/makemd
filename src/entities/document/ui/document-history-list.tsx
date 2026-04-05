@@ -13,6 +13,7 @@ import { DocumentListItem } from './document-list-item'
 export interface DocumentHistoryListProps {
   items: DocumentRecord[]
   selectionMode?: boolean
+  highlightActiveDocument?: boolean
   canSaveToFavorites?: boolean
   onOpenItem?: (documentId: string) => void
   onToggleItem?: (documentId: string) => void
@@ -26,6 +27,7 @@ export interface DocumentHistoryListProps {
 export function DocumentHistoryList({
   items,
   selectionMode = false,
+  highlightActiveDocument = true,
   canSaveToFavorites = false,
   onOpenItem,
   onToggleItem,
@@ -43,6 +45,7 @@ export function DocumentHistoryList({
           key={item.id}
           item={item}
           selectionMode={selectionMode}
+          highlightActiveDocument={highlightActiveDocument}
           canSaveToFavorites={canSaveToFavorites}
           onOpenDocument={onOpenItem}
           onToggleSelected={onToggleItem}
