@@ -43,6 +43,7 @@ function getToastToneIcon(tone: ToastTone): TablerIcon {
 }
 
 // Render the transient notification stack in a fixed viewport so workspace feedback stays visible without blocking the editor or sidebar.
+// On mobile, keep the stack below the fixed top controls so notifications do not cover the burger, tabs, or PDF button.
 export function ToastStack({ items, onDismiss, className }: ToastStackProps) {
   if (typeof document === 'undefined' || items.length === 0) {
     return null
@@ -52,7 +53,7 @@ export function ToastStack({ items, onDismiss, className }: ToastStackProps) {
     <div
       aria-live="polite"
       aria-relevant="additions removals"
-      className={cn('pointer-events-none fixed right-4 top-4 z-50 flex w-[22rem] max-w-[calc(100vw-2rem)] flex-col gap-3', className)}
+      className={cn('pointer-events-none fixed right-4 top-[92px] z-50 flex w-[22rem] max-w-[calc(100vw-2rem)] flex-col gap-3 lg:top-4', className)}
     >
       {items.map((item) => {
         const tone = item.tone ?? 'info'
