@@ -14,6 +14,7 @@ import { DocumentListLoading } from './document-list-loading'
 
 export interface DocumentListProps {
   isLoading?: boolean
+  showSelectionControls?: boolean
   documents: DocumentRecord[]
   selectionMode: boolean
   selectedCount: number
@@ -36,6 +37,7 @@ export interface DocumentListProps {
 
 export function DocumentList({
   isLoading = false,
+  showSelectionControls = true,
   documents,
   selectionMode,
   selectedCount,
@@ -62,19 +64,21 @@ export function DocumentList({
 
   return (
     <div className="space-y-4">
-      <DocumentSelectionBar
-        mode={selectedCount > 0 ? 'actions' : 'hint'}
-        selectedCount={selectedCount}
-        totalCount={totalCount}
-        helperText={helperText}
-        onToggleAllSelection={onToggleAllSelection}
-        onDeleteSelected={onDeleteSelected}
-        onDownloadSelected={onDownloadSelected}
-        onCopyMarkdownSelected={onCopyMarkdownSelected}
-      />
+      {showSelectionControls ? (
+        <DocumentSelectionBar
+          mode={selectedCount > 0 ? 'actions' : 'hint'}
+          selectedCount={selectedCount}
+          totalCount={totalCount}
+          helperText={helperText}
+          onToggleAllSelection={onToggleAllSelection}
+          onDeleteSelected={onDeleteSelected}
+          onDownloadSelected={onDownloadSelected}
+          onCopyMarkdownSelected={onCopyMarkdownSelected}
+        />
+      ) : null}
       <DocumentHistoryList
         items={documents}
-        selectionMode={selectionMode}
+        selectionMode={showSelectionControls ? selectionMode : false}
         highlightActiveDocument={highlightActiveDocument}
         canSaveToFavorites={canSaveToFavorites}
         onOpenItem={onOpenDocument}

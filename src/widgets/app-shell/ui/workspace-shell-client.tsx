@@ -5,11 +5,11 @@
  * Purpose: Client-only workspace controller for auth, documents, favorites, and the editor/preview split.
  * Why it exists: the page needs a small client boundary for live editing while the sidebar rules, auth modal, and document actions stay interactive.
  * What it does: coordinates markdown state, document history, favorites, auth modal state, the read-only Help document, and the desktop/mobile workspace compositions.
- * Connected to: `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, `HelpDocument`, `Sidebar`, `AuthModal`, and the workspace snapshot model.
+ * Connected to: `MarkdownPane`, `PreviewPane`, `ExportBar`, `HelpDocument`, `Sidebar`, `MobileWorkspaceShell`, `AuthModal`, and the workspace snapshot model.
  */
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { EditorPreview, MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
+import { MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
 import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
 import type {
@@ -36,6 +36,7 @@ import { useWorkspaceFavorites } from '@/features/workspace-favorites/model/use-
 import { useWorkspaceDraftPersistence } from '@/features/workspace-persistence/model/use-workspace-draft-persistence'
 import { HelpDocument } from '@/widgets/help-document/ui/help-document'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
+import { MobileWorkspaceShell } from '@/widgets/app-shell/ui/mobile-workspace-shell'
 import { AuthModal } from '@/features/auth/ui/auth-modal'
 import { guestWorkspacePromptTitle, guestWorkspaceWarning } from '@/entities/document/model/mock'
 import { mapSupabaseUserToWorkspaceAccount } from '@/shared/lib/supabase/account'
@@ -833,17 +834,48 @@ export function WorkspaceShellClient({
         </div>
       </div>
       <div className="h-full min-h-0 lg:hidden">
-        {isHelpDocumentOpen ? (
-          <HelpDocument markdown={helpMarkdown} />
-        ) : (
-          <EditorPreview
-            markdown={markdown}
-            onMarkdownChange={handleMarkdownChange}
-            onDownloadPdf={handleDownloadActiveDocument}
-            isDownloadingPdf={isDownloadingPdf}
-            placeholder={editorPlaceholder}
-          />
-        )}
+        <MobileWorkspaceShell
+          account={isAuthenticated ? account : undefined}
+          isAuthenticated={isAuthenticated}
+          activeSection={sidebarSection}
+          documents={documents}
+          favorites={workspaceFavorites}
+          warning={guestWarning}
+          isDocumentsLoading={isDocumentsLoading}
+          isFavoritesLoading={isFavoritesLoading}
+          totalCount={documents.length}
+          helperText={snapshot.selection?.helperText ?? 'Hold Ctrl to select many'}
+          highlightActiveDocument={!isHelpDocumentOpen}
+          onHelpClick={toggleHelpDocument}
+          onSectionChange={(section) => {
+            closeHelpDocument()
+            setSidebarSection(section)
+          }}
+          onSignUpClick={() => setIsAuthModalOpen(true)}
+          onSignOut={handleSignOut}
+          onCreateDocument={handleCreateDocument}
+          onUseFavorite={handleUseFavorite}
+          onRenameFavorite={handleRenameFavorite}
+          onDeleteFavorite={handleDeleteFavorite}
+          onDownloadDocument={handleDownloadDocument}
+          onDeleteDocument={handleDeleteDocument}
+          onRenameDocument={handleRenameDocument}
+          onCopyMarkdownDocument={handleCopyMarkdownDocument}
+          onSaveToFavorites={handleSaveDocumentToFavorites}
+          onToggleAllSelection={setAllSelected}
+          onToggleDocument={toggleDocument}
+          onOpenDocument={handleOpenDocument}
+          onDeleteSelected={handleDeleteSelectedDocuments}
+          onDownloadSelected={handleDownloadSelectedDocuments}
+          onCopyMarkdownSelected={handleCopyMarkdownSelectedDocuments}
+          markdown={markdown}
+          placeholder={editorPlaceholder}
+          helpMarkdown={helpMarkdown}
+          isHelpDocumentOpen={isHelpDocumentOpen}
+          isDownloadingPdf={isDownloadingPdf}
+          onMarkdownChange={handleMarkdownChange}
+          onDownloadPdf={handleDownloadActiveDocument}
+        />
       </div>
 
       <ToastStack items={toasts} onDismiss={dismissToast} />
