@@ -114,6 +114,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
           ...textStyle,
           textDecorationLine: 'line-through',
           textDecorationColor: theme.mutedForeground,
+          textDecorationThickness: '1px',
+          textDecorationSkipInk: 'none',
         }}
       >
         {children}
@@ -129,6 +131,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
           textDecorationLine: 'underline',
           textUnderlineOffset: '0.2em',
           textDecorationColor: theme.linkDecoration,
+          textDecorationThickness: '1px',
+          textDecorationSkipInk: 'none',
         }}
         target={href?.startsWith('http') ? '_blank' : undefined}
         rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
@@ -157,7 +161,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         style={{
           ...textStyle,
           margin: '0 0 0.85rem',
-          paddingLeft: '1.5rem',
+          paddingLeft: '1.25rem',
           fontSize: '0.95rem',
           lineHeight: '1.75',
         }}
@@ -171,7 +175,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         style={{
           ...textStyle,
           margin: '0 0 0.85rem',
-          paddingLeft: '1.5rem',
+          paddingLeft: '1.25rem',
           fontSize: '0.95rem',
           lineHeight: '1.75',
         }}
@@ -187,13 +191,13 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
           {...props}
           style={{
             ...textStyle,
-            marginBottom: '0.35rem',
+            marginBottom: '0.25rem',
             pageBreakInside: 'avoid',
             breakInside: 'avoid',
             listStyleType: isTaskListItem ? 'none' : undefined,
             display: isTaskListItem ? 'flex' : undefined,
-            alignItems: isTaskListItem ? 'flex-start' : undefined,
-            gap: isTaskListItem ? '0.5rem' : undefined,
+            alignItems: isTaskListItem ? 'center' : undefined,
+            gap: isTaskListItem ? '0.35rem' : undefined,
             paddingLeft: isTaskListItem ? 0 : undefined,
           }}
         >
@@ -231,7 +235,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
     ),
     tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
     tr: ({ children, ...props }) => (
-      <tr {...props} style={{ borderBottom: `1px solid ${theme.border}` }}>
+      <tr {...props} style={{ borderBottom: `0.75pt solid ${theme.border}` }}>
         {children}
       </tr>
     ),
@@ -239,7 +243,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       <th
         {...props}
         style={{
-          border: `1px solid ${theme.border}`,
+          border: `0.75pt solid ${theme.border}`,
           padding: '0.55rem 0.75rem',
           textAlign: 'left',
           fontWeight: 600,
@@ -256,7 +260,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       <td
         {...props}
         style={{
-          border: `1px solid ${theme.border}`,
+          border: `0.75pt solid ${theme.border}`,
           padding: '0.55rem 0.75rem',
           verticalAlign: 'top',
           overflowWrap: 'anywhere',
@@ -343,7 +347,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
                     color: theme.mutedForeground,
-                    backgroundColor: theme.background,
+                    backgroundColor: '#ffffff',
                   }}
                 >
                   {codeLanguage}
@@ -391,8 +395,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         aria-hidden="true"
         style={{
           display: 'inline-flex',
-          width: '1rem',
-          height: '1rem',
+          width: '0.95rem',
+          height: '0.95rem',
           alignItems: 'center',
           justifyContent: 'center',
           marginTop: '0.15rem',
@@ -400,7 +404,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
           borderRadius: '0.25rem',
           backgroundColor: checked ? theme.foreground : 'transparent',
           color: checked ? theme.background : theme.foreground,
-          fontSize: '0.7rem',
+          fontSize: '0.72rem',
+          fontWeight: 700,
           lineHeight: 1,
           flexShrink: 0,
         }}

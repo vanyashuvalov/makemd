@@ -90,11 +90,20 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       ),
     del: ({ children, ...props }) =>
       exportMode ? (
-        <del {...props} className="line-through" style={{ color: theme.foreground, textDecorationColor: theme.mutedForeground }}>
+        <del
+          {...props}
+          className="line-through"
+          style={{
+            color: theme.foreground,
+            textDecorationColor: theme.mutedForeground,
+            textDecorationThickness: '1px',
+            textDecorationSkipInk: 'none',
+          }}
+        >
           {children}
         </del>
       ) : (
-        <del {...props} className="text-foreground decoration-foreground/60 [overflow-wrap:anywhere]">
+        <del {...props} className="text-foreground decoration-foreground/60 decoration-[1px] [overflow-wrap:anywhere]">
           {children}
         </del>
       ),
@@ -104,7 +113,13 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
           {...props}
           href={href}
           className="break-words underline underline-offset-4 [overflow-wrap:anywhere]"
-          style={{ color: theme.link, textDecorationColor: theme.linkDecoration }}
+          style={{
+            color: theme.link,
+            textDecorationColor: theme.linkDecoration,
+            textDecorationThickness: '1px',
+            textUnderlineOffset: '0.2em',
+            textDecorationSkipInk: 'none',
+          }}
           target={href?.startsWith('http') ? '_blank' : undefined}
           rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
         >
@@ -114,7 +129,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         <a
           {...props}
           href={href}
-          className="break-words text-sky-700 underline decoration-sky-700/40 underline-offset-4 transition-colors hover:text-sky-700/80 [overflow-wrap:anywhere]"
+          className="break-words text-sky-700 underline decoration-sky-700/40 decoration-[1px] underline-offset-4 transition-colors hover:text-sky-700/80 [overflow-wrap:anywhere]"
           target={href?.startsWith('http') ? '_blank' : undefined}
           rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
         >
@@ -322,15 +337,17 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
             >
               <div className="px-4 pt-3">
                 <span
-                  className="inline-flex items-center rounded-full border px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em]"
+                  className="inline-flex items-center rounded-full border bg-white px-2.5 py-1 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-foreground"
                   style={
                     exportMode
                       ? {
                           borderColor: theme.border,
-                          backgroundColor: theme.background,
+                          backgroundColor: '#ffffff',
                           color: theme.mutedForeground,
                         }
-                      : undefined
+                      : {
+                          backgroundColor: '#ffffff',
+                        }
                   }
                 >
                   {codeLanguage}
