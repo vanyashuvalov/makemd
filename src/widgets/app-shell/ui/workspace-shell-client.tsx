@@ -4,8 +4,8 @@
  * File: src/widgets/app-shell/ui/workspace-shell-client.tsx
  * Purpose: Client-only workspace controller for auth, documents, favorites, and the editor/preview split.
  * Why it exists: the page needs a small client boundary for live editing while the sidebar rules, auth modal, and document actions stay interactive.
- * What it does: coordinates markdown state, document history, favorites, auth modal state, and the desktop/mobile workspace compositions.
- * Connected to: `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, `Sidebar`, `AuthModal`, and the workspace snapshot model.
+ * What it does: coordinates markdown state, document history, favorites, auth modal state, the read-only Help document, and the desktop/mobile workspace compositions.
+ * Connected to: `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, `HelpDocument`, `Sidebar`, `AuthModal`, and the workspace snapshot model.
  */
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -91,6 +91,7 @@ export function WorkspaceShellClient({
   const [account, setAccount] = useState(snapshot.account)
   const [sidebarSection, setSidebarSection] = useState<WorkspaceSidebarSection>('history')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  // Track whether the shell should show the read-only Help document instead of the normal editor/preview split.
   const [isHelpDocumentOpen, setIsHelpDocumentOpen] = useState(false)
   const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
   const [isSessionResolved, setIsSessionResolved] = useState(snapshot.state === 'authorized')
@@ -370,7 +371,7 @@ export function WorkspaceShellClient({
       return
     }
 
-    setIsHelpDocumentOpen(false)
+    closeHelpDocument()
     setDocuments((current) =>
       current.map((document) => ({
         ...document,
@@ -389,7 +390,7 @@ export function WorkspaceShellClient({
       return
     }
 
-    setIsHelpDocumentOpen(false)
+    closeHelpDocument()
     const title = createDocumentTitle()
     const nextMarkdown = getDocumentStarterMarkdown()
     const nextDocument: DocumentRecord = {
@@ -514,6 +515,16 @@ export function WorkspaceShellClient({
     )
   }
 
+  // Toggle the read-only Help document from the sidebar footer so the right-hand pane behaves like a workspace mode switch instead of a separate route.
+  const toggleHelpDocument = () => {
+    setIsHelpDocumentOpen((current) => !current)
+  }
+
+  // Return the shell to the editable workspace whenever the user opens or creates a real document from the sidebar controls.
+  const closeHelpDocument = () => {
+    setIsHelpDocumentOpen(false)
+  }
+
   // Persist the active document title only, so the sidebar row and the export chip can rename together without tying the title to markdown content.
   const handleActiveDocumentTitleChange = (nextTitle: string) => {
     if (!activeDocument) {
@@ -536,7 +547,7 @@ export function WorkspaceShellClient({
       return
     }
 
-    setIsHelpDocumentOpen(false)
+    closeHelpDocument()
     const nextDocument: DocumentRecord = {
       id: createDocumentId(),
       title: createDocumentTitle(),
@@ -701,9 +712,9 @@ export function WorkspaceShellClient({
             selectedCount={selectedCount}
             totalCount={documents.length}
             helperText={snapshot.selection?.helperText ?? 'Hold Ctrl to select many'}
-            onHelpClick={() => setIsHelpDocumentOpen((current) => !current)}
+            onHelpClick={toggleHelpDocument}
             onSectionChange={(section) => {
-              setIsHelpDocumentOpen(false)
+              closeHelpDocument()
               setSidebarSection(section)
             }}
             onSignUpClick={() => setIsAuthModalOpen(true)}
@@ -726,7 +737,7 @@ export function WorkspaceShellClient({
 
         <div className="min-h-0 min-w-0 flex-1">
           {isHelpDocumentOpen ? (
-            <HelpDocument markdown={helpMarkdown} onBack={() => setIsHelpDocumentOpen(false)} />
+            <HelpDocument markdown={helpMarkdown} onBack={closeHelpDocument} />
           ) : (
             <div className="grid h-full min-h-0 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <MarkdownPane
@@ -751,7 +762,7 @@ export function WorkspaceShellClient({
       </div>
       <div className="h-full min-h-0 lg:hidden">
         {isHelpDocumentOpen ? (
-          <HelpDocument markdown={helpMarkdown} onBack={() => setIsHelpDocumentOpen(false)} />
+          <HelpDocument markdown={helpMarkdown} onBack={closeHelpDocument} />
         ) : (
           <EditorPreview
             markdown={markdown}
