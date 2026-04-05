@@ -22,17 +22,43 @@ export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> {
   size?: SpinnerSize
 }
 
-// Render a compact border spinner so loading states stay obviously animated even when the surrounding button is disabled.
-export function Spinner({ size = 'md', className, ...props }: SpinnerProps) {
+// Render a compact loading indicator and start a native browser animation so the spinner keeps rotating even if Tailwind animation classes are unavailable or overridden.
+export function Spinner({ size = 'md', className, style, ...props }: SpinnerProps) {
+  const spinnerRef = React.useRef<HTMLSpanElement | null>(null)
+
+  React.useEffect(() => {
+    const element = spinnerRef.current
+
+    if (!element?.animate) {
+      return
+    }
+
+    const animation = element.animate(
+      [
+        { transform: 'rotate(0deg)' },
+        { transform: 'rotate(360deg)' },
+      ],
+      {
+        duration: 800,
+        iterations: Infinity,
+        easing: 'linear',
+      }
+    )
+
+    return () => animation.cancel()
+  }, [])
+
   return (
     <span
+      ref={spinnerRef}
       aria-hidden="true"
       role="status"
       className={cn(
-        'inline-block animate-spin rounded-full border-current border-r-transparent',
+        'inline-block rounded-full border-current border-r-transparent',
         spinnerSizeClasses[size],
         className
       )}
+      style={{ ...style, transformOrigin: '50% 50%', willChange: 'transform' }}
       {...props}
     />
   )
