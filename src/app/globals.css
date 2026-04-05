@@ -77,12 +77,18 @@
     @apply bg-background;
     width: 100%;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+    touch-action: pan-y pinch-zoom;
   }
 
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
     width: 100%;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+    touch-action: pan-y pinch-zoom;
   }
 
   @keyframes drawer-rise {
