@@ -86,15 +86,19 @@ function createFallbackUuidBytes(inputBytes: Uint8Array) {
 
 // Reduce a document collection to a deterministic signature so the sync hook can skip duplicate writes and notice when rows were deleted.
 export function createWorkspaceDocumentsSignature(documents: DocumentRecord[]) {
-  return documents
-    .map((document) =>
-      [
-        document.id,
-        document.title,
-        document.markdown ?? '',
-      ].join('::')
-    )
+  return [...documents]
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((document) => createWorkspaceDocumentContentSignature(document))
     .join('||')
+}
+
+// Reduce a single document to the fields that should trigger a remote save so the cloud sync layer can ignore active/selection noise and only react to actual content edits.
+export function createWorkspaceDocumentContentSignature(document: DocumentRecord) {
+  return [
+    document.id,
+    document.title,
+    document.markdown ?? '',
+  ].join('::')
 }
 
 // Format a remote timestamp into the same readable history label style used by the mock data so cloud-loaded documents blend into the existing sidebar UI.

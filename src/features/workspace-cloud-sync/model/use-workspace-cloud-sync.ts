@@ -8,11 +8,14 @@
 
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DocumentRecord, WorkspaceSidebarSection, WorkspaceSnapshot } from '@/entities/document/model/types'
-import { formatDocumentUpdatedLabel } from '@/entities/document/model/document-updated'
+import { formatDocumentUpdatedLabel, sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
 import {
+  createWorkspaceDocumentContentSignature,
   createWorkspaceDocumentsSignature,
-  type WorkspaceCloudDocumentRepository,
+} from './workspace-cloud-document'
+import {
   supabaseWorkspaceDocumentRepository,
+  type WorkspaceCloudDocumentRepository,
 } from './supabase-workspace-document-repository'
 
 export interface UseWorkspaceCloudSyncParams {
@@ -42,6 +45,7 @@ export function useWorkspaceCloudSync({
   const hasLoadedRemoteRef = useRef(false)
   const lastSavedSignatureRef = useRef<string | null>(null)
   const lastSavedDocumentIdsRef = useRef<string[]>([])
+  const lastSavedDocumentSignaturesRef = useRef<Map<string, string>>(new Map())
   const saveTimerRef = useRef<number | null>(null)
   const [isHydratingRemote, setIsHydratingRemote] = useState(false)
   const liveDocumentsSignature = createWorkspaceDocumentsSignature(documents)
@@ -50,6 +54,7 @@ export function useWorkspaceCloudSync({
     hasLoadedRemoteRef.current = false
     lastSavedSignatureRef.current = null
     lastSavedDocumentIdsRef.current = []
+    lastSavedDocumentSignaturesRef.current = new Map()
     setIsHydratingRemote(false)
   }, [userId])
 
@@ -79,6 +84,9 @@ export function useWorkspaceCloudSync({
 
         lastSavedSignatureRef.current = createWorkspaceDocumentsSignature(remoteDocuments)
         lastSavedDocumentIdsRef.current = remoteDocuments.map((document) => document.id)
+        lastSavedDocumentSignaturesRef.current = new Map(
+          remoteDocuments.map((document) => [document.id, createWorkspaceDocumentContentSignature(document)])
+        )
 
         setDocuments(remoteDocuments)
         setEditorMarkdown(remoteDocuments.find((document) => document.active)?.markdown ?? remoteDocuments[0]?.markdown ?? '')
@@ -128,6 +136,14 @@ export function useWorkspaceCloudSync({
       const previousDocumentIds = lastSavedDocumentIdsRef.current
       const currentDocumentIds = documents.map((document) => document.id)
       const removedDocumentIds = previousDocumentIds.filter((documentId) => !currentDocumentIds.includes(documentId))
+      const previousDocumentSignatures = lastSavedDocumentSignaturesRef.current
+      const changedDocuments = documents.filter((document) => {
+        const nextDocumentSignature = createWorkspaceDocumentContentSignature(document)
+        return previousDocumentSignatures.get(document.id) !== nextDocumentSignature
+      })
+      const nextDocumentSignatureMap = new Map(
+        documents.map((document) => [document.id, createWorkspaceDocumentContentSignature(document)])
+      )
 
       void Promise.resolve()
         .then(async () => {
@@ -135,32 +151,37 @@ export function useWorkspaceCloudSync({
             await repository.delete(userId, removedDocumentIds)
           }
 
-          if (documents.length > 0) {
-            const savedTimestamps = await repository.save(userId, documents)
-            const savedTimestampMap = new Map(savedTimestamps.map((item) => [item.id, item.updatedAt]))
+          if (changedDocuments.length > 0) {
+            const savedTimestamps = await repository.save(userId, changedDocuments)
+            const savedTimestampMap = new Map<string, string>(
+              savedTimestamps.map((item) => [item.id, item.updatedAt])
+            )
 
             // Merge the DB-provided timestamps back into local state so the sidebar labels and sort order reflect the same `updated_at` values that Supabase just wrote.
             if (savedTimestampMap.size > 0) {
               setDocuments((current) =>
-                current.map((document) => {
-                  const updatedAt = savedTimestampMap.get(document.id)
+                sortDocumentsByUpdatedAt(
+                  current.map((document) => {
+                    const updatedAt = savedTimestampMap.get(document.id)
 
-                  if (!updatedAt) {
-                    return document
-                  }
+                    if (!updatedAt) {
+                      return document
+                    }
 
-                  return {
-                    ...document,
-                    updatedAt,
-                    updatedLabel: formatDocumentUpdatedLabel(updatedAt),
-                  }
-                })
+                    return {
+                      ...document,
+                      updatedAt,
+                      updatedLabel: formatDocumentUpdatedLabel(updatedAt),
+                    }
+                  })
+                )
               )
             }
           }
 
           lastSavedSignatureRef.current = nextSignature
           lastSavedDocumentIdsRef.current = currentDocumentIds
+          lastSavedDocumentSignaturesRef.current = nextDocumentSignatureMap
         })
         .catch((error) => {
           // Keep cloud sync silent in the UI, but make failures observable in the console so backend issues are still discoverable during debugging.
