@@ -10,8 +10,10 @@
 import type { DocumentRecord } from '@/entities/document/model/types'
 import { DocumentHistoryList } from '@/entities/document/ui/document-history-list'
 import { DocumentSelectionBar } from '@/features/document-selection/ui/document-selection-bar'
+import { DocumentListLoading } from './document-list-loading'
 
 export interface DocumentListProps {
+  isLoading?: boolean
   documents: DocumentRecord[]
   selectionMode: boolean
   selectedCount: number
@@ -33,6 +35,7 @@ export interface DocumentListProps {
 }
 
 export function DocumentList({
+  isLoading = false,
   documents,
   selectionMode,
   selectedCount,
@@ -53,6 +56,10 @@ export function DocumentList({
   onCopyLinkSelected,
 }: DocumentListProps) {
   // Keep the selection rail and history list inside one visual group so the gap and stacking order stay consistent with the Figma document list block.
+  if (isLoading) {
+    return <DocumentListLoading />
+  }
+
   return (
     <div className="space-y-4">
       <DocumentSelectionBar

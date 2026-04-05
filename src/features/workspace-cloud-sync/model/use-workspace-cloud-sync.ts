@@ -2,11 +2,11 @@
  * File: src/features/workspace-cloud-sync/model/use-workspace-cloud-sync.ts
  * Purpose: Client hook that keeps authenticated workspace documents in Supabase in sync with the live editor state.
  * Why it exists: the app already had local IndexedDB drafts, but signed-in users also need real DB and Storage writes so their changes survive across devices.
- * What it does: optionally hydrates from Supabase when the workspace is still pristine, then debounces saves and deletes so document create/edit/delete actions emit real remote requests.
+ * What it does: hydrates the authenticated workspace from Supabase, then debounces saves and deletes so document create/edit/delete actions emit real remote requests.
  * Connected to: `workspace-shell-client.tsx`, the Supabase workspace document repository, and the shared cloud document helpers.
  */
 
-import { useEffect, useMemo, useRef, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DocumentRecord, WorkspaceSidebarSection, WorkspaceSnapshot } from '@/entities/document/model/types'
 import {
   createWorkspaceDocumentsSignature,
@@ -17,7 +17,6 @@ import {
 export interface UseWorkspaceCloudSyncParams {
   enabled: boolean
   userId: string | null
-  initialDocuments: DocumentRecord[]
   documents: DocumentRecord[]
   editorMarkdown: string
   sidebarSection: WorkspaceSidebarSection
@@ -31,7 +30,6 @@ export interface UseWorkspaceCloudSyncParams {
 export function useWorkspaceCloudSync({
   enabled,
   userId,
-  initialDocuments,
   documents,
   editorMarkdown,
   sidebarSection,
@@ -44,17 +42,17 @@ export function useWorkspaceCloudSync({
   const lastSavedSignatureRef = useRef<string | null>(null)
   const lastSavedDocumentIdsRef = useRef<string[]>([])
   const saveTimerRef = useRef<number | null>(null)
-  const initialDocumentsSignature = useMemo(() => createWorkspaceDocumentsSignature(initialDocuments), [initialDocuments])
-  const liveDocumentsSignature = useMemo(() => createWorkspaceDocumentsSignature(documents), [documents])
-
+  const [isHydratingRemote, setIsHydratingRemote] = useState(false)
+  const liveDocumentsSignature = createWorkspaceDocumentsSignature(documents)
   // Reset the cloud sync bookkeeping whenever the signed-in user changes so one account cannot leak its sync state into another.
   useEffect(() => {
     hasLoadedRemoteRef.current = false
     lastSavedSignatureRef.current = null
     lastSavedDocumentIdsRef.current = []
+    setIsHydratingRemote(false)
   }, [userId])
 
-  // Hydrate the workspace from Supabase only when the current shell still matches the pristine server snapshot, which lets local drafts win without hiding the cloud source of truth for fresh sessions.
+  // Hydrate the workspace from Supabase as soon as an authenticated session is available so cloud rows become the source of truth before the shell starts saving local mutations.
   useEffect(() => {
     if (!enabled || !userId || hasLoadedRemoteRef.current) {
       return
@@ -63,29 +61,36 @@ export function useWorkspaceCloudSync({
     let isMounted = true
 
     const loadRemoteDocuments = async () => {
-      if (liveDocumentsSignature !== initialDocumentsSignature) {
+      setIsHydratingRemote(true)
+
+      try {
+        const remoteDocuments = await repository.load(userId)
+
+        if (!isMounted) {
+          return
+        }
+
         hasLoadedRemoteRef.current = true
-        return
+
+        if (remoteDocuments.length === 0) {
+          return
+        }
+
+        lastSavedSignatureRef.current = createWorkspaceDocumentsSignature(remoteDocuments)
+        lastSavedDocumentIdsRef.current = remoteDocuments.map((document) => document.id)
+
+        setDocuments(remoteDocuments)
+        setEditorMarkdown(remoteDocuments.find((document) => document.active)?.markdown ?? remoteDocuments[0]?.markdown ?? '')
+        setAccount((current) => current)
+      } catch (error) {
+        // Keep the workspace usable when the initial cloud hydrate fails so the local draft can still continue syncing once the browser regains a stable connection.
+        console.error('[workspace-cloud-sync] remote hydrate failed', error)
+      } finally {
+        if (isMounted) {
+          hasLoadedRemoteRef.current = true
+          setIsHydratingRemote(false)
+        }
       }
-
-      const remoteDocuments = await repository.load(userId)
-
-      if (!isMounted) {
-        return
-      }
-
-      hasLoadedRemoteRef.current = true
-
-      if (remoteDocuments.length === 0) {
-        return
-      }
-
-      lastSavedSignatureRef.current = createWorkspaceDocumentsSignature(remoteDocuments)
-      lastSavedDocumentIdsRef.current = remoteDocuments.map((document) => document.id)
-
-      setDocuments(remoteDocuments)
-      setEditorMarkdown(remoteDocuments.find((document) => document.active)?.markdown ?? remoteDocuments[0]?.markdown ?? '')
-      setAccount((current) => current)
     }
 
     void loadRemoteDocuments()
@@ -95,8 +100,6 @@ export function useWorkspaceCloudSync({
     }
   }, [
     enabled,
-    initialDocumentsSignature,
-    liveDocumentsSignature,
     repository,
     setAccount,
     setDocuments,
@@ -160,4 +163,6 @@ export function useWorkspaceCloudSync({
     },
     []
   )
+
+  return isHydratingRemote
 }

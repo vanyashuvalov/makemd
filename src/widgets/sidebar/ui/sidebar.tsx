@@ -43,6 +43,7 @@ export interface SidebarProps {
   documents: DocumentRecord[]
   templates: WorkspaceTemplate[]
   warning?: WorkspaceWarning
+  isDocumentsLoading?: boolean
   selectionMode: boolean
   selectedCount: number
   totalCount: number
@@ -74,6 +75,7 @@ export function Sidebar({
   documents,
   templates,
   warning,
+  isDocumentsLoading = false,
   selectionMode,
   selectedCount,
   totalCount,
@@ -188,6 +190,7 @@ export function Sidebar({
               selectedCount={selectedCount}
               totalCount={totalCount}
               helperText={helperText}
+              isLoading={isDocumentsLoading}
               canCopyLink={canCopyLink}
               onToggleAllSelection={onToggleAllSelection}
               onToggleDocument={onToggleDocument}

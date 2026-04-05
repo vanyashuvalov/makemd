@@ -88,6 +88,7 @@ export function WorkspaceShellClient({
   const [sidebarSection, setSidebarSection] = useState<WorkspaceSidebarSection>('history')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
+  const [isSessionResolved, setIsSessionResolved] = useState(snapshot.state === 'authorized')
   const {
     documents,
     selectedCount,
@@ -128,10 +129,9 @@ export function WorkspaceShellClient({
   })
 
   // Keep authenticated workspaces connected to Supabase so every document mutation is mirrored into Postgres and Storage instead of only living in the local browser cache.
-  useWorkspaceCloudSync({
+  const isHydratingRemoteDocuments = useWorkspaceCloudSync({
     enabled: isAuthenticated,
     userId: supabaseUserId,
-    initialDocuments: snapshot.documents,
     documents,
     editorMarkdown: markdown,
     sidebarSection,
@@ -139,6 +139,7 @@ export function WorkspaceShellClient({
     setEditorMarkdown: setMarkdown,
     setAccount,
   })
+  const isDocumentsLoading = !isSessionResolved || (isAuthenticated && isHydratingRemoteDocuments)
 
   // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
   const dismissToast = (toastId: string) => {
@@ -194,6 +195,7 @@ export function WorkspaceShellClient({
         setIsAuthModalOpen(false)
         setSidebarSection('history')
         setAuthErrorMessage(undefined)
+        setIsSessionResolved(true)
         return
       }
 
@@ -201,6 +203,7 @@ export function WorkspaceShellClient({
       setSupabaseUserId(null)
       setAccount(undefined)
       setIsAuthModalOpen(false)
+      setIsSessionResolved(true)
     }
 
     void supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
@@ -665,6 +668,7 @@ export function WorkspaceShellClient({
             documents={documents}
             templates={templates}
             warning={guestWarning}
+            isDocumentsLoading={isDocumentsLoading}
             selectionMode={selectionMode}
             selectedCount={selectedCount}
             totalCount={documents.length}
