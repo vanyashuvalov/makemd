@@ -7,6 +7,7 @@
  */
 
 import type { WorkspaceSnapshot, WorkspaceSidebarSection, DocumentRecord, WorkspaceStateKey } from '@/entities/document/model/types'
+import { normalizeWorkspaceDocumentIds } from '@/entities/document/model/document-id'
 import { sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
 
 export type WorkspaceDraftScope = WorkspaceStateKey
@@ -78,17 +79,19 @@ export function normalizeWorkspaceDraftRecord(draft: WorkspaceDraftRecord | null
   }
 
   const documents = sortDocumentsByUpdatedAt(
-    draft.documents
-      .filter((document) => Boolean(document.id && document.title))
-      .map((document) => ({
-        id: document.id,
-        title: document.title,
-        updatedAt: document.updatedAt,
-        updatedLabel: document.updatedLabel,
-        markdown: document.markdown ?? '',
-        active: Boolean(document.active),
-        withMenu: Boolean(document.withMenu),
-      }))
+    normalizeWorkspaceDocumentIds(
+      draft.documents
+        .filter((document) => Boolean(document.id && document.title))
+        .map((document) => ({
+          id: document.id,
+          title: document.title,
+          updatedAt: document.updatedAt,
+          updatedLabel: document.updatedLabel,
+          markdown: document.markdown ?? '',
+          active: Boolean(document.active),
+          withMenu: Boolean(document.withMenu),
+        }))
+    )
   )
 
   if (documents.length === 0) {

@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DocumentRecord, WorkspaceSidebarSection, WorkspaceSnapshot } from '@/entities/document/model/types'
+import { normalizeWorkspaceDocumentIds } from '@/entities/document/model/document-id'
 import { formatDocumentUpdatedLabel, sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
 import {
   createWorkspaceDocumentContentSignature,
@@ -70,7 +71,7 @@ export function useWorkspaceCloudSync({
       setIsHydratingRemote(true)
 
       try {
-        const remoteDocuments = await repository.load(userId)
+        const remoteDocuments = normalizeWorkspaceDocumentIds(await repository.load(userId))
 
         if (!isMounted) {
           return

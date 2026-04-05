@@ -17,6 +17,7 @@ import type {
   WorkspaceSnapshot,
   WorkspaceSidebarSection,
 } from '@/entities/document/model/types'
+import { createWorkspaceDocumentId } from '@/entities/document/model/document-id'
 import {
   createDocumentTitle,
   getDocumentStarterMarkdown,
@@ -48,11 +49,6 @@ import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 const DESKTOP_SIDEBAR_WIDTH = 360
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
-// Generate a local identifier for newly created workspace documents so each draft can be tracked independently in the sidebar state.
-function createDocumentId() {
-  return `doc-${Date.now()}`
-}
-
 // Allocate a stable toast identifier so the workspace can add and remove transient feedback without colliding across renders.
 function createToastId() {
   return 'toast-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
@@ -76,7 +72,7 @@ function createWorkspaceDocumentFreshness(date = new Date()) {
 // Restore a starter document when the last file is deleted so the workspace never falls into an empty dead-end state.
 function createStarterDocument(snapshot: WorkspaceSnapshot): DocumentRecord {
   return {
-    id: createDocumentId(),
+    id: createWorkspaceDocumentId(),
     title: createDocumentTitle(),
     ...createWorkspaceDocumentFreshness(),
     markdown: snapshot.editor.markdown,
@@ -442,7 +438,7 @@ export function WorkspaceShellClient({
   const createDocumentFromMarkdown = (markdownSource: string, title = createDocumentTitle()) => {
     closeHelpDocument()
     const nextDocument: DocumentRecord = {
-      id: createDocumentId(),
+      id: createWorkspaceDocumentId(),
       title,
       ...createWorkspaceDocumentFreshness(),
       markdown: markdownSource,
