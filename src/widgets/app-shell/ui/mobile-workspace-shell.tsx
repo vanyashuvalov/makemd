@@ -85,9 +85,8 @@ export function MobileWorkspaceShell({
     setIsSidebarOpen(false)
   }
 
-  // Forward sidebar navigation into the workspace and then dismiss the drawer so the new target is visible without extra taps.
+  // Forward sidebar navigation into the workspace without dismissing the drawer so switching between history and favorites keeps the navigation surface open.
   const handleSectionChange = (section: WorkspaceSidebarSection) => {
-    closeSidebar()
     onSectionChange(section)
   }
 
@@ -229,6 +228,7 @@ export function MobileWorkspaceShell({
           helperText={helperText}
           highlightActiveDocument={highlightActiveDocument}
           showSelectionControls={false}
+          alwaysShowOverflowMenu
           onHelpClick={handleHelpClick}
           onSectionChange={handleSectionChange}
           onSignUpClick={handleSignUpClick}

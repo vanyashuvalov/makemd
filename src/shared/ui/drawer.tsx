@@ -31,6 +31,7 @@ export function Drawer({
   children,
 }: DrawerProps) {
   // Keep the drawer mounted only while it is visible so body scrolling is locked during off-canvas navigation.
+  // The mobile shell relies on this lock to stop the page behind the sheet from moving on touch devices where overflow hidden alone is not enough.
   React.useEffect(() => {
     if (!open) {
       return
@@ -42,13 +43,32 @@ export function Drawer({
       }
     }
 
+    const scrollY = window.scrollY
+    const previousPosition = document.body.style.position
+    const previousTop = document.body.style.top
+    const previousWidth = document.body.style.width
     const previousOverflow = document.body.style.overflow
+    const previousTouchAction = document.body.style.touchAction
+    const previousOverscrollBehavior = document.body.style.overscrollBehavior
+
+    // Freeze the page in place instead of only hiding overflow so mobile Safari cannot rubber-band the content underneath the drawer.
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.width = '100%'
     document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'none'
+    document.body.style.overscrollBehavior = 'none'
     window.addEventListener('keydown', handleKeyDown)
 
     return () => {
+      document.body.style.position = previousPosition
+      document.body.style.top = previousTop
+      document.body.style.width = previousWidth
       document.body.style.overflow = previousOverflow
+      document.body.style.touchAction = previousTouchAction
+      document.body.style.overscrollBehavior = previousOverscrollBehavior
       window.removeEventListener('keydown', handleKeyDown)
+      window.scrollTo(0, scrollY)
     }
   }, [onOpenChange, open])
 

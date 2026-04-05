@@ -30,6 +30,7 @@ export interface DocumentListItemProps {
   selectionMode?: boolean
   highlightActiveDocument?: boolean
   canSaveToFavorites?: boolean
+  alwaysShowOverflowMenu?: boolean
   leadingIcon?: TablerIcon
   menuItems?: ContextMenuItem[]
   onOpenDocument?: (documentId: string) => void
@@ -46,6 +47,7 @@ export function DocumentListItem({
   selectionMode = false,
   highlightActiveDocument = true,
   canSaveToFavorites = false,
+  alwaysShowOverflowMenu = false,
   leadingIcon = IconFileText,
   menuItems: overrideMenuItems,
   onOpenDocument,
@@ -64,7 +66,7 @@ export function DocumentListItem({
   const isSelected = Boolean(item.selected)
   const isActiveDocumentVisible = highlightActiveDocument && item.active
   const rowTone = item.selected || isActiveDocumentVisible ? 'bg-white/[0.15]' : 'bg-transparent'
-  const showOverflow = !item.selected
+  const showOverflow = alwaysShowOverflowMenu || !item.selected
 
   // Keep the inline editor aligned with the current row title unless the user is actively renaming the document.
   React.useEffect(() => {
@@ -236,7 +238,9 @@ export function DocumentListItem({
               setIsMenuOpen((current) => !current)
             }}
             className={cn(
-              'opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-sidebar-foreground',
+              alwaysShowOverflowMenu
+                ? 'opacity-100'
+                : 'opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-sidebar-foreground',
               isActiveDocumentVisible ? 'text-sidebar-foreground' : 'text-sidebar-muted-foreground'
             )}
           >

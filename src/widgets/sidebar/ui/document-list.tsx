@@ -15,6 +15,7 @@ import { DocumentListLoading } from './document-list-loading'
 export interface DocumentListProps {
   isLoading?: boolean
   showSelectionControls?: boolean
+  alwaysShowOverflowMenu?: boolean
   documents: DocumentRecord[]
   selectionMode: boolean
   selectedCount: number
@@ -38,6 +39,7 @@ export interface DocumentListProps {
 export function DocumentList({
   isLoading = false,
   showSelectionControls = true,
+  alwaysShowOverflowMenu = false,
   documents,
   selectionMode,
   selectedCount,
@@ -81,6 +83,7 @@ export function DocumentList({
         selectionMode={showSelectionControls ? selectionMode : false}
         highlightActiveDocument={highlightActiveDocument}
         canSaveToFavorites={canSaveToFavorites}
+        alwaysShowOverflowMenu={alwaysShowOverflowMenu}
         onOpenItem={onOpenDocument}
         onToggleItem={onToggleDocument}
         onDownloadItem={onDownloadDocument}

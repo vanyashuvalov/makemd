@@ -17,6 +17,7 @@ import type { ContextMenuItem } from '@/shared/ui/context-menu'
 export interface FavoriteListProps {
   items: WorkspaceFavorite[]
   isLoading?: boolean
+  alwaysShowOverflowMenu?: boolean
   onUseFavorite: (favoriteId: string) => void
   onRenameFavorite: (favoriteId: string, nextTitle: string) => void
   onDeleteFavorite: (favoriteId: string) => void
@@ -26,6 +27,7 @@ export interface FavoriteListProps {
 export function FavoriteList({
   items,
   isLoading = false,
+  alwaysShowOverflowMenu = false,
   onUseFavorite,
   onRenameFavorite,
   onDeleteFavorite,
@@ -81,6 +83,7 @@ export function FavoriteList({
             item={favoriteRow}
             leadingIcon={IconStar}
             menuItems={menuItems}
+            alwaysShowOverflowMenu={alwaysShowOverflowMenu}
             onRenameDocument={onRenameFavorite}
             onOpenDocument={() => onUseFavorite(item.id)}
           />

@@ -51,6 +51,7 @@ export interface SidebarProps {
   helperText?: string
   highlightActiveDocument?: boolean
   showSelectionControls?: boolean
+  alwaysShowOverflowMenu?: boolean
   onHelpClick: () => void
   onSectionChange: (section: WorkspaceSidebarSection) => void
   onSignUpClick: () => void
@@ -87,6 +88,7 @@ export function Sidebar({
   helperText = 'Hold Ctrl to select many',
   highlightActiveDocument = true,
   showSelectionControls = true,
+  alwaysShowOverflowMenu = false,
   onHelpClick,
   onSectionChange,
   onSignUpClick,
@@ -201,6 +203,7 @@ export function Sidebar({
               highlightActiveDocument={highlightActiveDocument}
               isLoading={isDocumentsLoading}
               showSelectionControls={showSelectionControls}
+              alwaysShowOverflowMenu={alwaysShowOverflowMenu}
               canSaveToFavorites={isAuthenticated}
               onToggleAllSelection={onToggleAllSelection}
               onToggleDocument={onToggleDocument}
@@ -220,6 +223,7 @@ export function Sidebar({
             <FavoriteList
               items={favorites}
               isLoading={isFavoritesLoading}
+              alwaysShowOverflowMenu={alwaysShowOverflowMenu}
               onUseFavorite={onUseFavorite}
               onRenameFavorite={onRenameFavorite}
               onDeleteFavorite={onDeleteFavorite}

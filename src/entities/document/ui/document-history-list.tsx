@@ -15,6 +15,7 @@ export interface DocumentHistoryListProps {
   selectionMode?: boolean
   highlightActiveDocument?: boolean
   canSaveToFavorites?: boolean
+  alwaysShowOverflowMenu?: boolean
   onOpenItem?: (documentId: string) => void
   onToggleItem?: (documentId: string) => void
   onDownloadItem?: (documentId: string) => void
@@ -29,6 +30,7 @@ export function DocumentHistoryList({
   selectionMode = false,
   highlightActiveDocument = true,
   canSaveToFavorites = false,
+  alwaysShowOverflowMenu = false,
   onOpenItem,
   onToggleItem,
   onDownloadItem,
@@ -47,6 +49,7 @@ export function DocumentHistoryList({
           selectionMode={selectionMode}
           highlightActiveDocument={highlightActiveDocument}
           canSaveToFavorites={canSaveToFavorites}
+          alwaysShowOverflowMenu={alwaysShowOverflowMenu}
           onOpenDocument={onOpenItem}
           onToggleSelected={onToggleItem}
           onDownloadDocument={onDownloadItem}
