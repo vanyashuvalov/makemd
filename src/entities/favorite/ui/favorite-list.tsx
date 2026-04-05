@@ -4,10 +4,10 @@
  * File: src/entities/favorite/ui/favorite-list.tsx
  * Purpose: Authenticated favorites surface shown in the sidebar tab.
  * Why it exists: favorites should reuse the same row presentation as documents while staying an independent cloud collection.
- * What it does: renders saved favorite snapshots as document-like rows, opens a new document on click, and exposes create/delete actions through the row menu.
+ * What it does: renders saved favorite snapshots as document-like rows, opens a new document on click, and exposes rename/create/delete actions through the row menu.
  * Connected to: the authenticated sidebar tab state, the workspace favorite repository, the document row component, and the workspace document creation flow.
  */
-import { IconFilePlus, IconStar, IconTrash } from '@tabler/icons-react'
+import { IconFilePlus, IconPencil, IconStar, IconTrash } from '@tabler/icons-react'
 import type { WorkspaceFavorite } from '@/entities/document/model/types'
 import type { DocumentRecord } from '@/entities/document/model/types'
 import { DocumentListItem } from '@/entities/document/ui/document-list-item'
@@ -18,6 +18,7 @@ export interface FavoriteListProps {
   items: WorkspaceFavorite[]
   isLoading?: boolean
   onUseFavorite: (favoriteId: string) => void
+  onRenameFavorite: (favoriteId: string) => void
   onDeleteFavorite: (favoriteId: string) => void
 }
 
@@ -26,6 +27,7 @@ export function FavoriteList({
   items,
   isLoading = false,
   onUseFavorite,
+  onRenameFavorite,
   onDeleteFavorite,
 }: FavoriteListProps) {
   if (isLoading) {
@@ -52,6 +54,12 @@ export function FavoriteList({
         }
 
         const menuItems: ContextMenuItem[] = [
+          {
+            key: 'rename',
+            label: 'Rename',
+            icon: IconPencil,
+            onSelect: () => onRenameFavorite(item.id),
+          },
           {
             key: 'create-document',
             label: 'Create document',

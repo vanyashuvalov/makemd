@@ -151,6 +151,7 @@ export function WorkspaceShellClient({
     favorites: workspaceFavorites,
     isHydratingFavorites,
     createFavoriteFromDocument,
+    renameFavorite,
     deleteFavorite,
   } = useWorkspaceFavorites({
     enabled: isAuthenticated,
@@ -613,6 +614,31 @@ export function WorkspaceShellClient({
     })
   }
 
+  // Rename a saved favorite snapshot through the cloud collection so the Favorites tab exposes the same editing affordance as document rows.
+  const handleRenameFavorite = (favoriteId: string) => {
+    const favorite = workspaceFavorites.find((item) => item.id === favoriteId)
+
+    if (!favorite) {
+      return
+    }
+
+    const nextTitle = window.prompt('Rename favorite', favorite.title)?.trim()
+
+    if (!nextTitle) {
+      return
+    }
+
+    void renameFavorite(favoriteId, nextTitle).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Unable to rename this favorite right now.'
+
+      showToast({
+        tone: 'warning',
+        title: 'Could not rename favorite',
+        description: message,
+      })
+    })
+  }
+
   // Run email/password auth through Supabase so the modal can support both login and registration without owning credential storage itself.
   const handleEmailPasswordSubmit = async (email: string, password: string) => {
     const resolvedEmail = email.trim().toLowerCase()
@@ -740,6 +766,7 @@ export function WorkspaceShellClient({
             onSignOut={handleSignOut}
             onCreateDocument={handleCreateDocument}
             onUseFavorite={handleUseFavorite}
+            onRenameFavorite={handleRenameFavorite}
             onDeleteFavorite={handleDeleteFavorite}
             onDownloadDocument={handleDownloadDocument}
             onDeleteDocument={handleDeleteDocument}

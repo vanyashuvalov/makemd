@@ -23,6 +23,7 @@ type SupabaseFavoriteRow = {
 export interface WorkspaceFavoriteRepository {
   load: (userId: string) => Promise<WorkspaceFavorite[]>
   save: (userId: string, favorite: WorkspaceFavoriteInput) => Promise<WorkspaceFavorite>
+  rename: (userId: string, favoriteId: string, nextTitle: string) => Promise<WorkspaceFavorite>
   delete: (userId: string, favoriteId: string) => Promise<void>
 }
 
@@ -74,6 +75,53 @@ export function createSupabaseWorkspaceFavoriteRepository(): WorkspaceFavoriteRe
       }
 
       const row = data as SupabaseFavoriteRow
+
+      return {
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        markdown: row.markdown,
+      }
+    },
+    // Rename a favorite snapshot in Postgres while keeping the markdown body intact so the same reusable seed can be re-labeled without losing its content.
+    async rename(userId, favoriteId, nextTitle) {
+      const supabase = getSupabaseBrowserClient()
+      const normalizedTitle = nextTitle.trim() || 'Untitled favorite'
+
+      const { data, error } = await supabase
+        .from('document_favorites')
+        .select('id, title, description, markdown')
+        .eq('user_id', userId)
+        .eq('id', favoriteId)
+        .single()
+
+      if (error || !data) {
+        throw error ?? new Error('Failed to load favorite snapshot.')
+      }
+
+      const currentRow = data as SupabaseFavoriteRow
+      const nextContentHash = await createWorkspaceFavoriteContentHash({
+        title: normalizedTitle,
+        description: currentRow.description,
+        markdown: currentRow.markdown,
+      })
+
+      const { data: updatedData, error: updateError } = await supabase
+        .from('document_favorites')
+        .update({
+          title: normalizedTitle,
+          content_hash: nextContentHash,
+        })
+        .eq('user_id', userId)
+        .eq('id', favoriteId)
+        .select('id, title, description, markdown')
+        .single()
+
+      if (updateError || !updatedData) {
+        throw updateError ?? new Error('Failed to rename favorite snapshot.')
+      }
+
+      const row = updatedData as SupabaseFavoriteRow
 
       return {
         id: row.id,

@@ -28,6 +28,7 @@ export interface UseWorkspaceFavoritesResult {
   favorites: WorkspaceFavorite[]
   isHydratingFavorites: boolean
   saveFavorite: (favorite: WorkspaceFavoriteInput) => Promise<WorkspaceFavorite | null>
+  renameFavorite: (favoriteId: string, nextTitle: string) => Promise<WorkspaceFavorite | null>
   deleteFavorite: (favoriteId: string) => Promise<boolean>
   createFavoriteFromDocument: (document: DocumentRecord) => Promise<WorkspaceFavorite | null>
 }
@@ -127,6 +128,24 @@ export function useWorkspaceFavorites({
     [enabled, repository, userId]
   )
 
+  // Rename a favorite snapshot in Supabase and mirror the new title back into local state so the sidebar row updates immediately after the write succeeds.
+  const renameFavorite = useCallback(
+    async (favoriteId: string, nextTitle: string) => {
+      if (!enabled || !userId) {
+        return null
+      }
+
+      const renamedFavorite = await repository.rename(userId, favoriteId, nextTitle)
+
+      setFavorites((current) =>
+        current.map((favorite) => (favorite.id === favoriteId ? renamedFavorite : favorite))
+      )
+
+      return renamedFavorite
+    },
+    [enabled, repository, userId]
+  )
+
   // Remove one saved favorite from Supabase and mirror the deletion into local state so the sidebar tab stays in sync with the cloud collection.
   const deleteFavorite = useCallback(
     async (favoriteId: string) => {
@@ -154,6 +173,7 @@ export function useWorkspaceFavorites({
     favorites,
     isHydratingFavorites,
     saveFavorite,
+    renameFavorite,
     deleteFavorite,
     createFavoriteFromDocument,
   }
