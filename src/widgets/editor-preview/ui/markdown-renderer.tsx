@@ -156,13 +156,10 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         </blockquote>
       ),
     ul: ({ children, ...props }) => {
-      // Detect task lists from the rendered subtree so the preview does not depend on remark-gfm class output staying stable across versions.
-      const isTaskList = containsTaskCheckboxNode(children)
-
       return exportMode ? (
         <ul
           {...props}
-          className={cn('my-0 space-y-2 pl-6 text-sm leading-7 break-words', isTaskList ? 'list-none pl-0' : 'list-disc')}
+          className="my-0 list-disc space-y-2 pl-6 text-sm leading-7 break-words [overflow-wrap:anywhere]"
           style={{ color: theme.foreground }}
         >
           {children}
@@ -170,7 +167,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
       ) : (
         <ul
           {...props}
-          className={cn('my-0 space-y-2 pl-6 text-sm leading-7 text-foreground break-words [overflow-wrap:anywhere]', isTaskList ? 'list-none pl-0' : 'list-disc')}
+          className="my-0 list-disc space-y-2 pl-6 text-sm leading-7 text-foreground break-words [overflow-wrap:anywhere]"
         >
           {children}
         </ul>

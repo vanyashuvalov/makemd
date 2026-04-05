@@ -158,16 +158,13 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       </blockquote>
     ),
     ul: ({ children, ...props }) => {
-      // Detect task lists from the rendered subtree so the export layout does not depend on parser-specific classes.
-      const isTaskList = containsTaskCheckboxNode(children)
-
       return (
         <ul
           {...props}
           style={{
             ...textStyle,
             margin: '0 0 0.85rem',
-            paddingLeft: isTaskList ? 0 : '1.25rem',
+            paddingLeft: '1.25rem',
             fontSize: '0.95rem',
             lineHeight: '1.75',
           }}
