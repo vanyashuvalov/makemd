@@ -29,6 +29,7 @@ import {
 import { shouldConfirmDocumentDeletion } from '@/features/document-delete-confirmation/model/document-delete-confirmation'
 import { DocumentDeleteConfirmationModal } from '@/features/document-delete-confirmation/ui/document-delete-confirmation-modal'
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
+import { useWorkspaceDraftPersistence } from '@/features/workspace-persistence/model/use-workspace-draft-persistence'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { AuthModal, type AuthModalAccount } from '@/features/auth/ui/auth-modal'
 
@@ -93,6 +94,7 @@ export function WorkspaceShellClient({
   const templates = snapshot.templates ?? []
   const selectedDocuments = documents.filter((document) => document.selected)
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
+  const workspacePersistenceScope = isAuthenticated ? 'authorized' : snapshot.state
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
@@ -100,6 +102,19 @@ export function WorkspaceShellClient({
   const hasHydratedGuestTitleRef = useRef(false)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
   const activeExportTitle = activeDocument?.title ?? createDocumentTitle()
+
+  // Keep a quiet browser draft in sync with the live workspace so refreshes, tab closes, and future cloud-sync handoffs can recover the same document collection without touching the visible UI state.
+  useWorkspaceDraftPersistence({
+    scope: workspacePersistenceScope,
+    account,
+    documents,
+    editorMarkdown: markdown,
+    sidebarSection,
+    setAccount,
+    setDocuments,
+    setEditorMarkdown: setMarkdown,
+    setSidebarSection,
+  })
 
   // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
   const dismissToast = (toastId: string) => {
