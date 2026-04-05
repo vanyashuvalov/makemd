@@ -227,9 +227,9 @@ export function Sidebar({
 
       <div className="shrink-0 space-y-4 px-6 py-4">
         <Separator className="bg-sidebar-border" />
-        <div className="space-y-2 text-xs leading-5 text-sidebar-muted-foreground">
+        <div className="space-y-2 text-sm leading-[18px] text-sidebar-muted-foreground">
           <div className="flex items-center justify-between gap-3">
-            <span>makemd &copy; 2026</span>
+            <span className="text-sm">makemd &copy; 2026</span>
             <button
               type="button"
               className="inline-flex items-center gap-2 text-sidebar-foreground/60 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -244,7 +244,7 @@ export function Sidebar({
               href="https://ivanshuvalov.vercel.app/"
               target="_blank"
               rel="noreferrer"
-              className="text-sidebar-foreground/70 transition-opacity duration-150 hover:opacity-100 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="text-sm text-sidebar-foreground/70 transition-opacity duration-150 hover:opacity-100 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               vanya was here
             </a>
