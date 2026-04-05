@@ -76,9 +76,9 @@ function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot
     },
     ...(state === 'unauthorized'
       ? {
-          warning: {
-            title: 'Closing current window will discard unsaved files!',
-            description: 'Sign up to save your history',
+        warning: {
+            title: 'Saved on this device',
+            description: 'Sign up to sync your history to the cloud',
           },
           selection: {
             helperText: 'Hold Ctrl to select many',
