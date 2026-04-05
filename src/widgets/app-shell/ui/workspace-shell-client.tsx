@@ -22,11 +22,9 @@ import {
   getDocumentStarterMarkdown,
 } from '@/entities/document/model/document-title'
 import {
-  buildDocumentBundleFileName,
   buildDocumentMarkdownBundle,
   copyTextToClipboard,
   downloadMarkdownAsPdf,
-  downloadBlob,
 } from '@/features/document-actions/model/document-actions'
 import { shouldConfirmDocumentDeletion } from '@/features/document-delete-confirmation/model/document-delete-confirmation'
 import { DocumentDeleteConfirmationModal } from '@/features/document-delete-confirmation/ui/document-delete-confirmation-modal'
@@ -174,20 +172,26 @@ export function WorkspaceShellClient({
   }
 
   // Announce the start of a PDF export so the user gets immediate feedback before Chromium finishes the server-side render.
-  const showPdfProcessingToast = () => {
+  const showPdfProcessingToast = (count: number) => {
     showToast({
       tone: 'info',
-      title: 'Preparing PDF',
-      description: 'The file is being processed. Please wait a couple of seconds.',
+      title: count === 1 ? 'Preparing PDF' : `Preparing ${count} PDFs`,
+      description:
+        count === 1
+          ? 'The file is being processed. Please wait a couple of seconds.'
+          : 'The files are being processed. Please wait a couple of seconds.',
     })
   }
 
   // Confirm the PDF export once the browser has received the generated blob so the workspace gives a clear completion signal.
-  const showPdfDownloadedToast = () => {
+  const showPdfDownloadedToast = (count: number) => {
     showToast({
       tone: 'success',
-      title: 'PDF downloaded',
-      description: 'The file has been saved to your downloads.',
+      title: count === 1 ? 'PDF downloaded' : `${count} PDFs downloaded`,
+      description:
+        count === 1
+          ? 'The file has been saved to your downloads.'
+          : 'The files have been saved to your downloads.',
     })
   }
 
@@ -298,48 +302,25 @@ export function WorkspaceShellClient({
     setMarkdown(nextMarkdown)
   }
 
-  // Download the provided documents through the shared blob transport so multi-select actions can still export a merged markdown bundle.
-  const downloadDocuments = (documentIds: string[]) => {
-    const targetDocuments = documents.filter((document) => documentIds.includes(document.id))
-
-    if (targetDocuments.length === 0) {
-      return
-    }
-
-    const markdownSource = buildDocumentMarkdownBundle(targetDocuments)
-    const fileName = buildDocumentBundleFileName(targetDocuments, 'md')
-    const blob = new Blob([markdownSource], { type: 'text/markdown;charset=utf-8' })
-
-    downloadBlob({ blob, fileName })
-  }
-
-  // Send a single document markdown payload to the server PDF route so the shared export flow can print the current document as a real PDF.
-  const downloadDocumentPdf = async (document: DocumentRecord | undefined) => {
-    if (!document) {
-      return
-    }
-
-    const markdownSource = document.markdown ?? ''
-
-    await downloadMarkdownAsPdf({
-      title: document.title ?? createDocumentTitle(),
-      markdown: markdownSource,
-    })
-  }
-
-  // Run a PDF download with shared loading and feedback state so desktop and mobile export controls stay in sync while the browser saves the file.
-  const handleDownloadPdfDocument = async (document: DocumentRecord | undefined) => {
-    if (!document || isDownloadingPdf) {
+  // Send one or more document markdown payloads to the server PDF route so the shared export flow always produces real PDF files instead of markdown bundles.
+  const downloadDocumentPdfs = async (documentsToExport: DocumentRecord[]) => {
+    if (documentsToExport.length === 0) {
       return
     }
 
     setIsDownloadingPdf(true)
-    showPdfProcessingToast()
+    showPdfProcessingToast(documentsToExport.length)
 
     try {
       await nextAnimationFrame()
-      await downloadDocumentPdf(document)
-      showPdfDownloadedToast()
+      for (const document of documentsToExport) {
+        await downloadMarkdownAsPdf({
+          title: document.title ?? createDocumentTitle(),
+          markdown: document.markdown ?? '',
+        })
+      }
+
+      showPdfDownloadedToast(documentsToExport.length)
     } catch {
       showToast({
         tone: 'warning',
@@ -395,17 +376,16 @@ export function WorkspaceShellClient({
   const handleDownloadDocument = (documentId: string) => {
     const targetDocument = documents.find((document) => document.id === documentId)
 
-    void handleDownloadPdfDocument(targetDocument)
-  }
-
-  // Download the current selected set, falling back to the legacy markdown bundle when more than one document is selected.
-  const handleDownloadSelectedDocuments = () => {
-    if (selectedDocuments.length === 1) {
-      void handleDownloadPdfDocument(selectedDocuments[0])
+    if (!targetDocument) {
       return
     }
 
-    downloadDocuments(selectedDocuments.map((document) => document.id))
+    void downloadDocumentPdfs([targetDocument])
+  }
+
+  // Download the current selected set as one PDF per document so bulk export stays in the same output format as the single-document action.
+  const handleDownloadSelectedDocuments = () => {
+    void downloadDocumentPdfs(selectedDocuments)
   }
 
   // Copy a single document's markdown by delegating to the shared bundle builder so the menu and bulk rail stay in sync.
@@ -502,7 +482,11 @@ export function WorkspaceShellClient({
 
   // Export the currently active document to a PDF through the server-side print route so the browser receives a real selectable document instead of a canvas capture.
   const handleDownloadActiveDocument = () => {
-    void handleDownloadPdfDocument(activeDocument)
+    if (!activeDocument) {
+      return
+    }
+
+    void downloadDocumentPdfs([activeDocument])
   }
 
   // Route textarea edits through the shared sync helper so the active document markdown stays in sync with the current editor value.
