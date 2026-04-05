@@ -174,6 +174,9 @@ export function MobileWorkspaceShell({
             value={mobilePanel}
             onValueChange={(value) => setMobilePanel(value as 'markdown' | 'preview')}
             compact
+            compactClassName="bg-[#292929]"
+            compactActiveClassName="bg-[#494949]"
+            compactInactiveClassName="hover:bg-[#323232] active:bg-[#3a3a3a]"
             className="min-w-0 flex-1"
           />
 

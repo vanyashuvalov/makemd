@@ -25,6 +25,9 @@ export interface TabsProps {
   onValueChange?: (value: string) => void
   compact?: boolean
   className?: string
+  compactClassName?: string
+  compactActiveClassName?: string
+  compactInactiveClassName?: string
 }
 
 export function Tabs({
@@ -34,6 +37,9 @@ export function Tabs({
   onValueChange,
   compact = false,
   className,
+  compactClassName,
+  compactActiveClassName,
+  compactInactiveClassName,
 }: TabsProps) {
   // Render either the sidebar-style icon pill tabs or the wider mobile tabs, depending on the compact flag.
   return (
@@ -42,8 +48,9 @@ export function Tabs({
       aria-label={ariaLabel}
       className={cn(
         compact
-          ? 'flex h-[68px] w-full items-start rounded-[999px] bg-[#292929] p-[6px]'
+          ? 'flex h-[68px] w-full items-start rounded-[999px] bg-[color:var(--color-sidebar-icon)] p-[6px]'
           : 'grid grid-flow-col auto-cols-fr gap-1 rounded-[1rem] bg-sidebar-muted p-1',
+        compact && compactClassName,
         className
       )}
     >
@@ -63,8 +70,10 @@ export function Tabs({
               'cursor-pointer',
               compact &&
                 (active
-                  ? 'bg-[#494949] opacity-100'
-                  : 'opacity-60 hover:bg-[#323232] hover:opacity-100 active:bg-[#3a3a3a]'),
+                  ? 'bg-[color:var(--color-sidebar-tab-active)] opacity-100'
+                  : 'opacity-60 hover:bg-[color:var(--color-sidebar-icon-hover)] hover:opacity-100 active:bg-[color:var(--color-sidebar-icon-active)]'),
+              compact && !active && compactInactiveClassName,
+              compact && active && compactActiveClassName,
               !compact &&
                 (active
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
