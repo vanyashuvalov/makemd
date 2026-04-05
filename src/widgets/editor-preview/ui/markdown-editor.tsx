@@ -66,7 +66,8 @@ function createMarkdownEditorTheme(isMobile: boolean) {
       },
       '.cm-scroller': {
         fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace)',
-        fontSize: '15px',
+        // Keep the mobile editor at 16px or larger so iPhone Safari does not auto-zoom the page when the markdown field receives focus.
+        fontSize: isMobile ? '16px' : '15px',
         lineHeight: '24px',
         overflow: isMobile ? 'visible' : 'auto',
       },

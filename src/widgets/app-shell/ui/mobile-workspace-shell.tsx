@@ -159,7 +159,7 @@ export function MobileWorkspaceShell({
             aria-label="Open sidebar"
             variant="neutral"
             size="lg"
-            className="h-[68px] w-[68px]"
+            className="h-[68px] w-[68px] bg-[#292929] hover:bg-[#323232] active:bg-[#494949]"
             onClick={() => setIsSidebarOpen(true)}
           >
             <Icon icon={IconMenu2} size="md" />

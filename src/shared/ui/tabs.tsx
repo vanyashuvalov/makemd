@@ -42,7 +42,7 @@ export function Tabs({
       aria-label={ariaLabel}
       className={cn(
         compact
-          ? 'flex h-[68px] w-full items-start rounded-[999px] bg-[color:var(--color-sidebar-icon)] p-[6px]'
+          ? 'flex h-[68px] w-full items-start rounded-[999px] bg-[#292929] p-[6px]'
           : 'grid grid-flow-col auto-cols-fr gap-1 rounded-[1rem] bg-sidebar-muted p-1',
         className
       )}
@@ -63,8 +63,8 @@ export function Tabs({
               'cursor-pointer',
               compact &&
                 (active
-                  ? 'bg-[color:var(--color-sidebar-tab-active)] opacity-100'
-                  : 'opacity-60 hover:bg-[color:var(--color-sidebar-icon-hover)] hover:opacity-100 active:bg-[color:var(--color-sidebar-icon-active)]'),
+                  ? 'bg-[#494949] opacity-100'
+                  : 'opacity-60 hover:bg-[#323232] hover:opacity-100 active:bg-[#3a3a3a]'),
               !compact &&
                 (active
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
