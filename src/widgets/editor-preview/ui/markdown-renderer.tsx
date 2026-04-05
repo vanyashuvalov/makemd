@@ -9,6 +9,7 @@ import { Children, isValidElement, type ReactElement, type ReactNode } from 'rea
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/shared/lib/cn'
+import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
 function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): Components {
@@ -423,7 +424,10 @@ export function MarkdownRenderer({
   // Render the markdown preview using the same GFM dialect that GitHub documents, while applying the workspace typography and surface rules.
     return (
     <div className={cn('max-w-[43rem] break-words [overflow-wrap:anywhere]', mobile && 'max-w-none', exportMode && 'max-w-none')} style={exportMode ? { color: theme.foreground } : undefined}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={createMarkdownComponents(exportMode, theme)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, stripMarkdownHtmlComments]}
+        components={createMarkdownComponents(exportMode, theme)}
+      >
         {markdown}
       </ReactMarkdown>
     </div>

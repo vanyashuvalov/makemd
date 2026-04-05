@@ -9,6 +9,7 @@
 import { Children, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
 export interface PdfMarkdownDocumentProps {
@@ -463,7 +464,10 @@ export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreview
       <body>
         <main style={{ minHeight: '100vh', backgroundColor: theme.background }}>
           <article style={{ maxWidth: '43rem', margin: '0 auto' }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={createPdfMarkdownComponents(theme)}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, stripMarkdownHtmlComments]}
+              components={createPdfMarkdownComponents(theme)}
+            >
               {markdown}
             </ReactMarkdown>
           </article>

@@ -10,6 +10,7 @@
 import {
   buildDocumentFileName,
 } from '@/shared/lib/document-file-name'
+import { buildMarkdownHtmlComment } from '@/shared/lib/markdown-comments'
 
 export type DocumentDownloadBlob = {
   blob: Blob
@@ -41,7 +42,7 @@ export function buildDocumentMarkdownBundle(documents: DocumentActionSource[]) {
   }
 
   return documents
-    .map((document) => `# ${document.title}\n\n${document.markdown ?? ''}`.trim())
+    .map((document) => `${buildMarkdownHtmlComment(document.title)}\n\n${document.markdown ?? ''}`.trim())
     .join('\n\n---\n\n')
 }
 
