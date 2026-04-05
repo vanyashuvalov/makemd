@@ -6,6 +6,7 @@
  * Connected to: the home page, sidebar, editor/preview widgets, and the state-switch links.
  */
 import { createDocumentTitle, getDocumentStarterMarkdown } from './document-title'
+import { createDocumentUpdatedAt, formatDocumentUpdatedLabel } from './document-updated'
 import type { DocumentRecord, WorkspaceAccount, WorkspaceSnapshot, WorkspaceStateKey, WorkspaceWarning } from './types'
 
 const starterMarkdown = getDocumentStarterMarkdown()
@@ -26,15 +27,17 @@ const defaultAuthorizedAccount: WorkspaceAccount = {
 function createMockDocument(
   id: string,
   date: Date,
-  updatedLabel: string,
   markdown: string,
   options: Partial<Pick<DocumentRecord, 'active' | 'withMenu'>> = {},
   title = createDocumentTitle(date)
 ) {
+  const updatedAt = createDocumentUpdatedAt(date)
+
   return {
     id,
     title,
-    updatedLabel,
+    updatedAt,
+    updatedLabel: formatDocumentUpdatedLabel(date),
     markdown,
     ...options,
   }
@@ -46,13 +49,13 @@ function createAuthorizedSnapshot(account: WorkspaceAccount = defaultAuthorizedA
     state: 'authorized',
     account,
     documents: [
-      createMockDocument('doc-1', new Date(2026, 2, 23, 12, 32), '23 Mar • 12:32', starterMarkdown),
-      createMockDocument('doc-2', new Date(2026, 2, 23, 12, 45), '23 Mar • 12:45', starterMarkdown),
-      createMockDocument('doc-3', new Date(2026, 2, 23, 13, 1), '23 Mar • 13:01', starterMarkdown, {
+      createMockDocument('doc-1', new Date(2026, 2, 23, 12, 32), starterMarkdown),
+      createMockDocument('doc-2', new Date(2026, 2, 23, 12, 45), starterMarkdown),
+      createMockDocument('doc-3', new Date(2026, 2, 23, 13, 1), starterMarkdown, {
         active: true,
         withMenu: true,
       }),
-      createMockDocument('doc-4', new Date(2026, 2, 23, 13, 12), '23 Mar • 13:12', starterMarkdown),
+      createMockDocument('doc-4', new Date(2026, 2, 23, 13, 12), starterMarkdown),
     ],
     favorites: [],
     editor: {
@@ -83,7 +86,7 @@ function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot
         }
       : {}),
     documents: [
-      createMockDocument('doc-1', now, 'Just now', sharedMarkdown, {
+      createMockDocument('doc-1', now, sharedMarkdown, {
         active: true,
         withMenu: true,
       }),

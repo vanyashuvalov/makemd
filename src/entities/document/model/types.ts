@@ -17,6 +17,7 @@ export type WorkspaceAccount = {
 export type DocumentRecord = {
   id: string
   title: string
+  updatedAt?: string
   updatedLabel: string
   markdown?: string
   selected?: boolean

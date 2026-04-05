@@ -7,6 +7,7 @@
  */
 
 import type { DocumentRecord } from '@/entities/document/model/types'
+import { formatDocumentUpdatedLabel } from '@/entities/document/model/document-updated'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -100,23 +101,8 @@ export function createWorkspaceDocumentsSignature(documents: DocumentRecord[]) {
 
 // Format a remote timestamp into the same readable history label style used by the mock data so cloud-loaded documents blend into the existing sidebar UI.
 export function formatWorkspaceCloudUpdatedLabel(updatedAt: string | null | undefined) {
-  if (!updatedAt) {
-    return 'Just now'
-  }
-
-  const date = new Date(updatedAt)
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Just now'
-  }
-
-  const day = new Intl.DateTimeFormat('en-GB', { day: '2-digit' }).format(date)
-  const month = new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date)
-  const time = new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date)
-
-  return `${day} ${month} • ${time}`
+  return formatDocumentUpdatedLabel(updatedAt)
 }
+
+
+

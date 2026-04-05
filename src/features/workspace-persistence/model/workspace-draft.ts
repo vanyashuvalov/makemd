@@ -7,12 +7,13 @@
  */
 
 import type { WorkspaceSnapshot, WorkspaceSidebarSection, DocumentRecord, WorkspaceStateKey } from '@/entities/document/model/types'
+import { sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
 
 export type WorkspaceDraftScope = WorkspaceStateKey
 
 export type WorkspaceDraftDocument = Pick<
   DocumentRecord,
-  'id' | 'title' | 'updatedLabel' | 'markdown' | 'active' | 'withMenu'
+  'id' | 'title' | 'updatedAt' | 'updatedLabel' | 'markdown' | 'active' | 'withMenu'
 >
 
 export interface WorkspaceDraftRecord {
@@ -50,6 +51,8 @@ export function createWorkspaceDraftRecord({
   documents: DocumentRecord[]
   editorMarkdown: string
 }): WorkspaceDraftRecord {
+  const fallbackUpdatedAt = new Date().toISOString()
+
   return {
     version: 1,
     scope,
@@ -59,6 +62,7 @@ export function createWorkspaceDraftRecord({
     documents: documents.map((document) => ({
       id: document.id,
       title: document.title,
+      updatedAt: document.updatedAt ?? fallbackUpdatedAt,
       updatedLabel: document.updatedLabel,
       markdown: document.markdown ?? '',
       active: Boolean(document.active),
@@ -74,16 +78,20 @@ export function normalizeWorkspaceDraftRecord(draft: WorkspaceDraftRecord | null
     return null
   }
 
-  const documents = draft.documents
-    .filter((document) => Boolean(document.id && document.title))
-    .map((document) => ({
-      id: document.id,
-      title: document.title,
-      updatedLabel: document.updatedLabel,
-      markdown: document.markdown ?? '',
-      active: Boolean(document.active),
-      withMenu: Boolean(document.withMenu),
-    }))
+  const fallbackUpdatedAt = new Date(draft.savedAt).toISOString()
+  const documents = sortDocumentsByUpdatedAt(
+    draft.documents
+      .filter((document) => Boolean(document.id && document.title))
+      .map((document) => ({
+        id: document.id,
+        title: document.title,
+        updatedAt: document.updatedAt ?? fallbackUpdatedAt,
+        updatedLabel: document.updatedLabel,
+        markdown: document.markdown ?? '',
+        active: Boolean(document.active),
+        withMenu: Boolean(document.withMenu),
+      }))
+  )
 
   if (documents.length === 0) {
     return null

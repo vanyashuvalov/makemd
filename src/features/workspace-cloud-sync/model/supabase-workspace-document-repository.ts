@@ -7,10 +7,14 @@
  */
 
 import type { DocumentRecord } from '@/entities/document/model/types'
+import {
+  createDocumentUpdatedAt,
+  formatDocumentUpdatedLabel,
+  sortDocumentsByUpdatedAt,
+} from '@/entities/document/model/document-updated'
 import { getSupabaseBrowserClient } from '@/shared/lib/supabase/browser-client'
 import {
   createWorkspaceDocumentsSignature,
-  formatWorkspaceCloudUpdatedLabel,
   getWorkspaceCloudDocumentId,
   getWorkspaceCloudDocumentStoragePath,
 } from './workspace-cloud-document'
@@ -65,14 +69,15 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
         cloudRows.map(async (row, index) => ({
           id: row.id,
           title: row.title,
-          updatedLabel: formatWorkspaceCloudUpdatedLabel(row.updated_at),
+          updatedAt: row.updated_at ?? createDocumentUpdatedAt(),
+          updatedLabel: formatDocumentUpdatedLabel(row.updated_at),
           markdown: await loadMarkdownFromStorage(row.storage_path),
           active: index === 0,
           withMenu: true,
         }))
       )
 
-      return loadedDocuments
+      return sortDocumentsByUpdatedAt(loadedDocuments)
     },
     async save(userId, documents) {
       if (documents.length === 0) {

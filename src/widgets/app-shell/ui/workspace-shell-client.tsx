@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 /**
  * File: src/widgets/app-shell/ui/workspace-shell-client.tsx
@@ -21,6 +21,7 @@ import {
   createDocumentTitle,
   getDocumentStarterMarkdown,
 } from '@/entities/document/model/document-title'
+import { createDocumentUpdatedAt, formatDocumentUpdatedLabel } from '@/entities/document/model/document-updated'
 import {
   buildDocumentMarkdownBundle,
   copyTextToClipboard,
@@ -59,12 +60,22 @@ function nextAnimationFrame() {
   return new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
 }
 
+// Create a reusable freshness stamp so any document mutation can update both the sort key and the visible subtitle from one source of truth.
+function createWorkspaceDocumentFreshness(date = new Date()) {
+  const updatedAt = createDocumentUpdatedAt(date)
+
+  return {
+    updatedAt,
+    updatedLabel: formatDocumentUpdatedLabel(date),
+  }
+}
+
 // Restore a starter document when the last file is deleted so the workspace never falls into an empty dead-end state.
 function createStarterDocument(snapshot: WorkspaceSnapshot): DocumentRecord {
   return {
     id: createDocumentId(),
     title: createDocumentTitle(),
-    updatedLabel: 'Just now',
+    ...createWorkspaceDocumentFreshness(),
     markdown: snapshot.editor.markdown,
     active: true,
     withMenu: true,
@@ -312,7 +323,7 @@ export function WorkspaceShellClient({
   const syncMarkdownToActiveDocument = (nextMarkdown: string) => {
     setMarkdown(nextMarkdown)
     setDocuments((current) =>
-      current.map((document) => (document.active ? { ...document, markdown: nextMarkdown } : document))
+      current.map((document) => (document.active ? { ...document, markdown: nextMarkdown, ...createWorkspaceDocumentFreshness() } : document))
     )
   }
 
@@ -398,7 +409,7 @@ export function WorkspaceShellClient({
     const nextDocument: DocumentRecord = {
       id: createDocumentId(),
       title,
-      updatedLabel: 'Just now',
+      ...createWorkspaceDocumentFreshness(),
       markdown: nextMarkdown,
       active: true,
       withMenu: true,
@@ -512,7 +523,7 @@ export function WorkspaceShellClient({
 
     setDocuments((current) =>
       current.map((document) =>
-        document.id === documentId ? { ...document, title: resolvedTitle } : document
+        document.id === documentId ? { ...document, title: resolvedTitle, ...createWorkspaceDocumentFreshness() } : document
       )
     )
   }
@@ -557,7 +568,7 @@ export function WorkspaceShellClient({
     const nextDocument: DocumentRecord = {
       id: createDocumentId(),
       title: createDocumentTitle(),
-      updatedLabel: 'Just now',
+      ...createWorkspaceDocumentFreshness(),
       markdown: favorite.markdown,
       active: true,
       withMenu: true,
@@ -854,6 +865,8 @@ export function WorkspaceShellClient({
     </>
   )
 }
+
+
 
 
 

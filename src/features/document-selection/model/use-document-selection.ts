@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DocumentRecord } from '@/entities/document/model/types'
+import { sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
 
 export interface UseDocumentSelectionResult {
   documents: DocumentRecord[]
@@ -23,12 +24,12 @@ export interface UseDocumentSelectionResult {
 }
 
 export function useDocumentSelection(initialDocuments: DocumentRecord[]): UseDocumentSelectionResult {
-  const [documents, setDocuments] = useState(initialDocuments)
+  const [documents, setDocuments] = useState(() => sortDocumentsByUpdatedAt(initialDocuments))
   const [isCtrlPressed, setIsCtrlPressed] = useState(false)
 
   // Keep the current document rows in local state so selection can react to Ctrl presses without touching the server snapshot.
   useEffect(() => {
-    setDocuments(initialDocuments)
+    setDocuments(sortDocumentsByUpdatedAt(initialDocuments))
   }, [initialDocuments])
 
   // Mirror the physical Ctrl key so the list can swap file icons for checkboxes while the key is held down.
@@ -71,14 +72,18 @@ export function useDocumentSelection(initialDocuments: DocumentRecord[]): UseDoc
 
   const toggleDocument = (documentId: string) => {
     setDocuments((current) =>
-      current.map((document) =>
-        document.id === documentId ? { ...document, selected: !document.selected } : document
+      sortDocumentsByUpdatedAt(
+        current.map((document) =>
+          document.id === documentId ? { ...document, selected: !document.selected } : document
+        )
       )
     )
   }
 
   const setAllSelected = (checked: boolean) => {
-    setDocuments((current) => current.map((document) => ({ ...document, selected: checked })))
+    setDocuments((current) =>
+      sortDocumentsByUpdatedAt(current.map((document) => ({ ...document, selected: checked })))
+    )
   }
 
   return {
@@ -93,5 +98,3 @@ export function useDocumentSelection(initialDocuments: DocumentRecord[]): UseDoc
     toggleDocument,
   }
 }
-
-

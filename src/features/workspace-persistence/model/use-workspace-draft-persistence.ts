@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * File: src/features/workspace-persistence/model/use-workspace-draft-persistence.ts
  * Purpose: Client hook that restores and autosaves the workspace draft in the browser.
@@ -59,6 +57,7 @@ export function useWorkspaceDraftPersistence({
       draft.documents.map((document) => ({
         id: document.id,
         title: document.title,
+        updatedAt: document.updatedAt,
         updatedLabel: document.updatedLabel,
         markdown: document.markdown,
         active: document.active,
@@ -81,6 +80,7 @@ export function useWorkspaceDraftPersistence({
         draft.documents.map((document) => ({
           id: document.id,
           title: document.title,
+          updatedAt: document.updatedAt,
           updatedLabel: document.updatedLabel,
           markdown: document.markdown,
           active: document.active,
