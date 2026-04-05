@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createDocumentTitle } from '@/entities/document/model/document-title'
 import { buildDocumentFileName } from '@/shared/lib/document-file-name'
+import { PDF_EXPORT_APP_HEADER_NAME, PDF_EXPORT_APP_HEADER_VALUE } from '@/features/document-actions/model/document-actions'
 import { runPdfTask } from '@/features/document-actions/model/pdf-browser'
 import { PdfMarkdownDocument } from '@/widgets/editor-preview/ui/pdf-markdown-document'
 import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
@@ -13,6 +14,17 @@ type PdfExportRequest = {
   markdown?: string
 }
 
+// Reject any PDF export call that does not originate from the Makemd site and does not carry the app-only handshake header.
+function isAllowedPdfExportRequest(request: NextRequest) {
+  const requestOrigin = request.nextUrl.origin
+  const requestOriginHeader = request.headers.get('origin')
+  const requestRefererHeader = request.headers.get('referer')
+  const requestAppHeader = request.headers.get(PDF_EXPORT_APP_HEADER_NAME)
+  const hasTrustedOrigin = requestOriginHeader === requestOrigin || Boolean(requestRefererHeader?.startsWith(requestOrigin))
+
+  return hasTrustedOrigin && requestAppHeader === PDF_EXPORT_APP_HEADER_VALUE
+}
+
 // Build the Content-Disposition header for a PDF attachment so browsers save the generated document using the same filename the UI expects.
 function createPdfAttachmentDisposition(fileName: string) {
   const escapedFileName = fileName.replaceAll('"', '')
@@ -20,6 +32,10 @@ function createPdfAttachmentDisposition(fileName: string) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isAllowedPdfExportRequest(request)) {
+    return NextResponse.json({ error: 'PDF export is only available from the Makemd app.' }, { status: 403 })
+  }
+
   const body = (await request.json().catch(() => null)) as PdfExportRequest | null
   const markdown = body?.markdown
 
@@ -66,3 +82,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unable to generate PDF.' }, { status: 500 })
   }
 }
+

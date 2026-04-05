@@ -21,7 +21,9 @@ import {
   createDocumentTitle,
   getDocumentStarterMarkdown,
 } from '@/entities/document/model/document-title'
-import { createDocumentUpdatedAt, formatDocumentUpdatedLabel } from '@/entities/document/model/document-updated'
+import { createDocumentUpdatedAt, formatDocumentUpdatedLabel, sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
+import { getOldestDocumentIds, isDocumentCapReached, type DocumentCapPendingAction } from '@/features/document-cap/model/document-cap'
+import { DocumentCapModal } from '@/features/document-cap/ui/document-cap-modal'
 import {
   buildDocumentMarkdownBundle,
   copyTextToClipboard,
@@ -42,7 +44,6 @@ import { useWorkspaceCloudSync } from '@/features/workspace-cloud-sync/model/use
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 
 const DESKTOP_SIDEBAR_WIDTH = 360
-const MAX_GUEST_DOCUMENTS = 20
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 // Generate a local identifier for newly created workspace documents so each draft can be tracked independently in the sidebar state.
@@ -121,12 +122,14 @@ export function WorkspaceShellClient({
   const guestWorkspaceState = snapshot.state === 'empty' ? 'empty' : 'unauthorized'
   const workspacePersistenceScope = isAuthenticated ? 'authorized' : guestWorkspaceState
   const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning ?? guestWorkspaceWarning : undefined
+  const isDocumentCapReachedNow = isDocumentCapReached(documents.length)
   const editorPlaceholder = isAuthenticated ? snapshot.prompt?.title ?? 'Start writing markdown' : guestWorkspacePromptTitle
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [isAuthBusy, setIsAuthBusy] = useState(false)
   const [authErrorMessage, setAuthErrorMessage] = useState<string | undefined>()
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
+  const [pendingDocumentCapRequest, setPendingDocumentCapRequest] = useState<DocumentCapPendingAction | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const hasHydratedGuestTitleRef = useRef(false)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
@@ -269,14 +272,6 @@ export function WorkspaceShellClient({
     )
   }, [setDocuments, snapshot.state])
 
-  // Notify guests when they hit the local document cap so the New action explains why it no longer creates files.
-  const showGuestLimitToast = () => {
-    showToast({
-      tone: 'warning',
-      title: 'Guest limit reached',
-      description: 'Guest workspace supports up to 20 files. Sign up to save your history and create more.',
-    })
-  }
 
   // Announce successful markdown clipboard copies through the shared toast stack so every copy entry point gives the same confirmation.
   const showMarkdownCopiedToast = () => {
@@ -329,7 +324,9 @@ export function WorkspaceShellClient({
     }
 
     setDocuments((current) =>
-      current.map((document) => (document.active ? { ...document, markdown: nextMarkdown, ...createWorkspaceDocumentFreshness() } : document))
+      sortDocumentsByUpdatedAt(
+        current.map((document) => (document.active ? { ...document, markdown: nextMarkdown, ...createWorkspaceDocumentFreshness() } : document))
+      )
     )
   }
 
@@ -358,8 +355,44 @@ export function WorkspaceShellClient({
     }) as DocumentRecord)
     const nextActiveDocument = resolvedDocuments.find((document) => document.id === nextActiveDocumentId)
 
-    setDocuments(resolvedDocuments)
+    setDocuments(sortDocumentsByUpdatedAt(resolvedDocuments))
     setMarkdown(nextActiveDocument?.markdown ?? snapshot.editor.markdown)
+  }
+
+  // Keep the overflow modal tied to the blocked create or favorite flow so the chosen cleanup action can resume the same intent after space is freed.
+  const clearPendingDocumentCapRequest = () => {
+    setPendingDocumentCapRequest(null)
+  }
+
+  // Replay the blocked create or favorite action after removing the oldest documents so the user only has to make one recovery choice.
+  const resolveDocumentCapOverflow = (deleteCount: 1 | 10) => {
+    const pendingAction = pendingDocumentCapRequest
+
+    if (!pendingAction) {
+      clearPendingDocumentCapRequest()
+      return
+    }
+
+    const oldestDocumentIds = getOldestDocumentIds(documents, deleteCount)
+
+    if (oldestDocumentIds.length > 0) {
+      deleteDocuments(oldestDocumentIds)
+    }
+
+    clearPendingDocumentCapRequest()
+
+    if (pendingAction.kind === 'create') {
+      createDocumentFromMarkdown(getDocumentStarterMarkdown())
+      return
+    }
+
+    const favorite = workspaceFavorites.find((item) => item.id === pendingAction.favoriteId)
+
+    if (!favorite) {
+      return
+    }
+
+    createDocumentFromMarkdown(favorite.markdown)
   }
 
   // Decide whether a delete request needs a confirmation step so long documents do not disappear without an extra warning.
@@ -403,35 +436,40 @@ export function WorkspaceShellClient({
   }
 
   // Create a blank draft document so the primary sidebar action now produces a tangible workspace state.
-  const handleCreateDocument = () => {
-    if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
-      showGuestLimitToast()
-      return
-    }
-
+  const createDocumentFromMarkdown = (markdownSource: string, title = createDocumentTitle()) => {
     closeHelpDocument()
-    const title = createDocumentTitle()
-    const nextMarkdown = getDocumentStarterMarkdown()
     const nextDocument: DocumentRecord = {
       id: createDocumentId(),
       title,
       ...createWorkspaceDocumentFreshness(),
-      markdown: nextMarkdown,
+      markdown: markdownSource,
       active: true,
       withMenu: true,
     }
 
     setDocuments((current) =>
-      current
-        .map((document) => ({
-          ...document,
-          active: false,
-          selected: false,
-        }) as DocumentRecord)
-        .concat(nextDocument)
+      sortDocumentsByUpdatedAt(
+        current
+          .map((document) => ({
+            ...document,
+            active: false,
+            selected: false,
+          }) as DocumentRecord)
+          .concat(nextDocument)
+      )
     )
     setSidebarSection('history')
-    setMarkdown(nextMarkdown)
+    setMarkdown(markdownSource)
+  }
+
+  // Create a blank draft document so the primary sidebar action now produces a tangible workspace state.
+  const handleCreateDocument = () => {
+    if (isDocumentCapReachedNow) {
+      setPendingDocumentCapRequest({ kind: 'create' })
+      return
+    }
+
+    createDocumentFromMarkdown(getDocumentStarterMarkdown())
   }
 
   // Send one or more document markdown payloads to the server PDF route so the shared export flow always produces real PDF files instead of markdown bundles.
@@ -528,8 +566,10 @@ export function WorkspaceShellClient({
     const resolvedTitle = nextTitle.trim() || createDocumentTitle()
 
     setDocuments((current) =>
-      current.map((document) =>
-        document.id === documentId ? { ...document, title: resolvedTitle, ...createWorkspaceDocumentFreshness() } : document
+      sortDocumentsByUpdatedAt(
+        current.map((document) =>
+          document.id === documentId ? { ...document, title: resolvedTitle, ...createWorkspaceDocumentFreshness() } : document
+        )
       )
     )
   }
@@ -559,8 +599,8 @@ export function WorkspaceShellClient({
 
   // Convert a favorite into a new active document so the Favorites tab becomes a real entry point instead of a decorative list.
   const handleUseFavorite = (favoriteId: string) => {
-    if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
-      showGuestLimitToast()
+    if (isDocumentCapReachedNow) {
+      setPendingDocumentCapRequest({ kind: 'favorite', favoriteId })
       return
     }
 
@@ -570,27 +610,7 @@ export function WorkspaceShellClient({
       return
     }
 
-    closeHelpDocument()
-    const nextDocument: DocumentRecord = {
-      id: createDocumentId(),
-      title: createDocumentTitle(),
-      ...createWorkspaceDocumentFreshness(),
-      markdown: favorite.markdown,
-      active: true,
-      withMenu: true,
-    }
-
-    setDocuments((current) =>
-      current
-        .map((document) => ({
-          ...document,
-          active: false,
-          selected: false,
-        }) as DocumentRecord)
-        .concat(nextDocument)
-    )
-    setSidebarSection('history')
-    setMarkdown(favorite.markdown)
+    createDocumentFromMarkdown(favorite.markdown)
   }
 
   // Save the current document snapshot into the authenticated favorites collection so the row menu can turn any document into a reusable seed.
@@ -828,6 +848,18 @@ export function WorkspaceShellClient({
 
       <ToastStack items={toasts} onDismiss={dismissToast} />
 
+      <DocumentCapModal
+        open={pendingDocumentCapRequest !== null}
+        documentCount={documents.length}
+        onDeleteOldestOne={() => resolveDocumentCapOverflow(1)}
+        onDeleteOldestTen={() => resolveDocumentCapOverflow(10)}
+        onOpenChange={(open) => {
+          if (!open) {
+            clearPendingDocumentCapRequest()
+          }
+        }}
+      />
+
       <DocumentDeleteConfirmationModal
         open={pendingDeleteDocumentIds !== null}
         documentCount={pendingDeleteDocumentIds?.length ?? 0}
@@ -859,6 +891,14 @@ export function WorkspaceShellClient({
     </>
   )
 }
+
+
+
+
+
+
+
+
 
 
 

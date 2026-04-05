@@ -60,14 +60,24 @@ export type PdfExportRequest = {
   markdown: string
 }
 
+// Share one lightweight app-only marker between the browser downloader and the server route so the PDF endpoint can reject stray cross-site callers without blocking guest exports.
+export const PDF_EXPORT_APP_HEADER_NAME = 'x-makemd-app'
+export const PDF_EXPORT_APP_HEADER_VALUE = 'web'
+
+// Build the request headers for the PDF export path so every caller includes the same app-only handshake.
+export function createPdfExportRequestHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    [PDF_EXPORT_APP_HEADER_NAME]: PDF_EXPORT_APP_HEADER_VALUE,
+  }
+}
+
 // Request a server-rendered PDF, then download the returned blob so the browser export path stays selectable and printable instead of rasterized.
 export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportRequest) {
   const fileName = buildDocumentFileName(title, 'pdf')
   const response = await fetch('/api/export/pdf', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: createPdfExportRequestHeaders(),
     body: JSON.stringify({
       title,
       markdown,
@@ -93,6 +103,7 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   anchor.click()
   URL.revokeObjectURL(url)
 }
+
 
 
 
