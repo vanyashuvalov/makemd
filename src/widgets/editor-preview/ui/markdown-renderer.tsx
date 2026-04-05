@@ -10,7 +10,7 @@ import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/shared/lib/cn'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
-import { hasTaskListContainerClassName, hasTaskListItemClassName } from '@/shared/lib/markdown-task-list'
+import { containsTaskCheckboxNode, hasTaskListContainerClassName, hasTaskListItemClassName } from '@/shared/lib/markdown-task-list'
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
@@ -156,14 +156,15 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         </blockquote>
       ),
     ul: ({ children, className, ...props }) => {
-      const isTaskList = hasTaskListContainerClassName(className)
+      const isTaskList =
+        hasTaskListContainerClassName(className) || containsTaskCheckboxNode(children)
 
       return exportMode ? (
         <ul
           {...props}
           className={cn(
             'my-0 space-y-2 text-sm leading-7 break-words [overflow-wrap:anywhere]',
-            isTaskList ? 'list-none pl-0' : 'list-disc pl-6'
+            isTaskList ? 'list-none pl-0 ml-0' : 'list-disc pl-6'
           )}
           style={{ color: theme.foreground }}
         >
@@ -174,7 +175,7 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
           {...props}
           className={cn(
             'my-0 space-y-2 text-sm leading-7 text-foreground break-words [overflow-wrap:anywhere]',
-            isTaskList ? 'list-none pl-0' : 'list-disc pl-6'
+            isTaskList ? 'list-none pl-0 ml-0' : 'list-disc pl-6'
           )}
         >
           {children}
@@ -196,15 +197,15 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         </ol>
     ),
     li: ({ children, className, ...props }) => {
-      // Flatten task list items based on the remark-gfm task-item marker so the bullet marker and extra indent disappear together.
-      const isTaskListItem = hasTaskListItemClassName(className)
+      // Flatten task list items based on the remark-gfm marker or the rendered checkbox primitive so the bullet marker and extra indent disappear together.
+      const isTaskListItem = hasTaskListItemClassName(className) || containsTaskCheckboxNode(children)
 
       return (
         <li
           {...props}
           className={cn(
             'page-break-avoid break-words [overflow-wrap:anywhere]',
-            isTaskListItem ? 'list-none flex items-start gap-2 pl-0 leading-7 [&>p]:my-0' : 'pl-1'
+            isTaskListItem ? 'list-none flex items-start gap-2 pl-0 ml-0 leading-7 [&>p]:my-0' : 'pl-1'
           )}
           style={exportMode ? { color: theme.foreground, breakInside: 'avoid', pageBreakInside: 'avoid' } : undefined}
         >

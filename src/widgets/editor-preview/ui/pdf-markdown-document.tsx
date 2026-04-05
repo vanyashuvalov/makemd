@@ -10,7 +10,7 @@ import { Children, isValidElement, type CSSProperties, type ReactElement, type R
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
-import { hasTaskListContainerClassName, hasTaskListItemClassName } from '@/shared/lib/markdown-task-list'
+import { containsTaskCheckboxNode, hasTaskListContainerClassName, hasTaskListItemClassName } from '@/shared/lib/markdown-task-list'
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
@@ -158,7 +158,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       </blockquote>
     ),
     ul: ({ children, className, ...props }) => {
-      const isTaskList = hasTaskListContainerClassName(className)
+      const isTaskList =
+        hasTaskListContainerClassName(className) || containsTaskCheckboxNode(children)
 
       return (
         <ul
@@ -166,6 +167,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
           style={{
             ...textStyle,
             margin: '0 0 0.85rem',
+            marginLeft: 0,
             paddingLeft: isTaskList ? 0 : '1.25rem',
             fontSize: '0.95rem',
             lineHeight: '1.75',
@@ -191,8 +193,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       </ol>
     ),
     li: ({ children, className, ...props }) => {
-      // Flatten task list items based on the remark-gfm task-item marker so the PDF keeps the same marker geometry as the live preview.
-      const isTaskListItem = hasTaskListItemClassName(className)
+      // Flatten task list items based on the remark-gfm marker or the rendered checkbox primitive so the PDF keeps the same marker geometry as the live preview.
+      const isTaskListItem = hasTaskListItemClassName(className) || containsTaskCheckboxNode(children)
 
       return (
         <li
@@ -207,6 +209,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
             alignItems: isTaskListItem ? 'center' : undefined,
             gap: isTaskListItem ? '0.4rem' : undefined,
             paddingLeft: isTaskListItem ? 0 : undefined,
+            marginLeft: isTaskListItem ? 0 : undefined,
           }}
         >
           {children}
