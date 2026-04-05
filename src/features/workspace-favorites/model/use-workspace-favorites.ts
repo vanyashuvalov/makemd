@@ -28,6 +28,7 @@ export interface UseWorkspaceFavoritesResult {
   favorites: WorkspaceFavorite[]
   isHydratingFavorites: boolean
   saveFavorite: (favorite: WorkspaceFavoriteInput) => Promise<WorkspaceFavorite | null>
+  deleteFavorite: (favoriteId: string) => Promise<boolean>
   createFavoriteFromDocument: (document: DocumentRecord) => Promise<WorkspaceFavorite | null>
 }
 
@@ -126,6 +127,21 @@ export function useWorkspaceFavorites({
     [enabled, repository, userId]
   )
 
+  // Remove one saved favorite from Supabase and mirror the deletion into local state so the sidebar tab stays in sync with the cloud collection.
+  const deleteFavorite = useCallback(
+    async (favoriteId: string) => {
+      if (!enabled || !userId) {
+        return false
+      }
+
+      await repository.delete(userId, favoriteId)
+      setFavorites((current) => current.filter((favorite) => favorite.id !== favoriteId))
+
+      return true
+    },
+    [enabled, repository, userId]
+  )
+
   // Convert a live document payload into a favorite snapshot so the document menu can save reusable seeds without knowing repository details.
   const createFavoriteFromDocument = useCallback(
     async (document: DocumentRecord) => {
@@ -138,6 +154,7 @@ export function useWorkspaceFavorites({
     favorites,
     isHydratingFavorites,
     saveFavorite,
+    deleteFavorite,
     createFavoriteFromDocument,
   }
 }

@@ -23,6 +23,7 @@ type SupabaseFavoriteRow = {
 export interface WorkspaceFavoriteRepository {
   load: (userId: string) => Promise<WorkspaceFavorite[]>
   save: (userId: string, favorite: WorkspaceFavoriteInput) => Promise<WorkspaceFavorite>
+  delete: (userId: string, favoriteId: string) => Promise<void>
 }
 
 // Build the browser-side favorite repository around the shared Supabase client so the hook can stay focused on state orchestration.
@@ -79,6 +80,19 @@ export function createSupabaseWorkspaceFavoriteRepository(): WorkspaceFavoriteRe
         title: row.title,
         description: row.description,
         markdown: row.markdown,
+      }
+    },
+    async delete(userId, favoriteId) {
+      const supabase = getSupabaseBrowserClient()
+
+      const { error } = await supabase
+        .from('document_favorites')
+        .delete()
+        .eq('user_id', userId)
+        .eq('id', favoriteId)
+
+      if (error) {
+        throw error
       }
     },
   }

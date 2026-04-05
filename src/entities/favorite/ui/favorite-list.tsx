@@ -3,27 +3,33 @@
 /**
  * File: src/entities/favorite/ui/favorite-list.tsx
  * Purpose: Authenticated favorites surface shown in the sidebar tab.
- * Why it exists: favorites are a separate user-owned collection, independent from documents, and should create new documents on demand.
- * What it does: renders saved favorite snapshots, exposes the create-document action, and falls back to a loading or empty state when needed.
- * Connected to: the authenticated sidebar tab state, the workspace favorite repository, and the workspace document creation flow.
+ * Why it exists: favorites should reuse the same row presentation as documents while staying an independent cloud collection.
+ * What it does: renders saved favorite snapshots as document-like rows, opens a new document on click, and exposes create/delete actions through the row menu.
+ * Connected to: the authenticated sidebar tab state, the workspace favorite repository, the document row component, and the workspace document creation flow.
  */
-import { IconStar } from '@tabler/icons-react'
+import { IconFilePlus, IconStar, IconTrash } from '@tabler/icons-react'
 import type { WorkspaceFavorite } from '@/entities/document/model/types'
-import { Button } from '@/shared/ui/button'
-import { Icon } from '@/shared/ui/icon'
-import { cn } from '@/shared/lib/cn'
+import type { DocumentRecord } from '@/entities/document/model/types'
+import { DocumentListItem } from '@/entities/document/ui/document-list-item'
 import { CollectionListLoading } from '@/shared/ui/collection-list-loading'
+import type { ContextMenuItem } from '@/shared/ui/context-menu'
 
 export interface FavoriteListProps {
   items: WorkspaceFavorite[]
   isLoading?: boolean
   onUseFavorite: (favoriteId: string) => void
+  onDeleteFavorite: (favoriteId: string) => void
 }
 
-export function FavoriteList({ items, isLoading = false, onUseFavorite }: FavoriteListProps) {
-  // Keep favorites visually separate from history so saved snapshots behave like reusable seeds rather than document rows.
+// Render favorites with the same list-row component as documents so reusable snapshots feel like first-class workspace entries.
+export function FavoriteList({
+  items,
+  isLoading = false,
+  onUseFavorite,
+  onDeleteFavorite,
+}: FavoriteListProps) {
   if (isLoading) {
-    return <CollectionListLoading label="Loading favorites" variant="cards" />
+    return <CollectionListLoading label="Loading favorites" variant="rows" />
   }
 
   if (items.length === 0) {
@@ -35,34 +41,42 @@ export function FavoriteList({ items, isLoading = false, onUseFavorite }: Favori
   }
 
   return (
-    <div className="space-y-2">
-      {items.map((item) => (
-        <article
-          key={item.id}
-          className={cn(
-            'group rounded-[1rem] border border-sidebar-border bg-white/[0.04] p-4 transition-[background-color,border-color] duration-150 hover:bg-white/[0.07] hover:border-white/10'
-          )}
-        >
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground">
-              <Icon icon={IconStar} size="md" />
-            </div>
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="space-y-1">
-                <h3 className="truncate text-[18px] font-normal leading-[22px] text-sidebar-foreground">
-                  {item.title}
-                </h3>
-                <p className="text-[14px] leading-[17px] text-sidebar-muted-foreground">
-                  {item.description}
-                </p>
-              </div>
-              <Button variant="secondary" size="sm" className="w-full" onClick={() => onUseFavorite(item.id)}>
-                Create document
-              </Button>
-            </div>
-          </div>
-        </article>
-      ))}
+    <div className="space-y-1.5">
+      {items.map((item) => {
+        const favoriteRow: DocumentRecord = {
+          id: item.id,
+          title: item.title,
+          updatedLabel: item.description,
+          active: false,
+          selected: false,
+        }
+
+        const menuItems: ContextMenuItem[] = [
+          {
+            key: 'create-document',
+            label: 'Create document',
+            icon: IconFilePlus,
+            onSelect: () => onUseFavorite(item.id),
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: IconTrash,
+            destructive: true,
+            onSelect: () => onDeleteFavorite(item.id),
+          },
+        ]
+
+        return (
+          <DocumentListItem
+            key={item.id}
+            item={favoriteRow}
+            leadingIcon={IconStar}
+            menuItems={menuItems}
+            onOpenDocument={() => onUseFavorite(item.id)}
+          />
+        )
+      })}
     </div>
   )
 }

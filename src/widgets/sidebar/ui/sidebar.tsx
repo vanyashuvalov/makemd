@@ -56,6 +56,7 @@ export interface SidebarProps {
   onSignOut: () => void
   onCreateDocument: () => void
   onUseFavorite: (favoriteId: string) => void
+  onDeleteFavorite: (favoriteId: string) => void
   onDownloadDocument: (documentId: string) => void
   onDeleteDocument: (documentId: string) => void
   onRenameDocument: (documentId: string, nextTitle: string) => void
@@ -89,6 +90,7 @@ export function Sidebar({
   onSignOut,
   onCreateDocument,
   onUseFavorite,
+  onDeleteFavorite,
   onDownloadDocument,
   onDeleteDocument,
   onRenameDocument,
@@ -210,7 +212,12 @@ export function Sidebar({
           ) : null}
 
           {showFavorites ? (
-            <FavoriteList items={favorites} isLoading={isFavoritesLoading} onUseFavorite={onUseFavorite} />
+            <FavoriteList
+              items={favorites}
+              isLoading={isFavoritesLoading}
+              onUseFavorite={onUseFavorite}
+              onDeleteFavorite={onDeleteFavorite}
+            />
           ) : null}
         </div>
       </div>

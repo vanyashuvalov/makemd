@@ -151,6 +151,7 @@ export function WorkspaceShellClient({
     favorites: workspaceFavorites,
     isHydratingFavorites,
     createFavoriteFromDocument,
+    deleteFavorite,
   } = useWorkspaceFavorites({
     enabled: isAuthenticated,
     userId: supabaseUserId,
@@ -599,6 +600,19 @@ export function WorkspaceShellClient({
       })
   }
 
+  // Remove a saved favorite from the cloud collection so the Favorites tab only shows reusable snapshots the user still wants to keep.
+  const handleDeleteFavorite = (favoriteId: string) => {
+    void deleteFavorite(favoriteId).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Unable to delete this favorite right now.'
+
+      showToast({
+        tone: 'warning',
+        title: 'Could not delete favorite',
+        description: message,
+      })
+    })
+  }
+
   // Run email/password auth through Supabase so the modal can support both login and registration without owning credential storage itself.
   const handleEmailPasswordSubmit = async (email: string, password: string) => {
     const resolvedEmail = email.trim().toLowerCase()
@@ -726,6 +740,7 @@ export function WorkspaceShellClient({
             onSignOut={handleSignOut}
             onCreateDocument={handleCreateDocument}
             onUseFavorite={handleUseFavorite}
+            onDeleteFavorite={handleDeleteFavorite}
             onDownloadDocument={handleDownloadDocument}
             onDeleteDocument={handleDeleteDocument}
             onCopyMarkdownDocument={handleCopyMarkdownDocument}

@@ -8,6 +8,7 @@
  * Connected to: `DocumentHistoryList`, the selection feature, the contextual menu primitive, and the sidebar widget.
  */
 import * as React from 'react'
+import type { TablerIcon } from '@tabler/icons-react'
 import {
   IconCopy,
   IconDotsVertical,
@@ -29,6 +30,8 @@ export interface DocumentListItemProps {
   selectionMode?: boolean
   highlightActiveDocument?: boolean
   canSaveToFavorites?: boolean
+  leadingIcon?: TablerIcon
+  menuItems?: ContextMenuItem[]
   onOpenDocument?: (documentId: string) => void
   onToggleSelected?: (documentId: string) => void
   onDownloadDocument?: (documentId: string) => void
@@ -43,6 +46,8 @@ export function DocumentListItem({
   selectionMode = false,
   highlightActiveDocument = true,
   canSaveToFavorites = false,
+  leadingIcon = IconFileText,
+  menuItems: overrideMenuItems,
   onOpenDocument,
   onToggleSelected,
   onDownloadDocument,
@@ -109,27 +114,29 @@ export function DocumentListItem({
     onOpenDocument?.(item.id)
   }
 
-  const menuItems: ContextMenuItem[] = [
-    {
-      key: 'rename',
-      label: 'Rename',
-      icon: IconPencil,
-      onSelect: () => setIsRenaming(true),
-    },
-    {
-      key: 'download',
-      label: 'Download pdf',
-      icon: IconDownload,
-      onSelect: () => onDownloadDocument?.(item.id),
-    },
-    {
-      key: 'copy-md',
-      label: 'Copy Markdown',
-      icon: IconCopy,
-      onSelect: () => onCopyMarkdown?.(item.id),
-    },
-    ...(canSaveToFavorites
-      ? [
+  const resolvedMenuItems: ContextMenuItem[] =
+    overrideMenuItems ??
+    [
+      {
+        key: 'rename',
+        label: 'Rename',
+        icon: IconPencil,
+        onSelect: () => setIsRenaming(true),
+      },
+      {
+        key: 'download',
+        label: 'Download pdf',
+        icon: IconDownload,
+        onSelect: () => onDownloadDocument?.(item.id),
+      },
+      {
+        key: 'copy-md',
+        label: 'Copy Markdown',
+        icon: IconCopy,
+        onSelect: () => onCopyMarkdown?.(item.id),
+      },
+      ...(canSaveToFavorites
+        ? [
           {
             key: 'save-to-favorites',
             label: 'Save to favorites',
@@ -137,15 +144,15 @@ export function DocumentListItem({
             onSelect: () => onSaveToFavorites?.(item.id),
           },
         ]
-      : []),
-    {
-      key: 'delete',
-      label: 'Delete',
-      icon: IconTrash,
-      onSelect: () => onDeleteDocument?.(item.id),
-      destructive: true,
-    },
-  ]
+        : []),
+      {
+        key: 'delete',
+        label: 'Delete',
+        icon: IconTrash,
+        onSelect: () => onDeleteDocument?.(item.id),
+        destructive: true,
+      },
+    ]
 
   // Render a single history row that can visually switch between the default, selected, and active states from the mockup.
   return (
@@ -171,7 +178,7 @@ export function DocumentListItem({
               'text-sidebar-foreground/60 transition-colors duration-150 group-hover:text-sidebar-foreground'
             )}
           >
-            <Icon icon={IconFileText} size="md" />
+            <Icon icon={leadingIcon} size="md" />
           </div>
         )}
 
@@ -233,7 +240,7 @@ export function DocumentListItem({
         open={isMenuOpen}
         anchorRef={menuButtonRef}
         onOpenChange={setIsMenuOpen}
-        items={menuItems}
+        items={resolvedMenuItems}
       />
     </>
   )
