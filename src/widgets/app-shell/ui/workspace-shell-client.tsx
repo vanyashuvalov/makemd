@@ -38,6 +38,7 @@ import { HelpDocument } from '@/widgets/help-document/ui/help-document'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { MobileWorkspaceShell } from '@/widgets/app-shell/ui/mobile-workspace-shell'
 import { AuthModal } from '@/features/auth/ui/auth-modal'
+import { SignOutConfirmationModal } from '@/features/auth/ui/sign-out-confirmation-modal'
 import { guestWorkspacePromptTitle, guestWorkspaceWarning } from '@/entities/document/model/mock'
 import { mapSupabaseUserToWorkspaceAccount } from '@/shared/lib/supabase/account'
 import { getSupabaseBrowserClient } from '@/shared/lib/supabase/browser-client'
@@ -129,6 +130,7 @@ export function WorkspaceShellClient({
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [isAuthBusy, setIsAuthBusy] = useState(false)
   const [authErrorMessage, setAuthErrorMessage] = useState<string | undefined>()
+  const [isSignOutConfirmationOpen, setIsSignOutConfirmationOpen] = useState(false)
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
   const [pendingDocumentCapRequest, setPendingDocumentCapRequest] = useState<DocumentCapPendingAction | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
@@ -733,6 +735,11 @@ export function WorkspaceShellClient({
     }
   }
 
+  // Open a confirmation dialog before ending the active Supabase session so accidental sign-out is less likely.
+  const handleSignOutRequest = () => {
+    setIsSignOutConfirmationOpen(true)
+  }
+
   // Sign out through Supabase so the session cookies disappear and the workspace falls back to the guest draft surface.
   const handleSignOut = async () => {
     const supabase = getSupabaseBrowserClient()
@@ -764,6 +771,12 @@ export function WorkspaceShellClient({
     syncMarkdownToActiveDocument(nextMarkdown)
   }
 
+  // Finalize a confirmed sign-out by closing the confirmation dialog first, then clearing the Supabase session.
+  const handleConfirmSignOut = async () => {
+    setIsSignOutConfirmationOpen(false)
+    await handleSignOut()
+  }
+
   // Keep the live markdown and selection state isolated to the client surface while the sidebar stays a fixed 360px anchor in the shell.
   return (
     <>
@@ -789,7 +802,7 @@ export function WorkspaceShellClient({
               setSidebarSection(section)
             }}
             onSignUpClick={() => setIsAuthModalOpen(true)}
-            onSignOut={handleSignOut}
+            onSignOut={handleSignOutRequest}
             onCreateDocument={handleCreateDocument}
             onUseFavorite={handleUseFavorite}
             onRenameFavorite={handleRenameFavorite}
@@ -852,7 +865,7 @@ export function WorkspaceShellClient({
             setSidebarSection(section)
           }}
           onSignUpClick={() => setIsAuthModalOpen(true)}
-          onSignOut={handleSignOut}
+          onSignOut={handleSignOutRequest}
           onCreateDocument={handleCreateDocument}
           onUseFavorite={handleUseFavorite}
           onRenameFavorite={handleRenameFavorite}
@@ -919,6 +932,14 @@ export function WorkspaceShellClient({
         onGoogleSignIn={handleGoogleSignIn}
         isLoading={isAuthBusy}
         errorMessage={authErrorMessage}
+      />
+
+      <SignOutConfirmationModal
+        open={isSignOutConfirmationOpen}
+        onCancel={() => setIsSignOutConfirmationOpen(false)}
+        onConfirm={() => {
+          void handleConfirmSignOut()
+        }}
       />
     </>
   )

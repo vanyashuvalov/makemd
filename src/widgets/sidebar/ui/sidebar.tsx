@@ -125,7 +125,7 @@ export function Sidebar({
   ]
 
   return (
-    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground">
+    <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
           <div className="flex items-center gap-3">
