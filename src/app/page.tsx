@@ -6,6 +6,7 @@
  * Connected to: `src/screens/workspace/ui/workspace-page.tsx` and `src/entities/document/model/mock.ts`.
  */
 import { getWorkspaceSnapshot, normalizeWorkspaceState } from '@/entities/document/model/mock'
+import { getHelpMarkdown } from '@/features/help/model/get-help-markdown'
 import { WorkspacePage } from '@/screens/workspace/ui/workspace-page'
 import { redirect } from 'next/navigation'
 import { mapSupabaseUserToWorkspaceAccount } from '@/shared/lib/supabase/account'
@@ -46,7 +47,7 @@ export default async function Page({ searchParams }: PageProps) {
   }
 
   const normalizedState = normalizeWorkspaceState(state)
-  const supabase = await createSupabaseServerClient()
+  const [supabase, helpMarkdown] = await Promise.all([createSupabaseServerClient(), getHelpMarkdown()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -56,5 +57,5 @@ export default async function Page({ searchParams }: PageProps) {
     ? getWorkspaceSnapshot('authorized', mapSupabaseUserToWorkspaceAccount(user))
     : getWorkspaceSnapshot(normalizedState)
 
-  return <WorkspacePage snapshot={snapshot} />
+  return <WorkspacePage snapshot={snapshot} helpMarkdown={helpMarkdown} />
 }

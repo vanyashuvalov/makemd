@@ -13,7 +13,6 @@ import { DocumentListItem } from './document-list-item'
 export interface DocumentHistoryListProps {
   items: DocumentRecord[]
   selectionMode?: boolean
-  canCopyLink?: boolean
   canSaveToFavorites?: boolean
   onOpenItem?: (documentId: string) => void
   onToggleItem?: (documentId: string) => void
@@ -21,14 +20,12 @@ export interface DocumentHistoryListProps {
   onDeleteItem?: (documentId: string) => void
   onRenameItem?: (documentId: string, nextTitle: string) => void
   onCopyMarkdownItem?: (documentId: string) => void
-  onCopyLinkItem?: (documentId: string) => void
   onSaveToFavoritesItem?: (documentId: string) => void
 }
 
 export function DocumentHistoryList({
   items,
   selectionMode = false,
-  canCopyLink = false,
   canSaveToFavorites = false,
   onOpenItem,
   onToggleItem,
@@ -36,7 +33,6 @@ export function DocumentHistoryList({
   onDeleteItem,
   onRenameItem,
   onCopyMarkdownItem,
-  onCopyLinkItem,
   onSaveToFavoritesItem,
 }: DocumentHistoryListProps) {
   // Render the repeated history rows with a single source of truth for title, timestamp, and active state.
@@ -47,7 +43,6 @@ export function DocumentHistoryList({
           key={item.id}
           item={item}
           selectionMode={selectionMode}
-          canCopyLink={canCopyLink}
           canSaveToFavorites={canSaveToFavorites}
           onOpenDocument={onOpenItem}
           onToggleSelected={onToggleItem}
@@ -55,7 +50,6 @@ export function DocumentHistoryList({
           onDeleteDocument={onDeleteItem}
           onRenameDocument={onRenameItem}
           onCopyMarkdown={onCopyMarkdownItem}
-          onCopyLink={onCopyLinkItem}
           onSaveToFavorites={onSaveToFavoritesItem}
         />
       ))}

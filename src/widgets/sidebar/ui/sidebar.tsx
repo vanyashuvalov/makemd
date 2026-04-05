@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * File: src/widgets/sidebar/ui/sidebar.tsx
@@ -49,7 +49,7 @@ export interface SidebarProps {
   selectedCount: number
   totalCount: number
   helperText?: string
-  canCopyLink: boolean
+  onHelpClick: () => void
   onSectionChange: (section: WorkspaceSidebarSection) => void
   onSignUpClick: () => void
   onSignOut: () => void
@@ -59,7 +59,6 @@ export interface SidebarProps {
   onDeleteDocument: (documentId: string) => void
   onRenameDocument: (documentId: string, nextTitle: string) => void
   onCopyMarkdownDocument: (documentId: string) => void
-  onCopyLinkDocument: (documentId: string) => void
   onSaveToFavorites: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
@@ -67,7 +66,6 @@ export interface SidebarProps {
   onDeleteSelected: () => void
   onDownloadSelected: () => void
   onCopyMarkdownSelected: () => void
-  onCopyLinkSelected: () => void
 }
 
 export function Sidebar({
@@ -83,7 +81,7 @@ export function Sidebar({
   selectedCount,
   totalCount,
   helperText = 'Hold Ctrl to select many',
-  canCopyLink,
+  onHelpClick,
   onSectionChange,
   onSignUpClick,
   onSignOut,
@@ -93,7 +91,6 @@ export function Sidebar({
   onDeleteDocument,
   onRenameDocument,
   onCopyMarkdownDocument,
-  onCopyLinkDocument,
   onSaveToFavorites,
   onToggleAllSelection,
   onToggleDocument,
@@ -101,7 +98,6 @@ export function Sidebar({
   onDeleteSelected,
   onDownloadSelected,
   onCopyMarkdownSelected,
-  onCopyLinkSelected,
 }: SidebarProps) {
   // Render the fixed-width navigation rail used in the Figma sidebar states without a compact or resizable variant.
   const showHistory = !isAuthenticated || activeSection === 'history'
@@ -195,7 +191,6 @@ export function Sidebar({
               totalCount={totalCount}
               helperText={helperText}
               isLoading={isDocumentsLoading}
-              canCopyLink={canCopyLink}
               canSaveToFavorites={isAuthenticated}
               onToggleAllSelection={onToggleAllSelection}
               onToggleDocument={onToggleDocument}
@@ -204,12 +199,10 @@ export function Sidebar({
               onDeleteDocument={onDeleteDocument}
               onRenameDocument={onRenameDocument}
               onCopyMarkdownDocument={onCopyMarkdownDocument}
-              onCopyLinkDocument={onCopyLinkDocument}
               onSaveToFavorites={onSaveToFavorites}
               onDeleteSelected={onDeleteSelected}
               onDownloadSelected={onDownloadSelected}
               onCopyMarkdownSelected={onCopyMarkdownSelected}
-              onCopyLinkSelected={onCopyLinkSelected}
             />
           ) : null}
 
@@ -223,13 +216,14 @@ export function Sidebar({
         <Separator className="bg-sidebar-border" />
         <div className="flex items-center justify-between text-sm text-sidebar-muted-foreground">
           <span>makemd &copy; 2026</span>
-          <a
-            href="#help"
+          <button
+            type="button"
             className="inline-flex items-center gap-2 text-sidebar-foreground/60 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            onClick={onHelpClick}
           >
             <Icon icon={IconHelpCircle} size="sm" tone="sidebarMuted" />
             <span>Help</span>
-          </a>
+          </button>
         </div>
       </div>
     </aside>

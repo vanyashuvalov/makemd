@@ -13,7 +13,6 @@ import {
   IconDotsVertical,
   IconDownload,
   IconFileText,
-  IconLink,
   IconPencil,
   IconStar,
   IconTrash,
@@ -28,7 +27,6 @@ import type { DocumentRecord } from '../model/types'
 export interface DocumentListItemProps {
   item: DocumentRecord
   selectionMode?: boolean
-  canCopyLink?: boolean
   canSaveToFavorites?: boolean
   onOpenDocument?: (documentId: string) => void
   onToggleSelected?: (documentId: string) => void
@@ -36,14 +34,12 @@ export interface DocumentListItemProps {
   onDeleteDocument?: (documentId: string) => void
   onRenameDocument?: (documentId: string, nextTitle: string) => void
   onCopyMarkdown?: (documentId: string) => void
-  onCopyLink?: (documentId: string) => void
   onSaveToFavorites?: (documentId: string) => void
 }
 
 export function DocumentListItem({
   item,
   selectionMode = false,
-  canCopyLink = false,
   canSaveToFavorites = false,
   onOpenDocument,
   onToggleSelected,
@@ -51,7 +47,6 @@ export function DocumentListItem({
   onDeleteDocument,
   onRenameDocument,
   onCopyMarkdown,
-  onCopyLink,
   onSaveToFavorites,
 }: DocumentListItemProps) {
   const menuButtonRef = React.useRef<HTMLButtonElement | null>(null)
@@ -125,13 +120,6 @@ export function DocumentListItem({
       onSelect: () => onDownloadDocument?.(item.id),
     },
     {
-      key: 'delete',
-      label: 'Delete',
-      icon: IconTrash,
-      onSelect: () => onDeleteDocument?.(item.id),
-      destructive: true,
-    },
-    {
       key: 'copy-md',
       label: 'Copy Markdown',
       icon: IconCopy,
@@ -147,16 +135,13 @@ export function DocumentListItem({
           },
         ]
       : []),
-    ...(canCopyLink
-      ? [
-          {
-            key: 'copy-link',
-            label: 'Copy link',
-            icon: IconLink,
-            onSelect: () => onCopyLink?.(item.id),
-          },
-        ]
-      : []),
+    {
+      key: 'delete',
+      label: 'Delete',
+      icon: IconTrash,
+      onSelect: () => onDeleteDocument?.(item.id),
+      destructive: true,
+    },
   ]
 
   // Render a single history row that can visually switch between the default, selected, and active states from the mockup.

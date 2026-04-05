@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * File: src/widgets/app-shell/ui/workspace-shell-client.tsx
@@ -31,6 +31,7 @@ import { DocumentDeleteConfirmationModal } from '@/features/document-delete-conf
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
 import { useWorkspaceFavorites } from '@/features/workspace-favorites/model/use-workspace-favorites'
 import { useWorkspaceDraftPersistence } from '@/features/workspace-persistence/model/use-workspace-draft-persistence'
+import { HelpDocument } from '@/widgets/help-document/ui/help-document'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { AuthModal } from '@/features/auth/ui/auth-modal'
 import { guestWorkspacePromptTitle, guestWorkspaceWarning } from '@/entities/document/model/mock'
@@ -80,14 +81,17 @@ function getNextActiveDocumentId(documents: DocumentRecord[], removedDocumentIds
 // Render the interactive workspace controller that keeps the sidebar, markdown editor, and export bar synchronized around one document model.
 export function WorkspaceShellClient({
   snapshot,
+  helpMarkdown,
 }: {
   snapshot: WorkspaceSnapshot
+  helpMarkdown: string
 }) {
   const [markdown, setMarkdown] = useState(snapshot.editor.markdown)
   const [isAuthenticated, setIsAuthenticated] = useState(snapshot.state === 'authorized')
   const [account, setAccount] = useState(snapshot.account)
   const [sidebarSection, setSidebarSection] = useState<WorkspaceSidebarSection>('history')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [isHelpDocumentOpen, setIsHelpDocumentOpen] = useState(false)
   const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
   const [isSessionResolved, setIsSessionResolved] = useState(snapshot.state === 'authorized')
   const {
@@ -366,6 +370,7 @@ export function WorkspaceShellClient({
       return
     }
 
+    setIsHelpDocumentOpen(false)
     setDocuments((current) =>
       current.map((document) => ({
         ...document,
@@ -384,6 +389,7 @@ export function WorkspaceShellClient({
       return
     }
 
+    setIsHelpDocumentOpen(false)
     const title = createDocumentTitle()
     const nextMarkdown = getDocumentStarterMarkdown()
     const nextDocument: DocumentRecord = {
@@ -452,22 +458,6 @@ export function WorkspaceShellClient({
     showMarkdownCopiedToast()
   }
 
-  // Copy a shareable URL for one or more documents so the row menu and the bulk rail stay aligned with the cloud-backed workflow.
-  const copyLinkDocuments = async (documentIds: string[]) => {
-    if (documentIds.length === 0) {
-      return
-    }
-
-    const urls = documentIds.map((documentId) => {
-      const url = new URL(window.location.href)
-      url.searchParams.set('state', 'authorized')
-      url.searchParams.set('document', documentId)
-      return url.toString()
-    })
-
-    await copyTextToClipboard(urls.join('\n'))
-  }
-
   // Remove a document from the local workspace collection and keep the editor pointed at the next available active row.
   const handleDeleteDocument = (documentId: string) => {
     requestDeleteDocuments([documentId])
@@ -513,16 +503,6 @@ export function WorkspaceShellClient({
     await copyMarkdownDocuments([activeDocument.id])
   }
 
-  // Copy a single shareable link by delegating to the shared link bundle path.
-  const handleCopyLinkDocument = async (documentId: string) => {
-    await copyLinkDocuments([documentId])
-  }
-
-  // Copy shareable links for the selected rows by using the same link builder as the per-row menu.
-  const handleCopyLinkSelectedDocuments = async () => {
-    await copyLinkDocuments(selectedDocuments.map((document) => document.id))
-  }
-
   // Update a single document title without touching its markdown so the sidebar row and the export chip can be renamed independently of content.
   const handleRenameDocument = (documentId: string, nextTitle: string) => {
     const resolvedTitle = nextTitle.trim() || createDocumentTitle()
@@ -556,6 +536,7 @@ export function WorkspaceShellClient({
       return
     }
 
+    setIsHelpDocumentOpen(false)
     const nextDocument: DocumentRecord = {
       id: createDocumentId(),
       title: createDocumentTitle(),
@@ -720,8 +701,11 @@ export function WorkspaceShellClient({
             selectedCount={selectedCount}
             totalCount={documents.length}
             helperText={snapshot.selection?.helperText ?? 'Hold Ctrl to select many'}
-            canCopyLink={isAuthenticated}
-            onSectionChange={setSidebarSection}
+            onHelpClick={() => setIsHelpDocumentOpen((current) => !current)}
+            onSectionChange={(section) => {
+              setIsHelpDocumentOpen(false)
+              setSidebarSection(section)
+            }}
             onSignUpClick={() => setIsAuthModalOpen(true)}
             onSignOut={handleSignOut}
             onCreateDocument={handleCreateDocument}
@@ -729,7 +713,6 @@ export function WorkspaceShellClient({
             onDownloadDocument={handleDownloadDocument}
             onDeleteDocument={handleDeleteDocument}
             onCopyMarkdownDocument={handleCopyMarkdownDocument}
-            onCopyLinkDocument={handleCopyLinkDocument}
             onSaveToFavorites={handleSaveDocumentToFavorites}
             onToggleAllSelection={setAllSelected}
             onToggleDocument={toggleDocument}
@@ -738,39 +721,46 @@ export function WorkspaceShellClient({
             onDownloadSelected={handleDownloadSelectedDocuments}
             onRenameDocument={handleRenameDocument}
             onCopyMarkdownSelected={handleCopyMarkdownSelectedDocuments}
-            onCopyLinkSelected={handleCopyLinkSelectedDocuments}
           />
         </div>
 
         <div className="min-h-0 min-w-0 flex-1">
-          <div className="grid h-full min-h-0 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <MarkdownPane
-              value={markdown}
-              onChange={handleMarkdownChange}
-              placeholder={editorPlaceholder}
-            />
-
-            <div className="relative min-h-0 min-w-0">
-              <PreviewPane markdown={markdown} />
-              <ExportBar
-                title={activeExportTitle}
-                onTitleChange={handleActiveDocumentTitleChange}
-                onCopyMarkdown={handleCopyActiveDocument}
-                onDownloadPdf={handleDownloadActiveDocument}
-                isDownloadingPdf={isDownloadingPdf}
+          {isHelpDocumentOpen ? (
+            <HelpDocument markdown={helpMarkdown} onBack={() => setIsHelpDocumentOpen(false)} />
+          ) : (
+            <div className="grid h-full min-h-0 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <MarkdownPane
+                value={markdown}
+                onChange={handleMarkdownChange}
+                placeholder={editorPlaceholder}
               />
+
+              <div className="relative min-h-0 min-w-0">
+                <PreviewPane markdown={markdown} />
+                <ExportBar
+                  title={activeExportTitle}
+                  onTitleChange={handleActiveDocumentTitleChange}
+                  onCopyMarkdown={handleCopyActiveDocument}
+                  onDownloadPdf={handleDownloadActiveDocument}
+                  isDownloadingPdf={isDownloadingPdf}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       <div className="h-full min-h-0 lg:hidden">
-        <EditorPreview
-          markdown={markdown}
-          onMarkdownChange={handleMarkdownChange}
-          onDownloadPdf={handleDownloadActiveDocument}
-          isDownloadingPdf={isDownloadingPdf}
-          placeholder={editorPlaceholder}
-        />
+        {isHelpDocumentOpen ? (
+          <HelpDocument markdown={helpMarkdown} onBack={() => setIsHelpDocumentOpen(false)} />
+        ) : (
+          <EditorPreview
+            markdown={markdown}
+            onMarkdownChange={handleMarkdownChange}
+            onDownloadPdf={handleDownloadActiveDocument}
+            isDownloadingPdf={isDownloadingPdf}
+            placeholder={editorPlaceholder}
+          />
+        )}
       </div>
 
       <ToastStack items={toasts} onDismiss={dismissToast} />
@@ -806,6 +796,9 @@ export function WorkspaceShellClient({
     </>
   )
 }
+
+
+
 
 
 

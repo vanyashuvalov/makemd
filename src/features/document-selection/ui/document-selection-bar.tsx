@@ -7,7 +7,7 @@
  * What it does: displays the selection count and the current batch operations in a compact rail.
  * Connected to: the document list, the sidebar, and future bulk management features.
  */
-import { IconCopy, IconDownload, IconLink, IconTrash } from '@tabler/icons-react'
+import { IconCopy, IconDownload, IconTrash } from '@tabler/icons-react'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
@@ -19,12 +19,10 @@ export interface DocumentSelectionBarProps {
   selectedCount?: number
   totalCount?: number
   helperText?: string
-  canCopyLink?: boolean
   onToggleAllSelection?: (checked: boolean) => void
   onDeleteSelected: () => void
   onDownloadSelected: () => void
   onCopyMarkdownSelected: () => void
-  onCopyLinkSelected: () => void
   className?: string
 }
 
@@ -33,12 +31,10 @@ export function DocumentSelectionBar({
   selectedCount = 0,
   totalCount = 0,
   helperText = 'Hold Ctrl to select many',
-  canCopyLink = false,
   onToggleAllSelection,
   onDeleteSelected,
   onDownloadSelected,
   onCopyMarkdownSelected,
-  onCopyLinkSelected,
   className,
 }: DocumentSelectionBarProps) {
   const helperTail = helperText.replace(/^Hold Ctrl\s*/, '') || helperText
@@ -92,16 +88,6 @@ export function DocumentSelectionBar({
             >
               <Icon icon={IconCopy} size="md" />
             </IconButton>
-            {canCopyLink ? (
-              <IconButton
-                aria-label="Copy selected links"
-                size="icon"
-                variant="ghost"
-                onClick={onCopyLinkSelected}
-              >
-                <Icon icon={IconLink} size="md" />
-              </IconButton>
-            ) : null}
           </div>
         </>
       ) : (
