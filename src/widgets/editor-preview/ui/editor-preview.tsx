@@ -8,10 +8,11 @@
 'use client'
 
 import { useState } from 'react'
-import { IconDownload, IconEye, IconFileCode2, IconLoader2, IconMenu2 } from '@tabler/icons-react'
+import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
+import { Spinner } from '@/shared/ui/spinner'
 import { cn } from '@/shared/lib/cn'
 import { MarkdownEditor } from './markdown-editor'
 import { MarkdownRenderer } from './markdown-renderer'
@@ -61,7 +62,7 @@ export function EditorPreview({
           onClick={onDownloadPdf}
         >
           {isDownloadingPdf ? (
-            <Icon icon={IconLoader2} size="sm" className="animate-spin" />
+            <Spinner size="sm" className="text-current" />
           ) : (
             <Icon icon={IconDownload} size="sm" />
           )}

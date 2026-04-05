@@ -48,6 +48,11 @@ function createToastId() {
   return 'toast-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
 }
 
+// Yield one animation frame before starting a heavier export so the loading spinner and processing toast can paint before Chromium work begins.
+function nextAnimationFrame() {
+  return new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+}
+
 // Restore a starter document when the last file is deleted so the workspace never falls into an empty dead-end state.
 function createStarterDocument(snapshot: WorkspaceSnapshot): DocumentRecord {
   return {
@@ -332,6 +337,7 @@ export function WorkspaceShellClient({
     showPdfProcessingToast()
 
     try {
+      await nextAnimationFrame()
       await downloadDocumentPdf(document)
       showPdfDownloadedToast()
     } catch {

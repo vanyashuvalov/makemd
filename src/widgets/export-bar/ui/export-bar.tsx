@@ -8,9 +8,10 @@
  * Connected to: the editor/preview widget and the current document snapshot.
  */
 import * as React from 'react'
-import { IconDownload, IconLoader2, IconPencil, IconCopy } from '@tabler/icons-react'
+import { IconDownload, IconPencil, IconCopy } from '@tabler/icons-react'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
+import { Spinner } from '@/shared/ui/spinner'
 import { cn } from '@/shared/lib/cn'
 
 const MAX_TITLE_CHARS = 20
@@ -130,9 +131,7 @@ export function ExportBar({
         disabled={isDownloadingPdf}
         onClick={onDownloadPdf}
       >
-        {isDownloadingPdf ? (
-          <Icon icon={IconLoader2} size="md" tone="white" className="animate-spin" />
-        ) : (
+        {isDownloadingPdf ? <Spinner size="md" className="text-white" /> : (
           <Icon icon={IconDownload} size="md" tone="white" />
         )}
       </IconButton>
