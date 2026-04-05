@@ -114,6 +114,9 @@ export function Sidebar({
   const showFavorites = isAuthenticated && activeSection === 'favorites'
   const accountButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false)
+  // Keep footer links visually identical so Help and the author credit read as one small metadata cluster instead of two unrelated controls.
+  const footerLinkClassName =
+    'inline-flex cursor-pointer items-center gap-2 text-sidebar-foreground/60 underline decoration-sidebar-foreground/30 underline-offset-4 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
   const accountMenuItems: ContextMenuItem[] = [
     {
       key: 'sign-out',
@@ -239,11 +242,11 @@ export function Sidebar({
             <span className="text-sm">makemd &copy; 2026</span>
             <button
               type="button"
-              className="inline-flex cursor-pointer items-center gap-2 text-sidebar-foreground/60 underline decoration-sidebar-foreground/30 underline-offset-4 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className={footerLinkClassName}
               onClick={onHelpClick}
             >
               <Icon icon={IconHelpCircle} size="sm" tone="sidebarMuted" />
-              <span>Help</span>
+              <span className="text-sm leading-[18px]">Help</span>
             </button>
           </div>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -251,9 +254,9 @@ export function Sidebar({
               href="https://ivanshuvalov.vercel.app/"
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-sidebar-foreground/70 transition-opacity duration-150 hover:opacity-100 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className={footerLinkClassName}
             >
-              vanya was here
+              <span className="text-sm leading-[18px]">vanya was here</span>
             </a>
           </p>
         </div>
