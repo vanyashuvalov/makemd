@@ -35,6 +35,7 @@ import { AuthModal } from '@/features/auth/ui/auth-modal'
 import { guestWorkspacePromptTitle, guestWorkspaceWarning } from '@/entities/document/model/mock'
 import { mapSupabaseUserToWorkspaceAccount } from '@/shared/lib/supabase/account'
 import { getSupabaseBrowserClient } from '@/shared/lib/supabase/browser-client'
+import { useWorkspaceCloudSync } from '@/features/workspace-cloud-sync/model/use-workspace-cloud-sync'
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 
 const DESKTOP_SIDEBAR_WIDTH = 360
@@ -86,6 +87,7 @@ export function WorkspaceShellClient({
   const [account, setAccount] = useState(snapshot.account)
   const [sidebarSection, setSidebarSection] = useState<WorkspaceSidebarSection>('history')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
   const {
     documents,
     selectedCount,
@@ -123,6 +125,19 @@ export function WorkspaceShellClient({
     setDocuments,
     setEditorMarkdown: setMarkdown,
     setSidebarSection,
+  })
+
+  // Keep authenticated workspaces connected to Supabase so every document mutation is mirrored into Postgres and Storage instead of only living in the local browser cache.
+  useWorkspaceCloudSync({
+    enabled: isAuthenticated,
+    userId: supabaseUserId,
+    initialDocuments: snapshot.documents,
+    documents,
+    editorMarkdown: markdown,
+    sidebarSection,
+    setDocuments,
+    setEditorMarkdown: setMarkdown,
+    setAccount,
   })
 
   // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
@@ -174,6 +189,7 @@ export function WorkspaceShellClient({
 
       if (sessionUser) {
         setIsAuthenticated(true)
+        setSupabaseUserId(sessionUser.id)
         setAccount(mapSupabaseUserToWorkspaceAccount(sessionUser))
         setIsAuthModalOpen(false)
         setSidebarSection('history')
@@ -182,6 +198,7 @@ export function WorkspaceShellClient({
       }
 
       setIsAuthenticated(false)
+      setSupabaseUserId(null)
       setAccount(undefined)
       setIsAuthModalOpen(false)
     }
