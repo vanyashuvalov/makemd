@@ -11,8 +11,20 @@ import { createDocumentTitle } from '@/entities/document/model/document-title'
 import { buildDocumentFileName } from '@/shared/lib/document-file-name'
 import { PDF_EXPORT_APP_HEADER_NAME, PDF_EXPORT_APP_HEADER_VALUE } from '@/shared/lib/pdf-export-handshake'
 import { runPdfTask } from '@/features/document-actions/model/pdf-browser'
+import { createSupabaseServerClient } from '@/shared/lib/supabase/server-client'
 import { PdfMarkdownDocument } from '@/widgets/editor-preview/ui/pdf-markdown-document'
 import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
+import {
+  PDF_DOWNLOAD_DAILY_LIMIT,
+  PDF_DOWNLOAD_GUEST_COOKIE_NAME,
+  claimGuestPdfDownloadUsage,
+  createPdfDownloadLimitMessage,
+  releaseGuestPdfDownloadUsage,
+} from '@/features/pdf-download-limit/model/pdf-download-limit'
+import {
+  claimAuthenticatedPdfDownloadSlot,
+  releaseAuthenticatedPdfDownloadSlot,
+} from '@/features/pdf-download-limit/model/supabase-pdf-download-limit-repository'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -63,6 +75,17 @@ async function readPdfExportRequest(request: NextRequest) {
   }
 }
 
+// Build the guest quota cookie options so anonymous browsers keep their daily count across requests without exposing the counter to client-side JavaScript.
+function createGuestPdfDownloadCookieOptions(request: NextRequest) {
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: request.nextUrl.protocol === 'https:',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  }
+}
+
 export async function POST(request: NextRequest) {
   if (!isAllowedPdfExportRequest(request)) {
     return NextResponse.json({ error: 'PDF export is only available from the Makemd app.' }, { status: 403 })
@@ -77,6 +100,38 @@ export async function POST(request: NextRequest) {
 
   const title = typeof body?.title === 'string' && body.title.trim() ? body.title.trim() : createDocumentTitle()
   const fileName = buildDocumentFileName(title, 'pdf')
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const guestQuotaCookie = request.cookies.get(PDF_DOWNLOAD_GUEST_COOKIE_NAME)?.value ?? null
+  const isAuthenticatedRequest = Boolean(user)
+  const guestQuotaClaim = isAuthenticatedRequest ? null : claimGuestPdfDownloadUsage(guestQuotaCookie, PDF_DOWNLOAD_DAILY_LIMIT)
+
+  // Reserve a slot before the browser work begins so the route can enforce the quota without paying the Chromium cost for requests that are already over the daily cap.
+  if (!isAuthenticatedRequest && !guestQuotaClaim?.allowed) {
+    const response = NextResponse.json(
+      { error: createPdfDownloadLimitMessage(PDF_DOWNLOAD_DAILY_LIMIT) },
+      { status: 429 }
+    )
+
+    response.cookies.set(PDF_DOWNLOAD_GUEST_COOKIE_NAME, guestQuotaClaim!.cookieValue, createGuestPdfDownloadCookieOptions(request))
+    return response
+  }
+
+  // Reserve the authenticated user's daily slot through Supabase so signed-in browsers share one durable quota across tabs and refreshes.
+  let authenticatedQuotaReserved = false
+
+  if (isAuthenticatedRequest) {
+    const quotaState = await claimAuthenticatedPdfDownloadSlot(supabase, PDF_DOWNLOAD_DAILY_LIMIT)
+
+    if (!quotaState.allowed) {
+      return NextResponse.json({ error: createPdfDownloadLimitMessage(PDF_DOWNLOAD_DAILY_LIMIT) }, { status: 429 })
+    }
+
+    authenticatedQuotaReserved = true
+  }
 
   try {
     const { renderToStaticMarkup } = await import('react-dom/server')
@@ -103,13 +158,33 @@ export async function POST(request: NextRequest) {
       })
     })
 
-    return new NextResponse(new Uint8Array(pdfBuffer), {
+    const response = new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': createPdfAttachmentDisposition(fileName),
       },
     })
+
+    if (guestQuotaClaim) {
+      response.cookies.set(PDF_DOWNLOAD_GUEST_COOKIE_NAME, guestQuotaClaim.cookieValue, createGuestPdfDownloadCookieOptions(request))
+    }
+
+    return response
   } catch (error) {
+    if (authenticatedQuotaReserved) {
+      await releaseAuthenticatedPdfDownloadSlot(supabase, PDF_DOWNLOAD_DAILY_LIMIT).catch((releaseError: unknown) => {
+        console.error('[pdf-export] quota rollback failed', releaseError)
+      })
+    }
+
+    if (guestQuotaClaim) {
+      const rolledBackGuestQuota = releaseGuestPdfDownloadUsage(guestQuotaClaim.usage, PDF_DOWNLOAD_DAILY_LIMIT)
+      const response = NextResponse.json({ error: 'Unable to generate PDF.' }, { status: 500 })
+      response.cookies.set(PDF_DOWNLOAD_GUEST_COOKIE_NAME, rolledBackGuestQuota.cookieValue, createGuestPdfDownloadCookieOptions(request))
+      console.error('[pdf-export] route failed', error)
+      return response
+    }
+
     console.error('[pdf-export] route failed', error)
     return NextResponse.json({ error: 'Unable to generate PDF.' }, { status: 500 })
   }

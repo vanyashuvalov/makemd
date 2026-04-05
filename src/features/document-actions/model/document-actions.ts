@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 /**
  * File: src/features/document-actions/model/document-actions.ts
@@ -74,7 +74,7 @@ export function createPdfExportRequestHeaders() {
 // Request a server-rendered PDF, then download the returned blob so the browser export path stays selectable and printable instead of rasterized.
 export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportRequest) {
   if (isIOSLikeDevice()) {
-    submitPdfDownloadForm({ title, markdown })
+    await submitPdfDownloadForm({ title, markdown })
     return
   }
 
@@ -90,7 +90,7 @@ export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportReques
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '')
-    throw new Error(errorText || 'Unable to generate PDF.')
+    throw new Error(extractPdfExportErrorMessage(errorText) || 'Unable to generate PDF.')
   }
 
   const blob = await response.blob()
@@ -99,35 +99,80 @@ export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportReques
 
 // Submit the PDF request as a same-origin form post so iPhone Safari can handle the attachment response more reliably than a blob URL download.
 function submitPdfDownloadForm({ title, markdown }: PdfExportRequest) {
-  const form = window.document.createElement('form')
-  const targetName = `pdf-download-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-  const iframe = window.document.createElement('iframe')
+  return new Promise<void>((resolve, reject) => {
+    const form = window.document.createElement('form')
+    const targetName = `pdf-download-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const iframe = window.document.createElement('iframe')
+    let settled = false
+    let timeoutId = 0
 
-  iframe.name = targetName
-  iframe.style.display = 'none'
+    const cleanup = () => {
+      window.clearTimeout(timeoutId)
+      iframe.remove()
+      form.remove()
+    }
 
-  form.method = 'POST'
-  form.action = '/api/export/pdf'
-  form.target = targetName
-  form.style.display = 'none'
+    const settle = (next: () => void) => {
+      if (settled) {
+        return
+      }
 
-  const titleInput = window.document.createElement('input')
-  titleInput.type = 'hidden'
-  titleInput.name = 'title'
-  titleInput.value = title
+      settled = true
+      cleanup()
+      next()
+    }
 
-  const markdownInput = window.document.createElement('textarea')
-  markdownInput.name = 'markdown'
-  markdownInput.value = markdown
+    iframe.name = targetName
+    iframe.style.display = 'none'
 
-  form.append(titleInput, markdownInput)
-  window.document.body.append(iframe, form)
-  form.submit()
+    iframe.addEventListener(
+      'load',
+      () => {
+        window.setTimeout(() => {
+          try {
+            const bodyText = iframe.contentDocument?.body?.textContent?.trim() ?? ''
 
-  window.setTimeout(() => {
-    iframe.remove()
-    form.remove()
-  }, 5000)
+            if (bodyText.startsWith('{')) {
+              const errorMessage = extractPdfExportErrorMessage(bodyText)
+
+              if (errorMessage) {
+                settle(() => reject(new Error(errorMessage)))
+                return
+              }
+            }
+          } catch {
+            // PDF attachments usually do not expose a readable body in the iframe, so a parse failure is treated as a successful download signal.
+          }
+
+          settle(() => resolve())
+        }, 0)
+      },
+      { once: true }
+    )
+
+    form.method = 'POST'
+    form.action = '/api/export/pdf'
+    form.target = targetName
+    form.style.display = 'none'
+
+    const titleInput = window.document.createElement('input')
+    titleInput.type = 'hidden'
+    titleInput.name = 'title'
+    titleInput.value = title
+
+    const markdownInput = window.document.createElement('textarea')
+    markdownInput.name = 'markdown'
+    markdownInput.value = markdown
+
+    form.append(titleInput, markdownInput)
+    window.document.body.append(iframe, form)
+
+    timeoutId = window.setTimeout(() => {
+      settle(() => resolve())
+    }, 15000)
+
+    form.submit()
+  })
 }
 
 // Trigger a file download from an already prepared blob so the current markdown download and any future binary export can share the same transport path.
@@ -139,4 +184,19 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   anchor.download = fileName
   anchor.click()
   URL.revokeObjectURL(url)
+}
+
+// Parse the server's structured error response so the workspace can surface limit and validation messages instead of a generic failure string.
+function extractPdfExportErrorMessage(responseText: string) {
+  if (!responseText.trim().startsWith('{')) {
+    return ''
+  }
+
+  try {
+    const parsed = JSON.parse(responseText) as { error?: unknown }
+
+    return typeof parsed.error === 'string' ? parsed.error : ''
+  } catch {
+    return ''
+  }
 }

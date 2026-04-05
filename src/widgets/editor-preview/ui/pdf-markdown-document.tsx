@@ -187,9 +187,10 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         {children}
       </ol>
     ),
-    li: ({ children, ...props }) => {
-      // Flatten task list items based on the rendered checkbox primitive so the PDF keeps the same marker geometry as the live preview.
-      const isTaskListItem = containsTaskCheckboxNode(children)
+    li: ({ children, className, ...props }) => {
+      // Flatten task list items based on the rendered checkbox primitive or the remark-gfm task-item marker so the PDF keeps the same marker geometry as the live preview.
+      const isTaskListItem =
+        typeof className === 'string' && className.includes('task-list-item') ? true : containsTaskCheckboxNode(children)
 
       return (
         <li
@@ -400,7 +401,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         checked={Boolean(checked)}
         className="mt-[0.15rem] h-4 w-4"
         style={{
-          border: `1px solid ${checked ? theme.taskMarkerBorder : theme.foreground}`,
+          borderColor: checked ? theme.taskMarkerBorder : theme.foreground,
           backgroundColor: checked ? theme.taskMarkerBackground : 'transparent',
           color: checked ? theme.taskMarkerForeground : theme.foreground,
         }}

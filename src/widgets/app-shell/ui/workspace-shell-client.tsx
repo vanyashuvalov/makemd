@@ -490,11 +490,13 @@ export function WorkspaceShellClient({
       }
 
       showPdfDownloadedToast(documentsToExport.length)
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to generate the PDF right now.'
+
       showToast({
         tone: 'warning',
         title: 'PDF export failed',
-        description: 'Unable to generate the PDF right now.',
+        description: message,
       })
     } finally {
       setIsDownloadingPdf(false)
@@ -940,6 +942,7 @@ export function WorkspaceShellClient({
     </>
   )
 }
+
 
 
 
