@@ -227,7 +227,7 @@ export function Sidebar({
 
       <div className="shrink-0 space-y-4 px-6 py-4">
         <Separator className="bg-sidebar-border" />
-        <div className="space-y-2 text-sm leading-[18px] text-sidebar-muted-foreground">
+        <div className="space-y-1 text-sm leading-[18px] text-sidebar-muted-foreground">
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm">makemd &copy; 2026</span>
             <button
