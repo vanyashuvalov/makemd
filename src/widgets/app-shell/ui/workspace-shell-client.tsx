@@ -833,7 +833,7 @@ export function WorkspaceShellClient({
           )}
         </div>
       </div>
-      <div className="h-full min-h-0 lg:hidden">
+      <div className="min-h-[100dvh] h-auto lg:hidden">
         <MobileWorkspaceShell
           account={isAuthenticated ? account : undefined}
           isAuthenticated={isAuthenticated}

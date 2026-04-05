@@ -59,7 +59,8 @@ function createMarkdownEditorTheme(isMobile: boolean) {
   return EditorView.theme(
     {
       '&': {
-        height: '100%',
+        height: isMobile ? 'auto' : '100%',
+        minHeight: isMobile ? '100%' : '100%',
         backgroundColor: 'transparent',
         color: 'var(--color-foreground)',
       },
@@ -67,6 +68,7 @@ function createMarkdownEditorTheme(isMobile: boolean) {
         fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace)',
         fontSize: '15px',
         lineHeight: '24px',
+        overflow: isMobile ? 'visible' : 'auto',
       },
       '.cm-content': {
         caretColor: 'var(--color-foreground)',
@@ -120,7 +122,7 @@ export function MarkdownEditor({
 
   // Keep the editor itself lightweight and controlled by the surrounding workspace state so the shell owns all persistence and preview sync.
   return (
-    <div className={cn('h-full min-h-0 w-full min-w-0 overflow-hidden')}>
+    <div className={cn('h-auto min-h-[100%] w-full min-w-0 overflow-visible')}>
       <CodeMirror
         value={value}
         onChange={onChange}
@@ -128,10 +130,10 @@ export function MarkdownEditor({
         extensions={[...markdownEditorExtensions, syntaxHighlighting(markdownSyntaxTheme)]}
         basicSetup={false}
         theme={theme}
-        height="100%"
-        minHeight="100%"
+        height={mobile ? 'auto' : '100%'}
+        minHeight={mobile ? '100%' : '100%'}
         width="100%"
-        className="h-full w-full min-w-0"
+        className={cn('w-full min-w-0', mobile ? 'h-auto' : 'h-full')}
       />
     </div>
   )

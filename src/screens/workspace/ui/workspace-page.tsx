@@ -12,11 +12,12 @@ export function WorkspacePage({ snapshot, helpMarkdown }: { snapshot: WorkspaceS
   // Keep the page background flat and neutral so the viewport reads like the Figma frame instead of a decorative landing page.
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-[color:var(--color-canvas)] text-foreground lg:overflow-hidden lg:p-3">
-      <div className="h-[100dvh] w-full min-w-0 overflow-hidden lg:h-[calc(100vh-1.5rem)]">
+      <div className="min-h-[100dvh] w-full min-w-0 overflow-visible lg:h-[calc(100vh-1.5rem)] lg:overflow-hidden">
         <AppShell snapshot={snapshot} helpMarkdown={helpMarkdown} />
       </div>
     </main>
   )
 }
+
 
 

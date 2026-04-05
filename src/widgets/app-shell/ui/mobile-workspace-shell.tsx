@@ -152,7 +152,7 @@ export function MobileWorkspaceShell({
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden overflow-x-hidden">
+    <section className="flex min-h-[100dvh] h-auto w-full min-w-0 flex-col overflow-visible overflow-x-hidden">
       <div className="shrink-0 px-3 pt-3">
         <div className="flex min-h-[68px] min-w-0 items-center gap-2">
           <IconButton
@@ -194,7 +194,7 @@ export function MobileWorkspaceShell({
         </div>
       </div>
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-hidden overflow-x-hidden px-0 pt-2">
+      <div className="min-h-[100%] min-w-0 overflow-visible px-0 pt-2">
         {isHelpDocumentOpen ? (
           <HelpDocument markdown={helpMarkdown} />
         ) : mobilePanel === 'markdown' ? (
