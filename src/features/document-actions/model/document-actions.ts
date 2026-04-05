@@ -1,16 +1,20 @@
-'use client'
+﻿'use client'
 
 /**
  * File: src/features/document-actions/model/document-actions.ts
  * Purpose: Workspace document action helpers shared by row menus, bulk actions, and future export flows.
  * Why it exists: document actions need a single place for clipboard, download, and filename behavior so the sidebar stays composable.
  * What it does: provides reusable helpers for copying text, downloading blobs, and building stable document filenames.
- * Connected to: document row menus, the workspace controller, and future PDF/markdown export implementations.
+ * Connected to: document row menus, the workspace controller, the shared PDF export handshake, and future PDF/markdown export implementations.
  */
 import {
   buildDocumentFileName,
 } from '@/shared/lib/document-file-name'
 import { buildMarkdownHtmlComment } from '@/shared/lib/markdown-comments'
+import {
+  PDF_EXPORT_APP_HEADER_NAME,
+  PDF_EXPORT_APP_HEADER_VALUE,
+} from '@/shared/lib/pdf-export-handshake'
 
 export type DocumentDownloadBlob = {
   blob: Blob
@@ -60,10 +64,6 @@ export type PdfExportRequest = {
   markdown: string
 }
 
-// Share one lightweight app-only marker between the browser downloader and the server route so the PDF endpoint can reject stray cross-site callers without blocking guest exports.
-export const PDF_EXPORT_APP_HEADER_NAME = 'x-makemd-app'
-export const PDF_EXPORT_APP_HEADER_VALUE = 'web'
-
 // Build the request headers for the PDF export path so every caller includes the same app-only handshake.
 export function createPdfExportRequestHeaders() {
   return {
@@ -103,18 +103,3 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
   anchor.click()
   URL.revokeObjectURL(url)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,7 +1,15 @@
+﻿/**
+ * File: src/app/api/export/pdf/route.tsx
+ * Purpose: Server-side PDF export endpoint for markdown documents.
+ * Why it exists: the workspace needs a trusted PDF generation path that can validate the caller and return a browser-printable attachment.
+ * What it does: validates the app-only handshake, renders markdown to HTML, prints it through Chromium, and returns the PDF bytes.
+ * Connected to: `features/document-actions/model/document-actions.ts`, `features/document-actions/model/pdf-browser.ts`, and the PDF preview widgets.
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createDocumentTitle } from '@/entities/document/model/document-title'
 import { buildDocumentFileName } from '@/shared/lib/document-file-name'
-import { PDF_EXPORT_APP_HEADER_NAME, PDF_EXPORT_APP_HEADER_VALUE } from '@/features/document-actions/model/document-actions'
+import { PDF_EXPORT_APP_HEADER_NAME, PDF_EXPORT_APP_HEADER_VALUE } from '@/shared/lib/pdf-export-handshake'
 import { runPdfTask } from '@/features/document-actions/model/pdf-browser'
 import { PdfMarkdownDocument } from '@/widgets/editor-preview/ui/pdf-markdown-document'
 import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
@@ -82,4 +90,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unable to generate PDF.' }, { status: 500 })
   }
 }
-
