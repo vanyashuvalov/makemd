@@ -19,11 +19,11 @@ export function containsTaskCheckboxNode(node: ReactNode): boolean {
     return true
   }
 
-  if (!isValidElement(node)) {
-    return false
+  if (isValidElement(node)) {
+    const element = node as ReactElement<{ children?: ReactNode }>
+
+    return Children.toArray(element.props.children).some(containsTaskCheckboxNode)
   }
 
-  const element = node as ReactElement<{ children?: ReactNode }>
-
-  return Children.toArray(element.props.children).some(containsTaskCheckboxNode)
+  return Children.toArray(node).some(containsTaskCheckboxNode)
 }
