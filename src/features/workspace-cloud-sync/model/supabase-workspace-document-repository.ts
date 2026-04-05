@@ -11,6 +11,7 @@ import { getSupabaseBrowserClient } from '@/shared/lib/supabase/browser-client'
 import {
   createWorkspaceDocumentsSignature,
   formatWorkspaceCloudUpdatedLabel,
+  getWorkspaceCloudDocumentId,
   getWorkspaceCloudDocumentStoragePath,
 } from './workspace-cloud-document'
 
@@ -79,12 +80,18 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
       }
 
       const supabase = getSupabaseBrowserClient()
-      const upsertRows = documents.map((document) => ({
-        id: document.id,
-        user_id: userId,
-        title: document.title,
-        storage_path: getWorkspaceCloudDocumentStoragePath(userId, document.id),
-      }))
+      const upsertRows = await Promise.all(
+        documents.map(async (document) => {
+          const cloudDocumentId = await getWorkspaceCloudDocumentId(document.id)
+
+          return {
+            id: cloudDocumentId,
+            user_id: userId,
+            title: document.title,
+            storage_path: getWorkspaceCloudDocumentStoragePath(userId, cloudDocumentId),
+          }
+        })
+      )
 
       const { error: upsertError } = await supabase.from('documents').upsert(upsertRows, {
         onConflict: 'id',
@@ -96,7 +103,8 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
 
       await Promise.all(
         documents.map(async (document) => {
-          const storagePath = getWorkspaceCloudDocumentStoragePath(userId, document.id)
+          const cloudDocumentId = await getWorkspaceCloudDocumentId(document.id)
+          const storagePath = getWorkspaceCloudDocumentStoragePath(userId, cloudDocumentId)
           const { error: uploadError } = await supabase.storage.from('markdown-files').upload(
             storagePath,
             createMarkdownBlob(document.markdown ?? ''),
@@ -118,7 +126,12 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
       }
 
       const supabase = getSupabaseBrowserClient()
-      const storagePaths = documentIds.map((documentId) => getWorkspaceCloudDocumentStoragePath(userId, documentId))
+      const cloudDocumentIds = await Promise.all(
+        documentIds.map(async (documentId) => getWorkspaceCloudDocumentId(documentId))
+      )
+      const storagePaths = cloudDocumentIds.map((documentId) =>
+        getWorkspaceCloudDocumentStoragePath(userId, documentId)
+      )
 
       const { error: removeError } = await supabase.storage.from('markdown-files').remove(storagePaths)
 
@@ -130,7 +143,7 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
         .from('documents')
         .delete()
         .eq('user_id', userId)
-        .in('id', documentIds)
+        .in('id', cloudDocumentIds)
 
       if (deleteError) {
         throw deleteError
