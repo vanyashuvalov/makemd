@@ -16,7 +16,7 @@ export interface DrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   ariaLabel: string
-  side?: 'left' | 'right'
+  side?: 'left' | 'right' | 'bottom'
   className?: string
   children: React.ReactNode
 }
@@ -58,7 +58,7 @@ export function Drawer({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 bg-black/75"
+      className={cn('fixed inset-0 z-50 bg-black/75', side === 'bottom' && 'flex items-end justify-center')}
       role="presentation"
       onMouseDown={() => onOpenChange(false)}
     >
@@ -67,8 +67,12 @@ export function Drawer({
         aria-modal="true"
         aria-label={ariaLabel}
         className={cn(
-          'absolute top-0 h-full w-[min(88vw,24rem)] p-3',
-          side === 'left' ? 'left-0' : 'right-0',
+          'absolute',
+          side === 'left'
+            ? 'left-0 top-0 h-full w-[min(88vw,24rem)] p-3'
+            : side === 'right'
+              ? 'right-0 top-0 h-full w-[min(88vw,24rem)] p-3'
+              : 'inset-x-0 bottom-0 h-[min(86vh,44rem)] w-full overflow-hidden rounded-t-[24px] bg-[color:var(--color-sidebar-surface)] p-0 shadow-[0_-24px_80px_rgba(0,0,0,0.45)] animate-[drawer-rise_240ms_cubic-bezier(0.16,1,0.3,1)] will-change-transform',
           className
         )}
         onMouseDown={(event) => event.stopPropagation()}
@@ -79,4 +83,3 @@ export function Drawer({
     document.body
   )
 }
-

@@ -75,10 +75,24 @@
 
   html {
     @apply bg-background;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  @keyframes drawer-rise {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
   }
 
   ::selection {
