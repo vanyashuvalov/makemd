@@ -7,18 +7,44 @@
  */
 import { getWorkspaceSnapshot, normalizeWorkspaceState } from '@/entities/document/model/mock'
 import { WorkspacePage } from '@/screens/workspace/ui/workspace-page'
+import { redirect } from 'next/navigation'
 import { mapSupabaseUserToWorkspaceAccount } from '@/shared/lib/supabase/account'
 import { createSupabaseServerClient } from '@/shared/lib/supabase/server-client'
 
 type PageProps = {
   searchParams: Promise<{
     state?: string
+    code?: string
+    next?: string
+    error?: string
+    error_description?: string
   }>
 }
 
 export default async function Page({ searchParams }: PageProps) {
   // Read the request-time state so the preview can switch between the Figma-inspired variants without client routing.
-  const { state } = await searchParams
+  const { state, code, next, error, error_description } = await searchParams
+
+  // If Supabase drops the OAuth code on the root URL instead of the dedicated callback route, forward the browser to the callback so the session exchange still completes.
+  if (code) {
+    const callbackSearch = new URLSearchParams()
+    callbackSearch.set('code', code)
+
+    if (next) {
+      callbackSearch.set('next', next)
+    }
+
+    if (error) {
+      callbackSearch.set('error', error)
+    }
+
+    if (error_description) {
+      callbackSearch.set('error_description', error_description)
+    }
+
+    redirect(`/auth/callback?${callbackSearch.toString()}`)
+  }
+
   const normalizedState = normalizeWorkspaceState(state)
   const supabase = await createSupabaseServerClient()
   const {
