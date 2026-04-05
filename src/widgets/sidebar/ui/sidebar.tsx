@@ -50,6 +50,7 @@ export interface SidebarProps {
   canCopyLink: boolean
   onSectionChange: (section: WorkspaceSidebarSection) => void
   onSignUpClick: () => void
+  onSignOut: () => void
   onCreateDocument: () => void
   onUseTemplate: (templateId: string) => void
   onDownloadDocument: (documentId: string) => void
@@ -80,6 +81,7 @@ export function Sidebar({
   canCopyLink,
   onSectionChange,
   onSignUpClick,
+  onSignOut,
   onCreateDocument,
   onUseTemplate,
   onDownloadDocument,
@@ -106,11 +108,16 @@ export function Sidebar({
           <div className="flex items-center gap-3">
             {account ? (
               <>
-                <Avatar name={account.name} className="h-10 w-10" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-sidebar-foreground">{account.email}</p>
-                  <p className="text-xs text-sidebar-muted-foreground">Signed in</p>
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <Avatar name={account.name} className="h-10 w-10" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-sidebar-foreground">{account.email}</p>
+                    <p className="text-xs text-sidebar-muted-foreground">Signed in</p>
+                  </div>
                 </div>
+                <Button variant="text" size="text" onClick={onSignOut}>
+                  Sign out
+                </Button>
               </>
             ) : (
               <Button

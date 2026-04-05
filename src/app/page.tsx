@@ -7,6 +7,8 @@
  */
 import { getWorkspaceSnapshot, normalizeWorkspaceState } from '@/entities/document/model/mock'
 import { WorkspacePage } from '@/screens/workspace/ui/workspace-page'
+import { mapSupabaseUserToWorkspaceAccount } from '@/shared/lib/supabase/account'
+import { createSupabaseServerClient } from '@/shared/lib/supabase/server-client'
 
 type PageProps = {
   searchParams: Promise<{
@@ -18,7 +20,15 @@ export default async function Page({ searchParams }: PageProps) {
   // Read the request-time state so the preview can switch between the Figma-inspired variants without client routing.
   const { state } = await searchParams
   const normalizedState = normalizeWorkspaceState(state)
-  const snapshot = getWorkspaceSnapshot(normalizedState)
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Prefer the real Supabase session when one exists so authenticated users land on their signed-in workspace instead of the mock authorized fixture.
+  const snapshot = user
+    ? getWorkspaceSnapshot('authorized', mapSupabaseUserToWorkspaceAccount(user))
+    : getWorkspaceSnapshot(normalizedState)
 
   return <WorkspacePage snapshot={snapshot} />
 }

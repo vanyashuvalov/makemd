@@ -6,9 +6,27 @@
  * Connected to: the home page, sidebar, editor/preview widgets, and the state-switch links.
  */
 import { createDocumentTitle, getDocumentStarterMarkdown } from './document-title'
-import type { DocumentRecord, WorkspaceSnapshot, WorkspaceStateKey } from './types'
+import type {
+  DocumentRecord,
+  WorkspaceAccount,
+  WorkspaceSnapshot,
+  WorkspaceStateKey,
+  WorkspaceWarning,
+} from './types'
 
 const starterMarkdown = getDocumentStarterMarkdown()
+
+export const guestWorkspacePromptTitle = 'Paste text or drop file here'
+
+export const guestWorkspaceWarning: WorkspaceWarning = {
+  title: 'Saved on this device',
+  description: 'Sign up to sync your history to the cloud',
+}
+
+const defaultAuthorizedAccount: WorkspaceAccount = {
+  name: 'Intjivan',
+  email: 'intjivan@gmail.com',
+}
 
 // Build a mocked document row from a fixed local date so the fixture titles stay timestamp-based without duplicating the formatting rule.
 function createMockDocument(
@@ -28,58 +46,56 @@ function createMockDocument(
   }
 }
 
-const authorizedSnapshot: WorkspaceSnapshot = {
-  state: 'authorized',
-  account: {
-    name: 'Intjivan',
-    email: 'intjivan@gmail.com',
-  },
-  documents: [
-    createMockDocument('doc-1', new Date(2026, 2, 23, 12, 32), `23 Mar \u2022 12:32`, starterMarkdown),
-    createMockDocument('doc-2', new Date(2026, 2, 23, 12, 45), `23 Mar \u2022 12:45`, starterMarkdown),
-    createMockDocument('doc-3', new Date(2026, 2, 23, 13, 1), `23 Mar \u2022 13:01`, starterMarkdown, {
-      active: true,
-      withMenu: true,
-    }),
-    createMockDocument('doc-4', new Date(2026, 2, 23, 13, 12), `23 Mar \u2022 13:12`, starterMarkdown),
-  ],
-  templates: [
-    {
-      id: 'template-1',
-      title: 'Resume starter',
-      description: 'Clean one-page resume layout with headings and compact sections.',
-      markdown: `# Resume starter\n\n## Summary\n\nWrite your summary here.\n\n## Experience\n\n- Role\n- Impact\n`,
+// Build the authorized snapshot on demand so server-side auth can swap in the current Supabase profile without mutating shared mock objects.
+function createAuthorizedSnapshot(account: WorkspaceAccount = defaultAuthorizedAccount): WorkspaceSnapshot {
+  return {
+    state: 'authorized',
+    account,
+    documents: [
+      createMockDocument('doc-1', new Date(2026, 2, 23, 12, 32), '23 Mar • 12:32', starterMarkdown),
+      createMockDocument('doc-2', new Date(2026, 2, 23, 12, 45), '23 Mar • 12:45', starterMarkdown),
+      createMockDocument('doc-3', new Date(2026, 2, 23, 13, 1), '23 Mar • 13:01', starterMarkdown, {
+        active: true,
+        withMenu: true,
+      }),
+      createMockDocument('doc-4', new Date(2026, 2, 23, 13, 12), '23 Mar • 13:12', starterMarkdown),
+    ],
+    templates: [
+      {
+        id: 'template-1',
+        title: 'Resume starter',
+        description: 'Clean one-page resume layout with headings and compact sections.',
+        markdown: `# Resume starter\n\n## Summary\n\nWrite your summary here.\n\n## Experience\n\n- Role\n- Impact\n`,
+      },
+      {
+        id: 'template-2',
+        title: 'Project brief',
+        description: 'Simple structure for product specs, outcomes, and action items.',
+        markdown: `# Project brief\n\n## Problem\n\nDescribe the problem.\n\n## Plan\n\n- Step one\n- Step two\n`,
+      },
+    ],
+    editor: {
+      markdown: starterMarkdown,
     },
-    {
-      id: 'template-2',
-      title: 'Project brief',
-      description: 'Simple structure for product specs, outcomes, and action items.',
-      markdown: `# Project brief\n\n## Problem\n\nDescribe the problem.\n\n## Plan\n\n- Step one\n- Step two\n`,
-    },
-  ],
-  editor: {
-    markdown: starterMarkdown,
-  },
+  }
 }
 
 // Create the guest workspace snapshot from the current moment so the first document looks freshly created rather than copied from static mock data.
 function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot {
   const now = new Date()
-  const sharedMarkdown = state === 'unauthorized'
-    ? `# Paste text or drop file here\n\nStart typing or drop a file to begin.`
-    : '# Paste text or drop file here'
+  const sharedMarkdown =
+    state === 'unauthorized'
+      ? `# ${guestWorkspacePromptTitle}\n\nStart typing or drop a file to begin.`
+      : `# ${guestWorkspacePromptTitle}`
 
   return {
     state,
     prompt: {
-      title: 'Paste text or drop file here',
+      title: guestWorkspacePromptTitle,
     },
     ...(state === 'unauthorized'
       ? {
-        warning: {
-            title: 'Saved on this device',
-            description: 'Sign up to sync your history to the cloud',
-          },
+          warning: guestWorkspaceWarning,
           selection: {
             helperText: 'Hold Ctrl to select many',
           },
@@ -106,10 +122,10 @@ export function normalizeWorkspaceState(state: string | undefined): WorkspaceSta
   return 'unauthorized'
 }
 
-export function getWorkspaceSnapshot(state: WorkspaceStateKey): WorkspaceSnapshot {
+export function getWorkspaceSnapshot(state: WorkspaceStateKey, account?: WorkspaceAccount): WorkspaceSnapshot {
   // Return the in-repo mock snapshot that the UI widgets use for the current design-state preview.
   if (state === 'authorized') {
-    return authorizedSnapshot
+    return createAuthorizedSnapshot(account)
   }
 
   return createGuestSnapshot(state)

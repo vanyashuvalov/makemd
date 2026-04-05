@@ -31,7 +31,11 @@ import { DocumentDeleteConfirmationModal } from '@/features/document-delete-conf
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
 import { useWorkspaceDraftPersistence } from '@/features/workspace-persistence/model/use-workspace-draft-persistence'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
-import { AuthModal, type AuthModalAccount } from '@/features/auth/ui/auth-modal'
+import { AuthModal } from '@/features/auth/ui/auth-modal'
+import { guestWorkspacePromptTitle, guestWorkspaceWarning } from '@/entities/document/model/mock'
+import { mapSupabaseUserToWorkspaceAccount } from '@/shared/lib/supabase/account'
+import { getSupabaseBrowserClient } from '@/shared/lib/supabase/browser-client'
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 
 const DESKTOP_SIDEBAR_WIDTH = 360
 const MAX_GUEST_DOCUMENTS = 20
@@ -93,10 +97,15 @@ export function WorkspaceShellClient({
 
   const templates = snapshot.templates ?? []
   const selectedDocuments = documents.filter((document) => document.selected)
-  const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning : undefined
-  const workspacePersistenceScope = isAuthenticated ? 'authorized' : snapshot.state
+  // Keep the local draft scope aligned with the live auth state so a sign-out can fall back to the guest cache without leaving the authorized key behind.
+  const guestWorkspaceState = snapshot.state === 'empty' ? 'empty' : 'unauthorized'
+  const workspacePersistenceScope = isAuthenticated ? 'authorized' : guestWorkspaceState
+  const guestWarning = !isAuthenticated && documents.length >= 2 ? snapshot.warning ?? guestWorkspaceWarning : undefined
+  const editorPlaceholder = isAuthenticated ? snapshot.prompt?.title ?? 'Start writing markdown' : guestWorkspacePromptTitle
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
+  const [isAuthBusy, setIsAuthBusy] = useState(false)
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | undefined>()
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const hasHydratedGuestTitleRef = useRef(false)
@@ -149,6 +158,47 @@ export function WorkspaceShellClient({
     return () => {
       timers.forEach((timeoutId) => window.clearTimeout(timeoutId))
       timers.clear()
+    }
+  }, [])
+
+  // Hydrate the workspace from the current Supabase browser session and keep the signed-in identity synchronized whenever auth state changes in another tab or after a provider redirect.
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient()
+    let isMounted = true
+
+    // Fold the current Supabase session into the shell state so the workspace shows the real account and closes the auth modal once sign-in completes.
+    const applyAuthenticatedSession = (sessionUser: User | null) => {
+      if (!isMounted) {
+        return
+      }
+
+      if (sessionUser) {
+        setIsAuthenticated(true)
+        setAccount(mapSupabaseUserToWorkspaceAccount(sessionUser))
+        setIsAuthModalOpen(false)
+        setSidebarSection('history')
+        setAuthErrorMessage(undefined)
+        return
+      }
+
+      setIsAuthenticated(false)
+      setAccount(undefined)
+      setIsAuthModalOpen(false)
+    }
+
+    void supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+      applyAuthenticatedSession(session?.user ?? null)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+      applyAuthenticatedSession(session?.user ?? null)
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
     }
   }, [])
 
@@ -487,12 +537,89 @@ export function WorkspaceShellClient({
     setMarkdown(template.markdown)
   }
 
-  // Promote the guest session into an authenticated workspace mode without leaving the current screen.
-  const handleAuthenticate = (nextAccount: AuthModalAccount) => {
-    setIsAuthenticated(true)
-    setAccount(nextAccount)
+  // Run email/password auth through Supabase so the modal can support both login and registration without owning credential storage itself.
+  const handleEmailPasswordSubmit = async (email: string, password: string) => {
+    const resolvedEmail = email.trim().toLowerCase()
+
+    if (!resolvedEmail || !password) {
+      setAuthErrorMessage('Enter both your email and password.')
+      return
+    }
+
+    const supabase = getSupabaseBrowserClient()
+    setIsAuthBusy(true)
+    setAuthErrorMessage(undefined)
+
+    const signInResult = await supabase.auth.signInWithPassword({
+      email: resolvedEmail,
+      password,
+    })
+
+    if (!signInResult.error) {
+      setIsAuthBusy(false)
+      return
+    }
+
+    const isMissingAccount = signInResult.error.message.toLowerCase().includes('invalid login credentials')
+
+    if (!isMissingAccount) {
+      setAuthErrorMessage(signInResult.error.message)
+      setIsAuthBusy(false)
+      return
+    }
+
+    const signUpResult = await supabase.auth.signUp({
+      email: resolvedEmail,
+      password,
+    })
+
+    if (signUpResult.error) {
+      setAuthErrorMessage(signUpResult.error.message)
+      setIsAuthBusy(false)
+      return
+    }
+
+    if (!signUpResult.data.session) {
+      setAuthErrorMessage('Check your email to confirm the account and finish signing in.')
+    }
+
+    setIsAuthBusy(false)
+  }
+
+  // Send Google sign-in through the Supabase OAuth flow so the workspace can reuse the same local auth modal and keep the redirect callback server-side.
+  const handleGoogleSignIn = async () => {
+    const supabase = getSupabaseBrowserClient()
+    setIsAuthBusy(true)
+    setAuthErrorMessage(undefined)
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/`,
+      },
+    })
+
+    if (error) {
+      setAuthErrorMessage(error.message)
+      setIsAuthBusy(false)
+    }
+  }
+
+  // Sign out through Supabase so the session cookies disappear and the workspace falls back to the guest draft surface.
+  const handleSignOut = async () => {
+    const supabase = getSupabaseBrowserClient()
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      showToast({
+        tone: 'warning',
+        title: 'Could not sign out',
+        description: error.message,
+      })
+      return
+    }
+
     setIsAuthModalOpen(false)
-    setSidebarSection('history')
   }
 
   // Export the currently active document to a PDF through the server-side print route so the browser receives a real selectable document instead of a canvas capture.
@@ -528,6 +655,7 @@ export function WorkspaceShellClient({
             canCopyLink={isAuthenticated}
             onSectionChange={setSidebarSection}
             onSignUpClick={() => setIsAuthModalOpen(true)}
+            onSignOut={handleSignOut}
             onCreateDocument={handleCreateDocument}
             onUseTemplate={handleUseTemplate}
             onDownloadDocument={handleDownloadDocument}
@@ -550,7 +678,7 @@ export function WorkspaceShellClient({
             <MarkdownPane
               value={markdown}
               onChange={handleMarkdownChange}
-              placeholder={snapshot.prompt?.title ?? 'Start writing markdown'}
+              placeholder={editorPlaceholder}
             />
 
             <div className="relative min-h-0 min-w-0">
@@ -572,7 +700,7 @@ export function WorkspaceShellClient({
           onMarkdownChange={handleMarkdownChange}
           onDownloadPdf={handleDownloadActiveDocument}
           isDownloadingPdf={isDownloadingPdf}
-          placeholder={snapshot.prompt?.title ?? 'Start writing markdown'}
+          placeholder={editorPlaceholder}
         />
       </div>
 
@@ -594,8 +722,17 @@ export function WorkspaceShellClient({
 
       <AuthModal
         open={isAuthModalOpen}
-        onOpenChange={setIsAuthModalOpen}
-        onAuthenticate={handleAuthenticate}
+        onOpenChange={(open) => {
+          setIsAuthModalOpen(open)
+
+          if (!open) {
+            setAuthErrorMessage(undefined)
+          }
+        }}
+        onEmailPasswordSubmit={handleEmailPasswordSubmit}
+        onGoogleSignIn={handleGoogleSignIn}
+        isLoading={isAuthBusy}
+        errorMessage={authErrorMessage}
       />
     </>
   )

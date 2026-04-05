@@ -8,6 +8,12 @@
 export type WorkspaceStateKey = 'authorized' | 'unauthorized' | 'empty'
 export type WorkspaceSidebarSection = 'history' | 'templates'
 
+export type WorkspaceAccount = {
+  name: string
+  email: string
+  avatarSrc?: string
+}
+
 export type DocumentRecord = {
   id: string
   title: string
@@ -46,11 +52,7 @@ export type WorkspaceEditor = {
 
 export type WorkspaceSnapshot = {
   state: WorkspaceStateKey
-  account?: {
-    name: string
-    email: string
-    avatarSrc?: string
-  }
+  account?: WorkspaceAccount
   prompt?: WorkspacePrompt
   warning?: WorkspaceWarning
   selection?: WorkspaceSelection
