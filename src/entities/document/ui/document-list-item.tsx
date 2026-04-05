@@ -115,7 +115,7 @@ export function DocumentListItem({
     },
     {
       key: 'download',
-      label: 'Download',
+      label: 'Download pdf',
       icon: IconDownload,
       onSelect: () => onDownloadDocument?.(item.id),
     },

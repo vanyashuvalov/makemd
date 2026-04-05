@@ -104,14 +104,17 @@ export function ExportBar({
         <button
           type="button"
           title={title}
-          className="flex h-11 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
+          className="flex h-11 items-center gap-0 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
           onClick={() => {
             setDraftTitle(title)
             setIsEditing(true)
           }}
         >
-          <span className="min-w-0 truncate font-normal">{formatDisplayTitle(title)}</span>
-          <Icon icon={IconPencil} size="md" tone="white" />
+          <span className="flex min-w-0 items-center gap-0">
+            <span className="min-w-0 truncate font-normal">{formatDisplayTitle(title)}</span>
+            <span className="shrink-0 font-normal text-white/60">.pdf</span>
+          </span>
+          <Icon icon={IconPencil} size="md" tone="white" className="ml-1" />
         </button>
       )}
       <IconButton
