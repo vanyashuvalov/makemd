@@ -20,6 +20,7 @@ export interface DocumentListProps {
   totalCount: number
   helperText?: string
   canCopyLink?: boolean
+  canSaveToFavorites?: boolean
   onOpenDocument?: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
@@ -28,6 +29,7 @@ export interface DocumentListProps {
   onRenameDocument: (documentId: string, nextTitle: string) => void
   onCopyMarkdownDocument: (documentId: string) => void
   onCopyLinkDocument: (documentId: string) => void
+  onSaveToFavorites: (documentId: string) => void
   onDeleteSelected: () => void
   onDownloadSelected: () => void
   onCopyMarkdownSelected: () => void
@@ -42,6 +44,7 @@ export function DocumentList({
   totalCount,
   helperText,
   canCopyLink = false,
+  canSaveToFavorites = false,
   onOpenDocument,
   onToggleAllSelection,
   onToggleDocument,
@@ -50,6 +53,7 @@ export function DocumentList({
   onRenameDocument,
   onCopyMarkdownDocument,
   onCopyLinkDocument,
+  onSaveToFavorites,
   onDeleteSelected,
   onDownloadSelected,
   onCopyMarkdownSelected,
@@ -78,6 +82,7 @@ export function DocumentList({
         items={documents}
         selectionMode={selectionMode}
         canCopyLink={canCopyLink}
+        canSaveToFavorites={canSaveToFavorites}
         onOpenItem={onOpenDocument}
         onToggleItem={onToggleDocument}
         onDownloadItem={onDownloadDocument}
@@ -85,6 +90,7 @@ export function DocumentList({
         onRenameItem={onRenameDocument}
         onCopyMarkdownItem={onCopyMarkdownDocument}
         onCopyLinkItem={onCopyLinkDocument}
+        onSaveToFavoritesItem={onSaveToFavorites}
       />
     </div>
   )

@@ -15,6 +15,7 @@ import {
   IconFileText,
   IconLink,
   IconPencil,
+  IconStar,
   IconTrash,
 } from '@tabler/icons-react'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -28,6 +29,7 @@ export interface DocumentListItemProps {
   item: DocumentRecord
   selectionMode?: boolean
   canCopyLink?: boolean
+  canSaveToFavorites?: boolean
   onOpenDocument?: (documentId: string) => void
   onToggleSelected?: (documentId: string) => void
   onDownloadDocument?: (documentId: string) => void
@@ -35,12 +37,14 @@ export interface DocumentListItemProps {
   onRenameDocument?: (documentId: string, nextTitle: string) => void
   onCopyMarkdown?: (documentId: string) => void
   onCopyLink?: (documentId: string) => void
+  onSaveToFavorites?: (documentId: string) => void
 }
 
 export function DocumentListItem({
   item,
   selectionMode = false,
   canCopyLink = false,
+  canSaveToFavorites = false,
   onOpenDocument,
   onToggleSelected,
   onDownloadDocument,
@@ -48,6 +52,7 @@ export function DocumentListItem({
   onRenameDocument,
   onCopyMarkdown,
   onCopyLink,
+  onSaveToFavorites,
 }: DocumentListItemProps) {
   const menuButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
@@ -132,6 +137,16 @@ export function DocumentListItem({
       icon: IconCopy,
       onSelect: () => onCopyMarkdown?.(item.id),
     },
+    ...(canSaveToFavorites
+      ? [
+          {
+            key: 'save-to-favorites',
+            label: 'Save to favorites',
+            icon: IconStar,
+            onSelect: () => onSaveToFavorites?.(item.id),
+          },
+        ]
+      : []),
     ...(canCopyLink
       ? [
           {

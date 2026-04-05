@@ -6,13 +6,7 @@
  * Connected to: the home page, sidebar, editor/preview widgets, and the state-switch links.
  */
 import { createDocumentTitle, getDocumentStarterMarkdown } from './document-title'
-import type {
-  DocumentRecord,
-  WorkspaceAccount,
-  WorkspaceSnapshot,
-  WorkspaceStateKey,
-  WorkspaceWarning,
-} from './types'
+import type { DocumentRecord, WorkspaceAccount, WorkspaceSnapshot, WorkspaceStateKey, WorkspaceWarning } from './types'
 
 const starterMarkdown = getDocumentStarterMarkdown()
 
@@ -60,20 +54,7 @@ function createAuthorizedSnapshot(account: WorkspaceAccount = defaultAuthorizedA
       }),
       createMockDocument('doc-4', new Date(2026, 2, 23, 13, 12), '23 Mar • 13:12', starterMarkdown),
     ],
-    templates: [
-      {
-        id: 'template-1',
-        title: 'Resume starter',
-        description: 'Clean one-page resume layout with headings and compact sections.',
-        markdown: `# Resume starter\n\n## Summary\n\nWrite your summary here.\n\n## Experience\n\n- Role\n- Impact\n`,
-      },
-      {
-        id: 'template-2',
-        title: 'Project brief',
-        description: 'Simple structure for product specs, outcomes, and action items.',
-        markdown: `# Project brief\n\n## Problem\n\nDescribe the problem.\n\n## Plan\n\n- Step one\n- Step two\n`,
-      },
-    ],
+    favorites: [],
     editor: {
       markdown: starterMarkdown,
     },
@@ -107,6 +88,7 @@ function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot
         withMenu: true,
       }),
     ],
+    favorites: [],
     editor: {
       markdown: sharedMarkdown,
     },

@@ -2,31 +2,31 @@
 
 /**
  * File: src/widgets/sidebar/ui/sidebar.tsx
- * Purpose: Figma-inspired navigation rail for account, create, history, templates, and support.
+ * Purpose: Figma-inspired navigation rail for account, create, history, favorites, and support.
  * Why it exists: the sidebar is the main control surface in the design and keeps document navigation predictable.
- * What it does: composes the account header, primary action, tabs, warnings, selection actions, history list, templates list, and footer.
- * Connected to: workspace session state, document and template entities, and the editor/preview shell.
+ * What it does: composes the account header, primary action, tabs, warnings, selection actions, history list, favorites list, and footer.
+ * Connected to: workspace session state, document and favorite entities, and the editor/preview shell.
  */
 
 import * as React from 'react'
 import {
   IconAlertTriangle,
-  IconClipboardList,
   IconHelpCircle,
   IconHistory,
   IconLogin2,
   IconLogout2,
+  IconStar,
 } from '@tabler/icons-react'
 import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
 import type {
   DocumentRecord,
   WorkspaceSidebarSection,
-  WorkspaceTemplate,
+  WorkspaceFavorite,
   WorkspaceWarning,
   WorkspaceAccount,
 } from '@/entities/document/model/types'
 import { DocumentList } from './document-list'
-import { TemplateList } from '@/entities/template/ui/template-list'
+import { FavoriteList } from '@/entities/favorite/ui/favorite-list'
 import { Alert } from '@/shared/ui/alert'
 import { Avatar } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
@@ -41,9 +41,10 @@ export interface SidebarProps {
   isAuthenticated: boolean
   activeSection: WorkspaceSidebarSection
   documents: DocumentRecord[]
-  templates: WorkspaceTemplate[]
+  favorites: WorkspaceFavorite[]
   warning?: WorkspaceWarning
   isDocumentsLoading?: boolean
+  isFavoritesLoading?: boolean
   selectionMode: boolean
   selectedCount: number
   totalCount: number
@@ -53,12 +54,13 @@ export interface SidebarProps {
   onSignUpClick: () => void
   onSignOut: () => void
   onCreateDocument: () => void
-  onUseTemplate: (templateId: string) => void
+  onUseFavorite: (favoriteId: string) => void
   onDownloadDocument: (documentId: string) => void
   onDeleteDocument: (documentId: string) => void
   onRenameDocument: (documentId: string, nextTitle: string) => void
   onCopyMarkdownDocument: (documentId: string) => void
   onCopyLinkDocument: (documentId: string) => void
+  onSaveToFavorites: (documentId: string) => void
   onToggleAllSelection: (checked: boolean) => void
   onToggleDocument: (documentId: string) => void
   onOpenDocument: (documentId: string) => void
@@ -73,9 +75,10 @@ export function Sidebar({
   isAuthenticated,
   activeSection,
   documents,
-  templates,
+  favorites,
   warning,
   isDocumentsLoading = false,
+  isFavoritesLoading = false,
   selectionMode,
   selectedCount,
   totalCount,
@@ -85,12 +88,13 @@ export function Sidebar({
   onSignUpClick,
   onSignOut,
   onCreateDocument,
-  onUseTemplate,
+  onUseFavorite,
   onDownloadDocument,
   onDeleteDocument,
   onRenameDocument,
   onCopyMarkdownDocument,
   onCopyLinkDocument,
+  onSaveToFavorites,
   onToggleAllSelection,
   onToggleDocument,
   onOpenDocument,
@@ -101,7 +105,7 @@ export function Sidebar({
 }: SidebarProps) {
   // Render the fixed-width navigation rail used in the Figma sidebar states without a compact or resizable variant.
   const showHistory = !isAuthenticated || activeSection === 'history'
-  const showTemplates = isAuthenticated && activeSection === 'templates'
+  const showFavorites = isAuthenticated && activeSection === 'favorites'
   const accountButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false)
   const accountMenuItems: ContextMenuItem[] = [
@@ -165,7 +169,7 @@ export function Sidebar({
               ariaLabel="Sidebar sections"
               items={[
                 { value: 'history', label: 'History', icon: IconHistory },
-                { value: 'templates', label: 'Templates', icon: IconClipboardList },
+                { value: 'favorites', label: 'Favorites', icon: IconStar },
               ]}
               value={activeSection}
               compact
@@ -192,6 +196,7 @@ export function Sidebar({
               helperText={helperText}
               isLoading={isDocumentsLoading}
               canCopyLink={canCopyLink}
+              canSaveToFavorites={isAuthenticated}
               onToggleAllSelection={onToggleAllSelection}
               onToggleDocument={onToggleDocument}
               onOpenDocument={onOpenDocument}
@@ -200,6 +205,7 @@ export function Sidebar({
               onRenameDocument={onRenameDocument}
               onCopyMarkdownDocument={onCopyMarkdownDocument}
               onCopyLinkDocument={onCopyLinkDocument}
+              onSaveToFavorites={onSaveToFavorites}
               onDeleteSelected={onDeleteSelected}
               onDownloadSelected={onDownloadSelected}
               onCopyMarkdownSelected={onCopyMarkdownSelected}
@@ -207,7 +213,9 @@ export function Sidebar({
             />
           ) : null}
 
-          {showTemplates ? <TemplateList items={templates} onUseTemplate={onUseTemplate} /> : null}
+          {showFavorites ? (
+            <FavoriteList items={favorites} isLoading={isFavoritesLoading} onUseFavorite={onUseFavorite} />
+          ) : null}
         </div>
       </div>
 

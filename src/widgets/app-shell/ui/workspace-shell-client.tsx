@@ -2,9 +2,9 @@
 
 /**
  * File: src/widgets/app-shell/ui/workspace-shell-client.tsx
- * Purpose: Client-only workspace controller for auth, documents, templates, and the editor/preview split.
+ * Purpose: Client-only workspace controller for auth, documents, favorites, and the editor/preview split.
  * Why it exists: the page needs a small client boundary for live editing while the sidebar rules, auth modal, and document actions stay interactive.
- * What it does: coordinates markdown state, document history, templates, auth modal state, and the desktop/mobile workspace compositions.
+ * What it does: coordinates markdown state, document history, favorites, auth modal state, and the desktop/mobile workspace compositions.
  * Connected to: `MarkdownPane`, `PreviewPane`, `EditorPreview`, `ExportBar`, `Sidebar`, `AuthModal`, and the workspace snapshot model.
  */
 
@@ -29,6 +29,7 @@ import {
 import { shouldConfirmDocumentDeletion } from '@/features/document-delete-confirmation/model/document-delete-confirmation'
 import { DocumentDeleteConfirmationModal } from '@/features/document-delete-confirmation/ui/document-delete-confirmation-modal'
 import { useDocumentSelection } from '@/features/document-selection/model/use-document-selection'
+import { useWorkspaceFavorites } from '@/features/workspace-favorites/model/use-workspace-favorites'
 import { useWorkspaceDraftPersistence } from '@/features/workspace-persistence/model/use-workspace-draft-persistence'
 import { Sidebar } from '@/widgets/sidebar/ui/sidebar'
 import { AuthModal } from '@/features/auth/ui/auth-modal'
@@ -98,7 +99,7 @@ export function WorkspaceShellClient({
     toggleDocument,
   } = useDocumentSelection(snapshot.documents)
 
-  const templates = snapshot.templates ?? []
+  const initialFavorites = snapshot.favorites ?? []
   const selectedDocuments = documents.filter((document) => document.selected)
   // Keep the local draft scope aligned with the live auth state so a sign-out can fall back to the guest cache without leaving the authorized key behind.
   const guestWorkspaceState = snapshot.state === 'empty' ? 'empty' : 'unauthorized'
@@ -140,6 +141,17 @@ export function WorkspaceShellClient({
     setAccount,
   })
   const isDocumentsLoading = !isSessionResolved || (isAuthenticated && isHydratingRemoteDocuments)
+  // Hydrate favorites through a separate cloud flow so reusable snapshots can load and save independently from the live document history.
+  const {
+    favorites: workspaceFavorites,
+    isHydratingFavorites,
+    createFavoriteFromDocument,
+  } = useWorkspaceFavorites({
+    enabled: isAuthenticated,
+    userId: supabaseUserId,
+    initialFavorites,
+  })
+  const isFavoritesLoading = !isSessionResolved || (isAuthenticated && isHydratingFavorites)
 
   // Remove a toast from the viewport and clear its pending timer so dismissed messages do not linger in memory.
   const dismissToast = (toastId: string) => {
@@ -253,6 +265,15 @@ export function WorkspaceShellClient({
       tone: 'success',
       title: 'Markdown copied',
       description: 'The document content is now in your clipboard.',
+    })
+  }
+
+  // Confirm that a document snapshot has been stored in the favorites collection so the document menu gives immediate feedback after the cloud write completes.
+  const showFavoriteSavedToast = () => {
+    showToast({
+      tone: 'success',
+      title: 'Saved to favorites',
+      description: 'Open the Favorites tab to reuse it later.',
     })
   }
 
@@ -522,16 +543,16 @@ export function WorkspaceShellClient({
     handleRenameDocument(activeDocument.id, nextTitle)
   }
 
-  // Convert a template into a new active document so the Templates tab becomes a real entry point instead of a decorative list.
-  const handleUseTemplate = (templateId: string) => {
+  // Convert a favorite into a new active document so the Favorites tab becomes a real entry point instead of a decorative list.
+  const handleUseFavorite = (favoriteId: string) => {
     if (!isAuthenticated && documents.length >= MAX_GUEST_DOCUMENTS) {
       showGuestLimitToast()
       return
     }
 
-    const template = templates.find((item) => item.id === templateId)
+    const favorite = workspaceFavorites.find((item) => item.id === favoriteId)
 
-    if (!template) {
+    if (!favorite) {
       return
     }
 
@@ -539,7 +560,7 @@ export function WorkspaceShellClient({
       id: createDocumentId(),
       title: createDocumentTitle(),
       updatedLabel: 'Just now',
-      markdown: template.markdown,
+      markdown: favorite.markdown,
       active: true,
       withMenu: true,
     }
@@ -554,7 +575,32 @@ export function WorkspaceShellClient({
         .concat(nextDocument)
     )
     setSidebarSection('history')
-    setMarkdown(template.markdown)
+    setMarkdown(favorite.markdown)
+  }
+
+  // Save the current document snapshot into the authenticated favorites collection so the row menu can turn any document into a reusable seed.
+  const handleSaveDocumentToFavorites = (documentId: string) => {
+    const targetDocument = documents.find((document) => document.id === documentId)
+
+    if (!targetDocument) {
+      return
+    }
+
+    void createFavoriteFromDocument(targetDocument)
+      .then((savedFavorite) => {
+        if (savedFavorite) {
+          showFavoriteSavedToast()
+        }
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : 'Unable to save this favorite right now.'
+
+        showToast({
+          tone: 'warning',
+          title: 'Could not save to favorites',
+          description: message,
+        })
+      })
   }
 
   // Run email/password auth through Supabase so the modal can support both login and registration without owning credential storage itself.
@@ -666,9 +712,10 @@ export function WorkspaceShellClient({
             isAuthenticated={isAuthenticated}
             activeSection={sidebarSection}
             documents={documents}
-            templates={templates}
+            favorites={workspaceFavorites}
             warning={guestWarning}
             isDocumentsLoading={isDocumentsLoading}
+            isFavoritesLoading={isFavoritesLoading}
             selectionMode={selectionMode}
             selectedCount={selectedCount}
             totalCount={documents.length}
@@ -678,11 +725,12 @@ export function WorkspaceShellClient({
             onSignUpClick={() => setIsAuthModalOpen(true)}
             onSignOut={handleSignOut}
             onCreateDocument={handleCreateDocument}
-            onUseTemplate={handleUseTemplate}
+            onUseFavorite={handleUseFavorite}
             onDownloadDocument={handleDownloadDocument}
             onDeleteDocument={handleDeleteDocument}
             onCopyMarkdownDocument={handleCopyMarkdownDocument}
             onCopyLinkDocument={handleCopyLinkDocument}
+            onSaveToFavorites={handleSaveDocumentToFavorites}
             onToggleAllSelection={setAllSelected}
             onToggleDocument={toggleDocument}
             onOpenDocument={handleOpenDocument}
