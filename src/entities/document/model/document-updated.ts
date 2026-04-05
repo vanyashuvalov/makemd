@@ -38,26 +38,33 @@ export function createDocumentUpdatedAt(date = new Date()) {
 
 // Sort document rows by the most recent update time so the sidebar always surfaces the freshest work first, regardless of where the rows came from.
 export function sortDocumentsByUpdatedAt(documents: DocumentRecord[]) {
-  return [...documents].sort((left, right) => {
-    const leftTime = left.updatedAt ? Date.parse(left.updatedAt) : Number.NEGATIVE_INFINITY
-    const rightTime = right.updatedAt ? Date.parse(right.updatedAt) : Number.NEGATIVE_INFINITY
+  return [...documents]
+    .map((document, index) => ({
+      document,
+      index,
+      updatedTime: document.updatedAt ? Date.parse(document.updatedAt) : Number.NaN,
+    }))
+    .sort((left, right) => {
+      const leftHasTime = !Number.isNaN(left.updatedTime)
+      const rightHasTime = !Number.isNaN(right.updatedTime)
 
-    if (Number.isNaN(leftTime) && Number.isNaN(rightTime)) {
-      return left.title.localeCompare(right.title)
-    }
+      if (leftHasTime && rightHasTime && left.updatedTime !== right.updatedTime) {
+        return right.updatedTime - left.updatedTime
+      }
 
-    if (Number.isNaN(leftTime)) {
-      return 1
-    }
+      if (leftHasTime && !rightHasTime) {
+        return -1
+      }
 
-    if (Number.isNaN(rightTime)) {
-      return -1
-    }
+      if (!leftHasTime && rightHasTime) {
+        return 1
+      }
 
-    if (leftTime !== rightTime) {
-      return rightTime - leftTime
-    }
+      if (leftHasTime && rightHasTime) {
+        return left.index - right.index
+      }
 
-    return left.title.localeCompare(right.title)
-  })
+      return left.index - right.index
+    })
+    .map(({ document }) => document)
 }

@@ -51,7 +51,6 @@ export function createWorkspaceDraftRecord({
   documents: DocumentRecord[]
   editorMarkdown: string
 }): WorkspaceDraftRecord {
-  const fallbackUpdatedAt = new Date().toISOString()
 
   return {
     version: 1,
@@ -62,7 +61,7 @@ export function createWorkspaceDraftRecord({
     documents: documents.map((document) => ({
       id: document.id,
       title: document.title,
-      updatedAt: document.updatedAt ?? fallbackUpdatedAt,
+      updatedAt: document.updatedAt,
       updatedLabel: document.updatedLabel,
       markdown: document.markdown ?? '',
       active: Boolean(document.active),
@@ -78,14 +77,13 @@ export function normalizeWorkspaceDraftRecord(draft: WorkspaceDraftRecord | null
     return null
   }
 
-  const fallbackUpdatedAt = new Date(draft.savedAt).toISOString()
   const documents = sortDocumentsByUpdatedAt(
     draft.documents
       .filter((document) => Boolean(document.id && document.title))
       .map((document) => ({
         id: document.id,
         title: document.title,
-        updatedAt: document.updatedAt ?? fallbackUpdatedAt,
+        updatedAt: document.updatedAt,
         updatedLabel: document.updatedLabel,
         markdown: document.markdown ?? '',
         active: Boolean(document.active),
@@ -123,3 +121,4 @@ export async function requestPersistentWorkspaceStorage() {
     return false
   }
 }
+
