@@ -232,7 +232,7 @@ export function Sidebar({
             <span className="text-sm">makemd &copy; 2026</span>
             <button
               type="button"
-              className="inline-flex items-center gap-2 text-sidebar-foreground/60 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="inline-flex cursor-pointer items-center gap-2 text-sidebar-foreground/60 underline decoration-sidebar-foreground/30 underline-offset-4 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               onClick={onHelpClick}
             >
               <Icon icon={IconHelpCircle} size="sm" tone="sidebarMuted" />
