@@ -22,15 +22,20 @@ type PdfExportRequest = {
   markdown?: string
 }
 
-// Reject any PDF export call that does not originate from the Makemd site and does not carry the app-only handshake header.
+// Reject any PDF export call that does not originate from the Makemd site and does not carry the app-only handshake header, while still allowing same-origin form submissions from iPhone fallback flows.
 function isAllowedPdfExportRequest(request: NextRequest) {
   const requestOrigin = request.nextUrl.origin
   const requestOriginHeader = request.headers.get('origin')
   const requestRefererHeader = request.headers.get('referer')
   const requestAppHeader = request.headers.get(PDF_EXPORT_APP_HEADER_NAME)
   const hasTrustedOrigin = requestOriginHeader === requestOrigin || Boolean(requestRefererHeader?.startsWith(requestOrigin))
+  const isFormSubmission = request.headers.get('content-type')?.includes('application/x-www-form-urlencoded') || request.headers.get('content-type')?.includes('multipart/form-data')
 
-  return hasTrustedOrigin && requestAppHeader === PDF_EXPORT_APP_HEADER_VALUE
+  if (!hasTrustedOrigin) {
+    return false
+  }
+
+  return requestAppHeader === PDF_EXPORT_APP_HEADER_VALUE || isFormSubmission
 }
 
 // Build the Content-Disposition header for a PDF attachment so browsers save the generated document using the same filename the UI expects.
@@ -39,12 +44,31 @@ function createPdfAttachmentDisposition(fileName: string) {
   return `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
 }
 
+async function readPdfExportRequest(request: NextRequest) {
+  const contentType = request.headers.get('content-type') ?? ''
+
+  if (contentType.includes('application/json')) {
+    return (await request.json().catch(() => null)) as PdfExportRequest | null
+  }
+
+  const formData = await request.formData().catch(() => null)
+
+  if (!formData) {
+    return null
+  }
+
+  return {
+    title: typeof formData.get('title') === 'string' ? String(formData.get('title')) : undefined,
+    markdown: typeof formData.get('markdown') === 'string' ? String(formData.get('markdown')) : undefined,
+  }
+}
+
 export async function POST(request: NextRequest) {
   if (!isAllowedPdfExportRequest(request)) {
     return NextResponse.json({ error: 'PDF export is only available from the Makemd app.' }, { status: 403 })
   }
 
-  const body = (await request.json().catch(() => null)) as PdfExportRequest | null
+  const body = await readPdfExportRequest(request)
   const markdown = body?.markdown
 
   if (typeof markdown !== 'string') {

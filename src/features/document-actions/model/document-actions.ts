@@ -7,9 +7,8 @@
  * What it does: provides reusable helpers for copying text, downloading blobs, and building stable document filenames.
  * Connected to: document row menus, the workspace controller, the shared PDF export handshake, and future PDF/markdown export implementations.
  */
-import {
-  buildDocumentFileName,
-} from '@/shared/lib/document-file-name'
+import { buildDocumentFileName } from '@/shared/lib/document-file-name'
+import { isIOSLikeDevice } from '@/shared/lib/browser-platform'
 import { buildMarkdownHtmlComment } from '@/shared/lib/markdown-comments'
 import {
   PDF_EXPORT_APP_HEADER_NAME,
@@ -74,6 +73,11 @@ export function createPdfExportRequestHeaders() {
 
 // Request a server-rendered PDF, then download the returned blob so the browser export path stays selectable and printable instead of rasterized.
 export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportRequest) {
+  if (isIOSLikeDevice()) {
+    submitPdfDownloadForm({ title, markdown })
+    return
+  }
+
   const fileName = buildDocumentFileName(title, 'pdf')
   const response = await fetch('/api/export/pdf', {
     method: 'POST',
@@ -91,6 +95,39 @@ export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportReques
 
   const blob = await response.blob()
   downloadBlob({ blob, fileName })
+}
+
+// Submit the PDF request as a same-origin form post so iPhone Safari can handle the attachment response more reliably than a blob URL download.
+function submitPdfDownloadForm({ title, markdown }: PdfExportRequest) {
+  const form = window.document.createElement('form')
+  const targetName = `pdf-download-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const iframe = window.document.createElement('iframe')
+
+  iframe.name = targetName
+  iframe.style.display = 'none'
+
+  form.method = 'POST'
+  form.action = '/api/export/pdf'
+  form.target = targetName
+  form.style.display = 'none'
+
+  const titleInput = window.document.createElement('input')
+  titleInput.type = 'hidden'
+  titleInput.name = 'title'
+  titleInput.value = title
+
+  const markdownInput = window.document.createElement('textarea')
+  markdownInput.name = 'markdown'
+  markdownInput.value = markdown
+
+  form.append(titleInput, markdownInput)
+  window.document.body.append(iframe, form)
+  form.submit()
+
+  window.setTimeout(() => {
+    iframe.remove()
+    form.remove()
+  }, 5000)
 }
 
 // Trigger a file download from an already prepared blob so the current markdown download and any future binary export can share the same transport path.
