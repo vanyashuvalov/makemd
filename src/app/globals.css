@@ -28,7 +28,7 @@
   --color-destructive: #c45a4a;
   --color-border: #d6cec1;
   --color-input: #d6cec1;
-  --color-ring: #4f74ff;
+  --color-ring: rgba(255, 255, 255, 0.1);
   --color-syntax-heading: #f97316;
   --color-syntax-strong: #8b5cf6;
   --color-syntax-emphasis: #a78bfa;
