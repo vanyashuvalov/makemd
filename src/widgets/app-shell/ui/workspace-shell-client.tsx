@@ -134,6 +134,7 @@ export function WorkspaceShellClient({
 
   // Keep a quiet browser draft in sync with the live workspace so refreshes, tab closes, and future cloud-sync handoffs can recover the same document collection without touching the visible UI state.
   useWorkspaceDraftPersistence({
+    shouldRestoreDraft: !isAuthenticated,
     scope: workspacePersistenceScope,
     account,
     documents,

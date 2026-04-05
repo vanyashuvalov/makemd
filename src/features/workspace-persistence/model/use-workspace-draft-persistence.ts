@@ -19,6 +19,7 @@ import {
 import { indexedDbWorkspaceDraftRepository, type WorkspaceDraftRepository } from './indexeddb-workspace-draft-repository'
 
 export interface UseWorkspaceDraftPersistenceParams {
+  shouldRestoreDraft?: boolean
   scope: WorkspaceDraftScope
   account?: WorkspaceSnapshot['account']
   documents: DocumentRecord[]
@@ -33,6 +34,7 @@ export interface UseWorkspaceDraftPersistenceParams {
 
 // Restore the last local draft once per browser session, then keep writing changes back to the same repository key so refreshes and tab restarts preserve the live workspace state.
 export function useWorkspaceDraftPersistence({
+  shouldRestoreDraft = true,
   scope,
   account,
   documents,
@@ -98,6 +100,12 @@ export function useWorkspaceDraftPersistence({
       return
     }
 
+    if (!shouldRestoreDraft) {
+      hasRestoredRef.current = true
+      lastSavedStorageKeyRef.current = storageKey
+      return
+    }
+
     let isMounted = true
 
     const restoreDraft = async () => {
@@ -127,7 +135,7 @@ export function useWorkspaceDraftPersistence({
     return () => {
       isMounted = false
     }
-  }, [storageKey])
+  }, [shouldRestoreDraft, storageKey])
 
   // Persist the current workspace snapshot after a short pause so typing, renaming, opening, and deleting documents all feed the same browser-backed draft without spamming writes on every keystroke.
   useEffect(() => {
