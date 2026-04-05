@@ -39,7 +39,7 @@ export function EditorPreview({
 
   // Keep the mobile experience aligned with the desktop shell by switching between the same markdown source and preview panels.
   return (
-    <section className="flex h-full min-h-0 flex-col gap-2 lg:hidden">
+    <section className="flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-hidden lg:hidden">
       <div className="flex items-center gap-3 rounded-[16px] border border-border bg-card px-4 py-3">
         <IconButton aria-label="Open navigation" variant="outline" size="sm">
           <Icon icon={IconMenu2} size="sm" />
@@ -69,7 +69,7 @@ export function EditorPreview({
         </IconButton>
       </div>
 
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {mobilePanel === 'markdown' ? (
           <MarkdownPane value={markdown} onChange={onMarkdownChange} placeholder={placeholder} mobile />
         ) : (
@@ -93,7 +93,7 @@ export function MarkdownPane({
 }) {
   // Keep the markdown editor inside the same framed surface as before so the shell layout and preview column do not need to change.
   return (
-    <section className={`relative ${PREVIEW_FRAME_CLASSNAME}`}>
+    <section className={`relative min-w-0 ${PREVIEW_FRAME_CLASSNAME}`}>
       <MarkdownEditor value={value} onChange={onChange} placeholder={placeholder} mobile={mobile} />
     </section>
   )
@@ -108,7 +108,7 @@ export function PreviewPane({
 }) {
   // Render the markdown preview through the shared renderer so CommonMark and GFM features stay visually consistent with the source editor.
   return (
-    <section className={PREVIEW_FRAME_CLASSNAME}>
+    <section className={cn('min-w-0', PREVIEW_FRAME_CLASSNAME)}>
       <div className={cn(PREVIEW_BODY_CLASSNAME, mobile && PREVIEW_BODY_MOBILE_CLASSNAME)}>
         <MarkdownRenderer markdown={markdown} mobile={mobile} />
       </div>

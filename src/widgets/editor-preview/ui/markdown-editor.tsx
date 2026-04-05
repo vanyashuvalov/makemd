@@ -120,7 +120,7 @@ export function MarkdownEditor({
 
   // Keep the editor itself lightweight and controlled by the surrounding workspace state so the shell owns all persistence and preview sync.
   return (
-    <div className={cn('h-full min-h-0 w-full')}>
+    <div className={cn('h-full min-h-0 w-full min-w-0 overflow-hidden')}>
       <CodeMirror
         value={value}
         onChange={onChange}
@@ -131,7 +131,7 @@ export function MarkdownEditor({
         height="100%"
         minHeight="100%"
         width="100%"
-        className="h-full w-full"
+        className="h-full w-full min-w-0"
       />
     </div>
   )

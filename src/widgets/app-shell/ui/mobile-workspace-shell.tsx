@@ -152,14 +152,14 @@ export function MobileWorkspaceShell({
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-col overflow-x-hidden">
+    <section className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden overflow-x-hidden">
       <div className="shrink-0 px-3 pt-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-h-[68px] min-w-0 items-center gap-2">
           <IconButton
             aria-label="Open sidebar"
             variant="neutral"
             size="lg"
-            className="h-14 w-14"
+            className="h-[68px] w-[68px]"
             onClick={() => setIsSidebarOpen(true)}
           >
             <Icon icon={IconMenu2} size="md" />
@@ -181,7 +181,7 @@ export function MobileWorkspaceShell({
             aria-label="Download PDF"
             variant="primary"
             size="lg"
-            className="h-14 w-14"
+            className="h-[68px] w-[68px]"
             disabled={isDownloadingPdf}
             onClick={onDownloadPdf}
           >
@@ -194,7 +194,7 @@ export function MobileWorkspaceShell({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-x-hidden px-0 pt-2">
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden overflow-x-hidden px-0 pt-2">
         {isHelpDocumentOpen ? (
           <HelpDocument markdown={helpMarkdown} />
         ) : mobilePanel === 'markdown' ? (
