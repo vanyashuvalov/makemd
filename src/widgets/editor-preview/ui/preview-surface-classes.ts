@@ -17,5 +17,8 @@ export const PREVIEW_BODY_CLASSNAME =
 // Keep the mobile preview body on the same rhythm as the desktop preview while letting the page itself scroll instead of trapping scroll inside the preview card.
 export const PREVIEW_BODY_MOBILE_CLASSNAME = 'w-full max-w-none overflow-visible bg-card px-6 py-6 pb-20'
 
+// Keep the mobile document surface at least one viewport tall so short drafts still fill the screen before the page grows naturally with content.
+export const MOBILE_WORKSPACE_SURFACE_MIN_HEIGHT_CLASSNAME = 'min-h-[calc(100dvh-88px)]'
+
 // Keep the export-only markdown surface on the same card background and padding as the preview body while letting the outer export wrapper decide the actual PDF page width.
 export const PDF_EXPORT_BODY_CLASSNAME = 'w-full max-w-none bg-card px-8 py-8 pb-24 text-foreground'

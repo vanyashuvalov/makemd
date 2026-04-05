@@ -20,6 +20,7 @@ import {
   PREVIEW_BODY_CLASSNAME,
   PREVIEW_BODY_MOBILE_CLASSNAME,
   PREVIEW_FRAME_CLASSNAME,
+  MOBILE_WORKSPACE_SURFACE_MIN_HEIGHT_CLASSNAME,
 } from './preview-surface-classes'
 
 export function EditorPreview({
@@ -39,7 +40,7 @@ export function EditorPreview({
 
   // Keep the mobile experience aligned with the desktop shell by switching between the same markdown source and preview panels.
   return (
-    <section className="flex min-h-[100%] min-w-0 flex-col gap-2 overflow-visible lg:hidden">
+    <section className={cn('flex min-w-0 flex-col gap-2 overflow-visible lg:hidden', MOBILE_WORKSPACE_SURFACE_MIN_HEIGHT_CLASSNAME)}>
       <div className="flex items-center gap-3 rounded-[16px] border border-border bg-card px-4 py-3">
         <IconButton aria-label="Open navigation" variant="outline" size="sm">
           <Icon icon={IconMenu2} size="sm" />
@@ -69,7 +70,7 @@ export function EditorPreview({
         </IconButton>
       </div>
 
-      <div className="min-h-0 min-w-0">
+      <div className={cn('min-w-0', MOBILE_WORKSPACE_SURFACE_MIN_HEIGHT_CLASSNAME)}>
         {mobilePanel === 'markdown' ? (
           <MarkdownPane value={markdown} onChange={onMarkdownChange} placeholder={placeholder} mobile />
         ) : (
@@ -96,7 +97,9 @@ export function MarkdownPane({
     <section
       className={cn(
         'relative min-w-0',
-        mobile ? 'h-auto overflow-visible rounded-[16px] border border-border bg-card' : PREVIEW_FRAME_CLASSNAME
+        mobile
+          ? `overflow-visible rounded-[16px] border border-border bg-card ${MOBILE_WORKSPACE_SURFACE_MIN_HEIGHT_CLASSNAME}`
+          : PREVIEW_FRAME_CLASSNAME
       )}
     >
       <MarkdownEditor value={value} onChange={onChange} placeholder={placeholder} mobile={mobile} />
@@ -113,7 +116,14 @@ export function PreviewPane({
 }) {
   // Render the markdown preview through the shared renderer so CommonMark and GFM features stay visually consistent with the source editor.
   return (
-    <section className={cn('min-w-0', mobile ? 'h-auto overflow-visible rounded-[16px] border border-border bg-card' : PREVIEW_FRAME_CLASSNAME)}>
+    <section
+      className={cn(
+        'min-w-0',
+        mobile
+          ? `overflow-visible rounded-[16px] border border-border bg-card ${MOBILE_WORKSPACE_SURFACE_MIN_HEIGHT_CLASSNAME}`
+          : PREVIEW_FRAME_CLASSNAME
+      )}
+    >
       <div className={cn(mobile ? PREVIEW_BODY_MOBILE_CLASSNAME : PREVIEW_BODY_CLASSNAME)}>
         <MarkdownRenderer markdown={markdown} mobile={mobile} />
       </div>
