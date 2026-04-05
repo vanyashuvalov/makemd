@@ -10,6 +10,7 @@ import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/shared/lib/cn'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
+import { containsTaskCheckboxNode } from '@/shared/lib/markdown-task-list'
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
@@ -155,7 +156,8 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         </blockquote>
       ),
     ul: ({ children, ...props }) => {
-      const isTaskList = typeof props.className === 'string' && props.className.includes('contains-task-list')
+      // Detect task lists from the rendered subtree so the preview does not depend on remark-gfm class output staying stable across versions.
+      const isTaskList = containsTaskCheckboxNode(children)
 
       return exportMode ? (
         <ul
@@ -187,10 +189,10 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         <ol {...props} className="my-0 list-decimal space-y-2 pl-6 text-sm leading-7 text-foreground break-words [overflow-wrap:anywhere]">
           {children}
         </ol>
-      ),
-    li: ({ children, className, ...props }) => {
-      // Flatten task list items so GFM checkboxes render without the default bullet marker and keep the checkbox aligned with the text.
-      const isTaskListItem = typeof className === 'string' && className.includes('task-list-item')
+    ),
+    li: ({ children, ...props }) => {
+      // Flatten task list items based on the rendered checkbox primitive so the bullet marker disappears even if markdown classes change.
+      const isTaskListItem = containsTaskCheckboxNode(children)
 
       return (
         <li

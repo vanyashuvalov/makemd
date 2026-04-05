@@ -10,6 +10,7 @@ import { Children, isValidElement, type CSSProperties, type ReactElement, type R
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
+import { containsTaskCheckboxNode } from '@/shared/lib/markdown-task-list'
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
@@ -156,8 +157,9 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         {children}
       </blockquote>
     ),
-    ul: ({ children, className, ...props }) => {
-      const isTaskList = typeof className === 'string' && className.includes('contains-task-list')
+    ul: ({ children, ...props }) => {
+      // Detect task lists from the rendered subtree so the export layout does not depend on parser-specific classes.
+      const isTaskList = containsTaskCheckboxNode(children)
 
       return (
         <ul
@@ -188,8 +190,9 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         {children}
       </ol>
     ),
-    li: ({ children, className, ...props }) => {
-      const isTaskListItem = typeof className === 'string' && className.includes('task-list-item')
+    li: ({ children, ...props }) => {
+      // Flatten task list items based on the rendered checkbox primitive so the PDF keeps the same marker geometry as the live preview.
+      const isTaskListItem = containsTaskCheckboxNode(children)
 
       return (
         <li
