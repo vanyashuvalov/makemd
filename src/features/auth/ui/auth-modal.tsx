@@ -8,13 +8,13 @@
  * Connected to: the sidebar Sign up button, workspace session state, Supabase OAuth, and future auth providers.
  */
 import * as React from 'react'
-import { IconBrandGoogle } from '@tabler/icons-react'
+import Image from 'next/image'
 import { Alert } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import { Icon } from '@/shared/ui/icon'
 import { Input } from '@/shared/ui/input'
 import { Modal } from '@/shared/ui/modal'
 import { Separator } from '@/shared/ui/separator'
+import { GOOGLE_AUTH_ICON_SRC } from '@/shared/lib/social-icons'
 
 export interface AuthModalProps {
   open: boolean
@@ -61,7 +61,18 @@ export function AuthModal({
           variant="outline"
           size="primary"
           className="w-full"
-          before={<Icon icon={IconBrandGoogle} size="sm" />}
+          before={
+            <span className="flex h-5 w-5 items-center justify-center">
+              <Image
+                src={GOOGLE_AUTH_ICON_SRC}
+                alt=""
+                aria-hidden="true"
+                width={20}
+                height={20}
+                className="block h-5 w-5 shrink-0"
+              />
+            </span>
+          }
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         >
