@@ -8,36 +8,36 @@
  * Connected to: workspace session state, document and template entities, and the editor/preview shell.
  */
 
-import { Alert } from '@/shared/ui/alert'
-import { Avatar } from '@/shared/ui/avatar'
-import { Button } from '@/shared/ui/button'
-import { IconButton } from '@/shared/ui/icon-button'
-import { Tabs } from '@/shared/ui/tabs'
-import { Icon } from '@/shared/ui/icon'
-import { Separator } from '@/shared/ui/separator'
-import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
-import { DocumentList } from './document-list'
-import { TemplateList } from '@/entities/template/ui/template-list'
-import type {
-  DocumentRecord,
-  WorkspaceSidebarSection,
-  WorkspaceTemplate,
-  WorkspaceWarning,
-} from '@/entities/document/model/types'
+import * as React from 'react'
 import {
   IconAlertTriangle,
   IconClipboardList,
   IconHelpCircle,
   IconHistory,
   IconLogin2,
+  IconLogout2,
 } from '@tabler/icons-react'
+import { CreateDocumentButton } from '@/features/document-create/ui/create-document-button'
+import type {
+  DocumentRecord,
+  WorkspaceSidebarSection,
+  WorkspaceTemplate,
+  WorkspaceWarning,
+  WorkspaceAccount,
+} from '@/entities/document/model/types'
+import { DocumentList } from './document-list'
+import { TemplateList } from '@/entities/template/ui/template-list'
+import { Alert } from '@/shared/ui/alert'
+import { Avatar } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
+import { ContextMenu, type ContextMenuItem } from '@/shared/ui/context-menu'
+import { Icon } from '@/shared/ui/icon'
+import { IconButton } from '@/shared/ui/icon-button'
+import { Separator } from '@/shared/ui/separator'
+import { Tabs } from '@/shared/ui/tabs'
 
 export interface SidebarProps {
-  account?: {
-    name: string
-    email: string
-    avatarSrc?: string
-  }
+  account?: WorkspaceAccount
   isAuthenticated: boolean
   activeSection: WorkspaceSidebarSection
   documents: DocumentRecord[]
@@ -100,6 +100,17 @@ export function Sidebar({
   // Render the fixed-width navigation rail used in the Figma sidebar states without a compact or resizable variant.
   const showHistory = !isAuthenticated || activeSection === 'history'
   const showTemplates = isAuthenticated && activeSection === 'templates'
+  const accountButtonRef = React.useRef<HTMLButtonElement | null>(null)
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false)
+  const accountMenuItems: ContextMenuItem[] = [
+    {
+      key: 'sign-out',
+      label: 'Sign out',
+      icon: IconLogout2,
+      destructive: true,
+      onSelect: onSignOut,
+    },
+  ]
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[16px] border border-sidebar-border bg-[color:var(--color-sidebar-surface)] text-sidebar-foreground">
@@ -107,18 +118,18 @@ export function Sidebar({
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
           <div className="flex items-center gap-3">
             {account ? (
-              <>
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar name={account.name} className="h-10 w-10" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-sidebar-foreground">{account.email}</p>
-                    <p className="text-xs text-sidebar-muted-foreground">Signed in</p>
-                  </div>
-                </div>
-                <Button variant="text" size="text" onClick={onSignOut}>
-                  Sign out
-                </Button>
-              </>
+              <Button
+                ref={accountButtonRef}
+                variant="text"
+                size="text"
+                className="w-full justify-start gap-3 px-0 font-normal"
+                before={<Avatar name={account.name} className="h-10 w-10" />}
+                aria-haspopup="menu"
+                aria-expanded={isAccountMenuOpen}
+                onClick={() => setIsAccountMenuOpen((current) => !current)}
+              >
+                <span className="truncate text-[18px] leading-[25px] text-sidebar-foreground">{account.email}</span>
+              </Button>
             ) : (
               <Button
                 variant="text"
@@ -134,6 +145,15 @@ export function Sidebar({
                 Sign up
               </Button>
             )}
+
+            {account ? (
+              <ContextMenu
+                open={isAccountMenuOpen}
+                anchorRef={accountButtonRef}
+                items={accountMenuItems}
+                onOpenChange={setIsAccountMenuOpen}
+              />
+            ) : null}
           </div>
 
           <CreateDocumentButton onClick={onCreateDocument} />
