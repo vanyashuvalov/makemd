@@ -154,6 +154,15 @@ export function DocumentListItem({
       },
     ]
 
+  const inlineRenameMenuItems: ContextMenuItem[] = resolvedMenuItems.map((menuItem) =>
+    menuItem.key === 'rename'
+      ? {
+          ...menuItem,
+          onSelect: () => setIsRenaming(true),
+        }
+      : menuItem
+  )
+
   // Render a single history row that can visually switch between the default, selected, and active states from the mockup.
   return (
     <>
@@ -240,7 +249,7 @@ export function DocumentListItem({
         open={isMenuOpen}
         anchorRef={menuButtonRef}
         onOpenChange={setIsMenuOpen}
-        items={resolvedMenuItems}
+        items={inlineRenameMenuItems}
       />
     </>
   )

@@ -630,20 +630,8 @@ export function WorkspaceShellClient({
     })
   }
 
-  // Rename a saved favorite snapshot through the cloud collection so the Favorites tab exposes the same editing affordance as document rows.
-  const handleRenameFavorite = (favoriteId: string) => {
-    const favorite = workspaceFavorites.find((item) => item.id === favoriteId)
-
-    if (!favorite) {
-      return
-    }
-
-    const nextTitle = window.prompt('Rename favorite', favorite.title)?.trim()
-
-    if (!nextTitle) {
-      return
-    }
-
+  // Rename a saved favorite snapshot through the cloud collection so the Favorites tab exposes the same inline editing affordance as document rows.
+  const handleRenameFavorite = (favoriteId: string, nextTitle: string) => {
     void renameFavorite(favoriteId, nextTitle).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : 'Unable to rename this favorite right now.'
 

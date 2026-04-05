@@ -56,7 +56,7 @@ export interface SidebarProps {
   onSignOut: () => void
   onCreateDocument: () => void
   onUseFavorite: (favoriteId: string) => void
-  onRenameFavorite: (favoriteId: string) => void
+  onRenameFavorite: (favoriteId: string, nextTitle: string) => void
   onDeleteFavorite: (favoriteId: string) => void
   onDownloadDocument: (documentId: string) => void
   onDeleteDocument: (documentId: string) => void

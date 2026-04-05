@@ -18,7 +18,7 @@ export interface FavoriteListProps {
   items: WorkspaceFavorite[]
   isLoading?: boolean
   onUseFavorite: (favoriteId: string) => void
-  onRenameFavorite: (favoriteId: string) => void
+  onRenameFavorite: (favoriteId: string, nextTitle: string) => void
   onDeleteFavorite: (favoriteId: string) => void
 }
 
@@ -58,7 +58,7 @@ export function FavoriteList({
             key: 'rename',
             label: 'Rename',
             icon: IconPencil,
-            onSelect: () => onRenameFavorite(item.id),
+            onSelect: () => onRenameFavorite(item.id, item.title),
           },
           {
             key: 'create-document',
@@ -81,6 +81,7 @@ export function FavoriteList({
             item={favoriteRow}
             leadingIcon={IconStar}
             menuItems={menuItems}
+            onRenameDocument={onRenameFavorite}
             onOpenDocument={() => onUseFavorite(item.id)}
           />
         )
