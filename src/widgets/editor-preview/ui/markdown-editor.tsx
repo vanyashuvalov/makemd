@@ -63,15 +63,20 @@ function createMarkdownEditorTheme(isMobile: boolean) {
         minHeight: isMobile ? '100%' : '100%',
         backgroundColor: 'transparent',
         color: 'var(--color-foreground)',
+        // iPhone Safari zooms focused editable controls when the actual editor root is smaller than 16px, so the mobile editor keeps the minimum size at the root instead of only on the scroll container.
+        fontSize: isMobile ? '16px' : '15px',
+        WebkitTextSizeAdjust: '100%',
       },
       '.cm-scroller': {
         fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace)',
-        // Keep the mobile editor at 16px or larger so iPhone Safari does not auto-zoom the page when the markdown field receives focus.
-        fontSize: isMobile ? '16px' : '15px',
         lineHeight: '24px',
         overflow: isMobile ? 'visible' : 'auto',
       },
+      '.cm-gutters, .cm-lineNumbers, .cm-gutterElement': {
+        fontSize: isMobile ? '16px' : '15px',
+      },
       '.cm-content': {
+        fontSize: isMobile ? '16px' : '15px',
         caretColor: 'var(--color-foreground)',
         padding: isMobile ? '32px 16px 96px 12px' : '32px 24px 96px 16px',
       },
