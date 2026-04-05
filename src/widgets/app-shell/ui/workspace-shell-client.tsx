@@ -517,6 +517,10 @@ export function WorkspaceShellClient({
 
   // Toggle the read-only Help document from the sidebar footer so the right-hand pane behaves like a workspace mode switch instead of a separate route.
   const toggleHelpDocument = () => {
+    if (window.location.hash) {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+    }
+
     setIsHelpDocumentOpen((current) => !current)
   }
 
