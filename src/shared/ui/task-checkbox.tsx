@@ -19,12 +19,12 @@ export function TaskCheckbox({ checked, className, style }: TaskCheckboxProps) {
   return (
     <span
       aria-hidden="true"
-      className={cn('inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border border-solid box-border leading-none', className)}
+      className={cn('inline-grid h-4 w-4 shrink-0 place-items-center overflow-hidden rounded-[5px] border-[1.5px] border-solid box-border leading-none', className)}
       style={style}
     >
       {checked ? (
-        <svg aria-hidden="true" viewBox="0 0 16 16" width="11" height="11" fill="none" style={{ display: 'block' }}>
-          <path d="M3 8.5L6.2 11.7L13 4.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="10" height="10" fill="none" style={{ display: 'block' }}>
+          <path d="M3 8.5L6.2 11.7L13 4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ) : null}
     </span>

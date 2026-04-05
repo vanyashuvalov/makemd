@@ -10,7 +10,7 @@ import { Children, isValidElement, type CSSProperties, type ReactElement, type R
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
-import { containsTaskCheckboxNode } from '@/shared/lib/markdown-task-list'
+import { hasTaskListContainerClassName, hasTaskListItemClassName } from '@/shared/lib/markdown-task-list'
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
@@ -157,16 +157,19 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         {children}
       </blockquote>
     ),
-    ul: ({ children, ...props }) => {
+    ul: ({ children, className, ...props }) => {
+      const isTaskList = hasTaskListContainerClassName(className)
+
       return (
         <ul
           {...props}
           style={{
             ...textStyle,
             margin: '0 0 0.85rem',
-            paddingLeft: '1.25rem',
+            paddingLeft: isTaskList ? 0 : '1.25rem',
             fontSize: '0.95rem',
             lineHeight: '1.75',
+            listStyleType: isTaskList ? 'none' : undefined,
           }}
         >
           {children}
@@ -188,9 +191,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       </ol>
     ),
     li: ({ children, className, ...props }) => {
-      // Flatten task list items based on the rendered checkbox primitive or the remark-gfm task-item marker so the PDF keeps the same marker geometry as the live preview.
-      const isTaskListItem =
-        typeof className === 'string' && className.includes('task-list-item') ? true : containsTaskCheckboxNode(children)
+      // Flatten task list items based on the remark-gfm task-item marker so the PDF keeps the same marker geometry as the live preview.
+      const isTaskListItem = hasTaskListItemClassName(className)
 
       return (
         <li
@@ -203,7 +205,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
             listStyleType: isTaskListItem ? 'none' : undefined,
             display: isTaskListItem ? 'flex' : undefined,
             alignItems: isTaskListItem ? 'center' : undefined,
-            gap: isTaskListItem ? '0.35rem' : undefined,
+            gap: isTaskListItem ? '0.4rem' : undefined,
             paddingLeft: isTaskListItem ? 0 : undefined,
           }}
         >
@@ -399,7 +401,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
     input: ({ checked }) => (
       <TaskCheckbox
         checked={Boolean(checked)}
-        className="mt-[0.15rem] h-4 w-4"
+        className="mt-[0.15rem]"
         style={{
           borderColor: checked ? theme.taskMarkerBorder : theme.foreground,
           backgroundColor: checked ? theme.taskMarkerBackground : 'transparent',

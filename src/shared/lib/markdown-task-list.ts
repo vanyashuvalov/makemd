@@ -1,49 +1,24 @@
 /**
  * File: src/shared/lib/markdown-task-list.ts
- * Purpose: Shared detection helper for markdown task-list nodes rendered by react-markdown and remark-gfm.
- * Why it exists: the preview and PDF renderers both need to identify task items reliably without depending on parser-specific className output.
- * What it does: inspects a shallow slice of the rendered markdown tree and reports whether it contains the shared task-checkbox primitive or a remark-gfm task-item marker.
+ * Purpose: Shared detection helpers for markdown task-list nodes rendered by react-markdown and remark-gfm.
+ * Why it exists: the preview and PDF renderers both need a single source of truth for task-list layout without relying on brittle list styling.
+ * What it does: detects task-list containers and items from remark-gfm class names while still exposing the shared task-checkbox primitive for future reuse.
  * Connected to: `markdown-renderer.tsx`, `pdf-markdown-document.tsx`, and the shared `TaskCheckbox` primitive.
  */
-import { Children, isValidElement, type ReactElement, type ReactNode } from 'react'
+import { Children, isValidElement, type ReactNode } from 'react'
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 
-// Inspect only a shallow subtree so list-item styling can detect task-list checkboxes without recursively walking the entire React tree.
+// Detect the remark-gfm task-list container marker so the renderer can remove default list padding only for checkbox lists.
+export function hasTaskListContainerClassName(className?: string) {
+  return typeof className === 'string' && className.includes('contains-task-list')
+}
+
+// Detect the remark-gfm task-item marker so the renderer can suppress bullets and align the checkbox/text row.
+export function hasTaskListItemClassName(className?: string) {
+  return typeof className === 'string' && className.includes('task-list-item')
+}
+
+// Keep a lightweight checkbox-node probe available for any future custom markdown tree integrations that need to inspect rendered children directly.
 export function containsTaskCheckboxNode(node: ReactNode): boolean {
-  const queue: Array<{ value: ReactNode; depth: number }> = Children.toArray(node).map((value) => ({
-    value,
-    depth: 0,
-  }))
-
-  while (queue.length > 0) {
-    const current = queue.shift()
-
-    if (!current) {
-      continue
-    }
-
-    const { value, depth } = current
-
-    if (!isValidElement(value)) {
-      continue
-    }
-
-    const element = value as ReactElement<{ className?: string; children?: ReactNode }>
-    const className = typeof element.props.className === 'string' ? element.props.className : ''
-
-    if (element.type === TaskCheckbox || className.includes('task-list-item')) {
-      return true
-    }
-
-    if (depth < 2) {
-      queue.push(
-        ...Children.toArray(element.props.children).map((child) => ({
-          value: child,
-          depth: depth + 1,
-        }))
-      )
-    }
-  }
-
-  return false
+  return Children.toArray(node).some((child) => isValidElement(child) && child.type === TaskCheckbox)
 }
