@@ -319,9 +319,14 @@ export function WorkspaceShellClient({
     })
   }
 
-  // Keep the editor content aligned with the currently active document so opening a history row updates the workspace canvas instead of only the sidebar state.
+  // Keep the editor content aligned with the currently active document, but only advance the document freshness stamp when the markdown text itself actually changed.
   const syncMarkdownToActiveDocument = (nextMarkdown: string) => {
     setMarkdown(nextMarkdown)
+
+    if (nextMarkdown === (activeDocument?.markdown ?? '')) {
+      return
+    }
+
     setDocuments((current) =>
       current.map((document) => (document.active ? { ...document, markdown: nextMarkdown, ...createWorkspaceDocumentFreshness() } : document))
     )

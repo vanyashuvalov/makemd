@@ -91,8 +91,6 @@ export function createWorkspaceDocumentsSignature(documents: DocumentRecord[]) {
       [
         document.id,
         document.title,
-        document.active ? '1' : '0',
-        document.withMenu ? '1' : '0',
         document.markdown ?? '',
       ].join('::')
     )
@@ -103,6 +101,7 @@ export function createWorkspaceDocumentsSignature(documents: DocumentRecord[]) {
 export function formatWorkspaceCloudUpdatedLabel(updatedAt: string | null | undefined) {
   return formatDocumentUpdatedLabel(updatedAt)
 }
+
 
 
 

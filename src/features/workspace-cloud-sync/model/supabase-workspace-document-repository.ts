@@ -26,9 +26,14 @@ type SupabaseDocumentsRow = {
   updated_at: string | null
 }
 
+type SupabaseDocumentTimestampRow = {
+  id: string
+  updated_at: string | null
+}
+
 export interface WorkspaceCloudDocumentRepository {
   load: (userId: string) => Promise<DocumentRecord[]>
-  save: (userId: string, documents: DocumentRecord[]) => Promise<void>
+  save: (userId: string, documents: DocumentRecord[]) => Promise<Array<{ id: string; updatedAt: string }>>
   delete: (userId: string, documentIds: string[]) => Promise<void>
 }
 
@@ -81,7 +86,7 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
     },
     async save(userId, documents) {
       if (documents.length === 0) {
-        return
+        return []
       }
 
       const supabase = getSupabaseBrowserClient()
@@ -124,6 +129,25 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
           }
         })
       )
+
+      // Read back the DB-assigned `updated_at` values after the write so the UI can display the same freshness timestamps that Supabase stored, instead of trusting the browser clock.
+      const savedDocumentIds = upsertRows.map((row) => row.id)
+      const { data: timestampRows, error: timestampError } = await supabase
+        .from('documents')
+        .select('id, updated_at')
+        .eq('user_id', userId)
+        .in('id', savedDocumentIds)
+
+      if (timestampError) {
+        throw timestampError
+      }
+
+      return ((timestampRows as SupabaseDocumentTimestampRow[] | null | undefined) ?? [])
+        .filter((row) => Boolean(row.id && row.updated_at))
+        .map((row) => ({
+          id: row.id,
+          updatedAt: row.updated_at as string,
+        }))
     },
     async delete(userId, documentIds) {
       if (documentIds.length === 0) {

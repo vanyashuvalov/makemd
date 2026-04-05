@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DocumentRecord, WorkspaceSidebarSection, WorkspaceSnapshot } from '@/entities/document/model/types'
+import { formatDocumentUpdatedLabel } from '@/entities/document/model/document-updated'
 import {
   createWorkspaceDocumentsSignature,
   type WorkspaceCloudDocumentRepository,
@@ -135,7 +136,27 @@ export function useWorkspaceCloudSync({
           }
 
           if (documents.length > 0) {
-            await repository.save(userId, documents)
+            const savedTimestamps = await repository.save(userId, documents)
+            const savedTimestampMap = new Map(savedTimestamps.map((item) => [item.id, item.updatedAt]))
+
+            // Merge the DB-provided timestamps back into local state so the sidebar labels and sort order reflect the same `updated_at` values that Supabase just wrote.
+            if (savedTimestampMap.size > 0) {
+              setDocuments((current) =>
+                current.map((document) => {
+                  const updatedAt = savedTimestampMap.get(document.id)
+
+                  if (!updatedAt) {
+                    return document
+                  }
+
+                  return {
+                    ...document,
+                    updatedAt,
+                    updatedLabel: formatDocumentUpdatedLabel(updatedAt),
+                  }
+                })
+              )
+            }
           }
 
           lastSavedSignatureRef.current = nextSignature
@@ -152,7 +173,7 @@ export function useWorkspaceCloudSync({
         window.clearTimeout(saveTimerRef.current)
       }
     }
-  }, [documents, editorMarkdown, enabled, liveDocumentsSignature, repository, sidebarSection, userId])
+  }, [documents, editorMarkdown, enabled, liveDocumentsSignature, repository, setDocuments, sidebarSection, userId])
 
   // Clear any pending sync debounce when the hook unmounts so the browser does not try to write a stale draft after the workspace leaves the page.
   useEffect(
