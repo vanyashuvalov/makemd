@@ -10,6 +10,7 @@ import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/shared/lib/cn'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
+import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
 function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): Components {
@@ -381,23 +382,20 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
     },
     input: ({ checked }) =>
       exportMode ? (
-        <span
-          aria-hidden="true"
-          className="inline-flex w-4 shrink-0 items-center justify-center font-mono text-[0.95rem] leading-6"
-          style={{ color: theme.foreground }}
-        >
-          {checked ? '☑' : '☐'}
-        </span>
+        <TaskCheckbox
+          checked={Boolean(checked)}
+          className="inline-flex h-4 w-4 translate-y-[1px]"
+          style={{
+            border: `1px solid ${checked ? theme.taskMarkerBorder : theme.foreground}`,
+            backgroundColor: checked ? theme.taskMarkerBackground : 'transparent',
+            color: checked ? theme.taskMarkerForeground : theme.foreground,
+          }}
+        />
       ) : (
-        <span
-          aria-hidden="true"
-          className={cn(
-            'mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border border-black/50 bg-transparent',
-            checked && 'border-black bg-black'
-          )}
-        >
-          {checked ? <span className="text-[0.7rem] leading-none text-white">✓</span> : null}
-        </span>
+        <TaskCheckbox
+          checked={Boolean(checked)}
+          className={cn('mt-1 h-4 w-4 translate-y-[1px]', checked ? 'border-black bg-black text-white' : 'border border-black/50 bg-transparent text-black')}
+        />
       ),
     img: ({ alt, src, ...props }) =>
       exportMode ? (

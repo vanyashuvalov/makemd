@@ -10,6 +10,7 @@ import { Children, isValidElement, type CSSProperties, type ReactElement, type R
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
+import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
 export interface PdfMarkdownDocumentProps {
@@ -395,31 +396,15 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       )
     },
     input: ({ checked }) => (
-      <span
-        aria-hidden="true"
+      <TaskCheckbox
+        checked={Boolean(checked)}
+        className="mt-[0.15rem] h-4 w-4"
         style={{
-          display: 'inline-flex',
-          width: '1rem',
-          height: '1rem',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginTop: '0.15rem',
           border: `1px solid ${checked ? theme.taskMarkerBorder : theme.foreground}`,
-          borderRadius: '0.25rem',
           backgroundColor: checked ? theme.taskMarkerBackground : 'transparent',
           color: checked ? theme.taskMarkerForeground : theme.foreground,
-          fontSize: '0.75rem',
-          fontWeight: 700,
-          lineHeight: 1,
-          flexShrink: 0,
         }}
-      >
-        {checked ? (
-          <svg aria-hidden="true" viewBox="0 0 16 16" width="10" height="10" fill="none">
-            <path d="M3 8.5L6.2 11.7L13 4.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : null}
-      </span>
+      />
     ),
     img: ({ alt, src, ...props }) => (
       // eslint-disable-next-line @next/next/no-img-element
