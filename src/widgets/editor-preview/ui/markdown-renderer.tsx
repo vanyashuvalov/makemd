@@ -393,21 +393,17 @@ function createMarkdownComponents(exportMode: boolean, theme: PdfPreviewTheme): 
         <TaskCheckbox
           checked={Boolean(checked)}
           className="translate-y-[1px]"
-          style={{
-            borderColor: checked ? theme.taskMarkerBorder : theme.foreground,
-            backgroundColor: checked ? theme.taskMarkerBackground : theme.background,
-            color: checked ? theme.taskMarkerForeground : theme.foreground,
-          }}
+          fillColor={checked ? theme.taskMarkerBackground : theme.background}
+          borderColor={checked ? theme.taskMarkerBorder : theme.foreground}
+          checkColor={theme.taskMarkerForeground}
         />
       ) : (
         <TaskCheckbox
           checked={Boolean(checked)}
           className="mt-1 translate-y-[1px]"
-          style={{
-            borderColor: checked ? theme.taskMarkerBorder : theme.foreground,
-            backgroundColor: checked ? theme.taskMarkerBackground : theme.background,
-            color: checked ? theme.taskMarkerForeground : theme.foreground,
-          }}
+          fillColor={checked ? theme.taskMarkerBackground : theme.background}
+          borderColor={checked ? theme.taskMarkerBorder : theme.foreground}
+          checkColor={theme.taskMarkerForeground}
         />
       ),
     img: ({ alt, src, ...props }) =>

@@ -405,11 +405,9 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       <TaskCheckbox
         checked={Boolean(checked)}
         className="mt-[0.15rem]"
-        style={{
-          borderColor: checked ? theme.taskMarkerBorder : theme.foreground,
-          backgroundColor: checked ? theme.taskMarkerBackground : theme.background,
-          color: checked ? theme.taskMarkerForeground : theme.foreground,
-        }}
+        fillColor={checked ? theme.taskMarkerBackground : theme.background}
+        borderColor={checked ? theme.taskMarkerBorder : theme.foreground}
+        checkColor={theme.taskMarkerForeground}
       />
     ),
     img: ({ alt, src, ...props }) => (

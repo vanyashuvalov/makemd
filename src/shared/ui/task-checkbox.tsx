@@ -12,21 +12,47 @@ export interface TaskCheckboxProps {
   checked: boolean
   className?: string
   style?: CSSProperties
+  fillColor?: string
+  borderColor?: string
+  checkColor?: string
 }
 
 // Render the checkbox as a passive visual marker so markdown task-list items can share one glyph between screen preview and exported PDF output.
-export function TaskCheckbox({ checked, className, style }: TaskCheckboxProps) {
+export function TaskCheckbox({
+  checked,
+  className,
+  style,
+  fillColor = 'transparent',
+  borderColor = 'currentColor',
+  checkColor = 'currentColor',
+}: TaskCheckboxProps) {
   return (
     <span
       aria-hidden="true"
-      className={cn('inline-grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-[4px] border-2 border-solid box-border leading-none', className)}
+      className={cn('inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden leading-none', className)}
       style={style}
     >
-      {checked ? (
-        <svg aria-hidden="true" viewBox="0 0 16 16" width="12" height="12" fill="none" style={{ display: 'block' }}>
-          <path d="M3 8.5L6.2 11.7L13 4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ) : null}
+      <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" style={{ display: 'block' }}>
+        <rect
+          x="2"
+          y="2"
+          width="16"
+          height="16"
+          rx="3.75"
+          fill={checked ? borderColor : fillColor}
+          stroke={borderColor}
+          strokeWidth="1.5"
+        />
+        {checked ? (
+          <path
+            d="M5.25 10.25L8.15 13.15L14.75 6.75"
+            stroke={checkColor}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ) : null}
+      </svg>
     </span>
   )
 }
