@@ -407,7 +407,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
         className="mt-[0.15rem]"
         style={{
           borderColor: checked ? theme.taskMarkerBorder : theme.foreground,
-          backgroundColor: checked ? theme.taskMarkerBackground : 'transparent',
+          backgroundColor: checked ? theme.taskMarkerBackground : theme.background,
           color: checked ? theme.taskMarkerForeground : theme.foreground,
         }}
       />
