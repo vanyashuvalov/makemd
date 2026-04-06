@@ -239,7 +239,6 @@ export function Sidebar({
         <Separator className="bg-white/10" />
         <div className="space-y-1 text-sm leading-[18px] text-sidebar-muted-foreground">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm">makemd &copy; 2026</span>
             <button
               type="button"
               className={footerLinkClassName}
@@ -248,17 +247,16 @@ export function Sidebar({
               <Icon icon={IconHelpCircle} size="sm" tone="sidebarMuted" />
               <span className="text-sm leading-[18px]">Help</span>
             </button>
-          </div>
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {/* Keep the author credit and portfolio link collapsed into the same footer line so the sidebar stays compact and the link is easy to discover. */}
             <a
               href="https://ivanshuvalov.vercel.app/"
               target="_blank"
               rel="noreferrer"
               className={footerLinkClassName}
             >
-              <span className="text-sm leading-[18px]">vanya was here</span>
+              <span className="text-sm leading-[18px]">made by ivan &copy; 2026</span>
             </a>
-          </p>
+          </div>
         </div>
       </div>
     </aside>
