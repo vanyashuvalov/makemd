@@ -6,8 +6,16 @@
  * Connected to: document actions, PDF export routing, and any future download/export surfaces.
  */
 
-// Normalize user-facing document titles into a predictable file name that stays valid across browser and OS download targets.
+// Normalize user-facing document titles into a predictable file name that stays valid across browser and OS download targets without stripping non-Latin characters or human-readable spacing.
 export function buildDocumentFileName(title: string, extension: string) {
-  const normalizedTitle = title.replace(/[^\w.-]+/g, '-').toLowerCase()
-  return `${normalizedTitle}.${extension}`
+  const normalizedTitle = title
+    .normalize('NFKC')
+    .trim()
+    .replace(/[<>:"/\\|?*\u0000-\u001F]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/ +/g, ' ')
+    .replace(/^ +| +$/g, '')
+    .toLowerCase()
+
+  return `${normalizedTitle || 'document'}.${extension}`
 }
