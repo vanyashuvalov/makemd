@@ -52,8 +52,15 @@ function isAllowedPdfExportRequest(request: NextRequest) {
 
 // Build the Content-Disposition header for a PDF attachment so browsers save the generated document using the same filename the UI expects.
 function createPdfAttachmentDisposition(fileName: string) {
-  const escapedFileName = fileName.replaceAll('"', '')
-  return `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
+  const asciiFallbackFileName = fileName
+    .normalize('NFKD')
+    .replace(/[^\x20-\x7E]+/g, '')
+    .replace(/"/g, '')
+    .trim()
+
+  const safeAsciiFileName = asciiFallbackFileName || 'document.pdf'
+
+  return `attachment; filename="${safeAsciiFileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
 }
 
 async function readPdfExportRequest(request: NextRequest) {
