@@ -25,14 +25,14 @@ for each row execute function public.set_updated_at();
 -- Keep the quota table private; the route only needs the RPC surface, not direct table access from the client.
 revoke all on table public.pdf_download_quotas from anon, authenticated, public;
 
--- Claim one PDF download slot for the current authenticated user if the daily cap has not been reached yet.
+-- Claim one PDF download slot for the current authenticated user if the daily cap has not been reached yet, returning the UTC day as `quota_day` to avoid PL/pgSQL name collisions.
 create or replace function public.claim_pdf_download_quota(p_daily_limit integer)
 returns table (
   allowed boolean,
   used_count integer,
   daily_limit integer,
   remaining_count integer,
-  quota_date date
+  quota_day date
 )
 language plpgsql
 security definer
@@ -49,11 +49,11 @@ begin
     return;
   end if;
 
-  insert into public.pdf_download_quotas (user_id, quota_date, download_count)
+  insert into public.pdf_download_quotas as quota_ledger (user_id, quota_date, download_count)
   values (current_user_id, current_quota_date, 1)
   on conflict (user_id, quota_date) do update
-    set download_count = public.pdf_download_quotas.download_count + 1
-    where public.pdf_download_quotas.download_count < p_daily_limit
+    set download_count = quota_ledger.download_count + 1
+    where quota_ledger.download_count < p_daily_limit
   returning download_count into next_download_count;
 
   if not found then
@@ -81,14 +81,14 @@ begin
 end;
 $$;
 
--- Roll back one claimed PDF download slot if the export fails after the quota was already reserved.
+-- Roll back one claimed PDF download slot if the export fails after the quota was already reserved, using the same `quota_day` output name as the claim function.
 create or replace function public.release_pdf_download_quota(p_daily_limit integer)
 returns table (
   allowed boolean,
   used_count integer,
   daily_limit integer,
   remaining_count integer,
-  quota_date date
+  quota_day date
 )
 language plpgsql
 security definer
@@ -105,12 +105,12 @@ begin
     return;
   end if;
 
-  update public.pdf_download_quotas
-    set download_count = greatest(download_count - 1, 0)
-    where user_id = current_user_id
-      and quota_date = current_quota_date
-      and download_count > 0
-  returning download_count into next_download_count;
+  update public.pdf_download_quotas as quota_ledger
+    set download_count = greatest(quota_ledger.download_count - 1, 0)
+    where quota_ledger.user_id = current_user_id
+      and quota_ledger.quota_date = current_quota_date
+      and quota_ledger.download_count > 0
+  returning quota_ledger.download_count into next_download_count;
 
   if not found then
     select pdf_download_quotas.download_count

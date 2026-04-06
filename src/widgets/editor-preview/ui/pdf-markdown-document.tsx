@@ -14,6 +14,9 @@ import { containsTaskCheckboxNode, hasTaskListContainerClassName, hasTaskListIte
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
+const pdfSansFontFamily = `var(--font-sans, "Geist", ui-sans-serif, system-ui, sans-serif)`
+const pdfMonoFontFamily = `var(--font-mono, "Geist Mono", ui-monospace, SFMono-Regular, monospace)`
+
 export interface PdfMarkdownDocumentProps {
   title: string
   markdown: string
@@ -31,7 +34,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
   const headingStyle = (fontSize: string, lineHeight: string, marginTop: string): CSSProperties => ({
     ...textStyle,
     marginTop,
-    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    fontFamily: pdfSansFontFamily,
     fontWeight: 600,
     letterSpacing: '-0.04em',
     lineHeight,
@@ -44,7 +47,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
     border: `1px solid ${theme.border}`,
     borderRadius: '14px',
     display: 'block',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontFamily: pdfMonoFontFamily,
     fontSize: '0.95rem',
     lineHeight: '1.6',
     margin: 0,
@@ -354,7 +357,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
                     borderRadius: '9999px',
                     padding: '0.2rem 0.55rem',
                     fontSize: '0.72rem',
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                    fontFamily: pdfMonoFontFamily,
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
                     color: theme.mutedForeground,
@@ -366,11 +369,11 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
               </div>
 
               <div style={{ padding: '0.75rem 1rem 1rem' }}>
-                <code
-                  style={{
-                    ...blockCodeStyle,
-                    border: 0,
-                    padding: 0,
+                  <code
+                    style={{
+                      ...blockCodeStyle,
+                      border: 0,
+                      padding: 0,
                     backgroundColor: 'transparent',
                     whiteSpace: 'pre-wrap',
                   }}
@@ -443,6 +446,8 @@ export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreview
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
         <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+
           @page {
             size: A4 portrait;
             margin: 18mm 16mm 20mm;
@@ -456,10 +461,16 @@ export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreview
             color: ${theme.foreground};
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            font-family: ${pdfSansFontFamily};
+          }
+
+          :root {
+            --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+            --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
           }
 
           body {
-            font-family: ui-sans-serif, system-ui, sans-serif;
+            font-family: ${pdfSansFontFamily};
           }
         `}</style>
       </head>

@@ -22,7 +22,7 @@ type PdfDownloadQuotaRpcRow = {
   used_count: number
   daily_limit: number
   remaining_count: number
-  quota_date: string
+  quota_day: string
 }
 
 // Normalize the RPC response into a stable shape so the route can reason about quota state without depending on raw Supabase row names.
@@ -42,7 +42,7 @@ function mapPdfDownloadQuotaRow(row: PdfDownloadQuotaRpcRow | null | undefined):
     usedCount: row.used_count,
     remainingCount: row.remaining_count,
     dailyLimit: row.daily_limit,
-    quotaDate: row.quota_date,
+    quotaDate: row.quota_day,
   }
 }
 
