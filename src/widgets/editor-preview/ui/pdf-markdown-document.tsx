@@ -14,8 +14,8 @@ import { containsTaskCheckboxNode, hasTaskListContainerClassName, hasTaskListIte
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
-const pdfSansFontFamily = `var(--font-sans, "Geist", ui-sans-serif, system-ui, sans-serif)`
-const pdfMonoFontFamily = `var(--font-mono, "Geist Mono", ui-monospace, SFMono-Regular, monospace)`
+const pdfSansFontFamily = `var(--font-sans, "Inter", ui-sans-serif, system-ui, sans-serif)`
+const pdfMonoFontFamily = `var(--font-mono, ui-monospace, SFMono-Regular, monospace)`
 
 export interface PdfMarkdownDocumentProps {
   title: string
@@ -446,7 +446,7 @@ export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreview
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
           @page {
             size: A4 portrait;
@@ -465,8 +465,8 @@ export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreview
           }
 
           :root {
-            --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-            --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+            --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, monospace;
           }
 
           body {
