@@ -12,7 +12,8 @@ import {
   type PdfOptions,
 } from '@/widgets/editor-preview/model/pdf-options'
 import { documentAccentColors } from '@/widgets/editor-preview/model/pdf-theme'
-import { documentFonts } from '@/widgets/editor-preview/ui/markdown-document-content'
+import { Button } from '@/shared/ui/button'
+import { IconButton } from '@/shared/ui/icon-button'
 
 export function DocumentCustomization({
   options,
@@ -43,65 +44,66 @@ export function DocumentCustomization({
 
   return (
     <details ref={details} className="group">
-      <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-md py-1 text-foreground [&::-webkit-details-marker]:hidden">
-        <IconAdjustmentsHorizontal size={15} stroke={1.6} />
+      <summary className="flex h-10 cursor-pointer list-none items-center gap-2 rounded-full px-3 text-sidebar-foreground hover:bg-sidebar-icon-hover [&::-webkit-details-marker]:hidden">
+        <IconAdjustmentsHorizontal size={20} stroke={1.6} />
         Customize
       </summary>
       <section
         aria-label="Document appearance"
-        className="absolute bottom-[calc(100%+12px)] left-0 max-h-[calc(100dvh-120px)] w-[320px] max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-2xl border border-black/10 bg-[#fffefa] p-5 text-[13px] text-[#252522] shadow-[0_8px_32px_#00000012]"
+        className="absolute bottom-[calc(100%+12px)] left-0 max-h-[calc(100dvh-120px)] w-[360px] max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-[24px] border border-sidebar-border bg-sidebar-surface p-6 text-base text-sidebar-foreground shadow-none"
       >
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-medium">Make it yours</h2>
-            <p className="mt-1 text-xs text-[#77766f]">
+            <h2 className="text-2xl font-medium">Customize</h2>
+            <p className="mt-1 text-sm text-sidebar-muted-foreground">
               Saved with this document
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="text"
+              size="sm"
               aria-label="Reset style"
-              className="rounded-md px-1 py-1 text-xs text-[#77766f] hover:text-black"
+              className="px-1"
               onClick={() => onChange({ ...defaultPdfOptions })}
             >
               Reset
-            </button>
-            <button
-              type="button"
+            </Button>
+            <IconButton
+              size="sm"
+              variant="ghost"
               aria-label="Close customization"
               onClick={() => {
                 if (details.current) details.current.open = false
               }}
-              className="rounded-md p-1.5 hover:bg-black/5"
             >
-              <IconX size={17} />
-            </button>
+              <IconX size={20} />
+            </IconButton>
           </div>
         </div>
         <fieldset className="mb-5">
-          <legend className="mb-2 text-xs text-[#77766f]">Style</legend>
-          <div className="grid grid-cols-3 gap-1 rounded-lg bg-black/[0.035] p-1">
+          <legend className="mb-3 text-sm text-sidebar-muted-foreground">Style</legend>
+          <div className="grid grid-cols-3 gap-2">
             {Object.entries(documentPresets).map(([name, preset]) => {
               const selected = Object.entries(preset).every(
                 ([key, value]) => options[key as keyof PdfOptions] === value
               )
               return (
-                <button
-                  type="button"
+                <Button
+                  variant={selected ? 'primary' : 'sidebar'}
+                  size="sm"
                   key={name}
                   aria-pressed={selected}
                   onClick={() => onChange({ ...options, ...preset })}
-                  className={`rounded-md px-2 py-2.5 ${selected ? 'bg-white shadow-sm' : 'hover:bg-white/60'}`}
-                  style={{ fontFamily: documentFonts[preset.font] }}
+                  className="px-3"
                 >
                   {name}
-                </button>
+                </Button>
               )
             })}
           </div>
         </fieldset>
-        <div className="space-y-4">
+        <div className="space-y-2">
           <Option
             label="Font"
             value={options.font}
@@ -136,11 +138,11 @@ export function DocumentCustomization({
                       accent: name as PdfOptions['accent'],
                     })
                   }
-                  className="flex h-7 w-7 items-center justify-center rounded-full ring-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-sidebar-checkbox-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   style={{ background: color }}
                 >
                   {options.accent === name && (
-                    <IconCheck size={14} color="white" stroke={2} />
+                    <IconCheck size={16} color="white" stroke={2} />
                   )}
                 </button>
               ))}
@@ -153,8 +155,8 @@ export function DocumentCustomization({
             choices={{ white: 'White', warm: 'Warm' }}
           />
         </div>
-        <div className="my-5 border-t border-black/[0.07]" />
-        <div className="space-y-4">
+        <div className="my-5 border-t border-white/10" />
+        <div className="space-y-2">
           <Option
             label="Page size"
             ariaLabel="PDF paper size"
@@ -195,7 +197,7 @@ function Option<T extends string>({
         aria-label={ariaLabel ?? label}
         value={value}
         onChange={(event) => onChange(event.target.value as T)}
-        className="max-w-36 rounded-md bg-transparent py-1 pl-2 text-right outline-offset-4"
+        className="h-10 max-w-36 cursor-pointer rounded-full border border-white/10 bg-sidebar-icon px-3 text-sm text-sidebar-foreground outline-offset-4 [color-scheme:dark] focus-visible:outline-primary"
       >
         {Object.entries(choices).map(([key, text]) => (
           <option key={key} value={key}>

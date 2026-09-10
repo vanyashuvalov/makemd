@@ -30,12 +30,13 @@ export function WorkspaceTools({
 }) {
   return (
     <>
-      <div className="fixed left-3 bottom-10 z-20 flex items-center gap-4 bg-card px-3 py-2 text-xs lg:left-[380px]">
-        <button type="button" onClick={() => onImport()}>
+      <div className="fixed left-3 bottom-10 z-20 flex items-center gap-1 rounded-full bg-sidebar-surface p-1 text-sm text-sidebar-foreground lg:left-[380px]">
+        <button type="button" className="h-10 cursor-pointer rounded-full px-3 hover:bg-sidebar-icon-hover" onClick={() => onImport()}>
           Import
         </button>
         <button
           type="button"
+          className="h-10 cursor-pointer rounded-full px-3 hover:bg-sidebar-icon-hover"
           onClick={() =>
             downloadBlob({
               blob: new Blob([encodeDocumentFile(markdown, pdfOptions)], {
