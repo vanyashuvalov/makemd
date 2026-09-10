@@ -14,7 +14,7 @@ import { runPdfTask } from '@/features/document-actions/model/pdf-browser'
 import { createSupabaseServerClient } from '@/shared/lib/supabase/server-client'
 import { PdfMarkdownDocument } from '@/widgets/editor-preview/ui/pdf-markdown-document'
 import { normalizePdfOptions } from '@/widgets/editor-preview/model/pdf-options'
-import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
+import { getEmbeddedDocumentFonts } from '@/features/document-actions/model/document-fonts-server'
 import {
   PDF_DOWNLOAD_DAILY_LIMIT,
   PDF_DOWNLOAD_GUEST_COOKIE_NAME,
@@ -153,8 +153,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const { renderToStaticMarkup } = await import('react-dom/server')
+    const fontCss = await getEmbeddedDocumentFonts()
     const html = renderToStaticMarkup(
-      <PdfMarkdownDocument title={title} markdown={markdown} theme={defaultPdfPreviewTheme} options={options} />
+      <PdfMarkdownDocument title={title} markdown={markdown} options={options} fontCss={fontCss} />
     )
 
     const pdfBuffer = await runPdfTask(async ({ page }) => {

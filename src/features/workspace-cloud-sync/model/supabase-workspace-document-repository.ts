@@ -6,6 +6,7 @@
  * Connected to: the workspace cloud sync hook, Supabase Auth session state, the `documents` table, and the private `markdown-files` bucket.
  */
 
+import { decodeDocumentFile, encodeDocumentFile } from '@/entities/document/lib/document-file'
 import type { DocumentRecord } from '@/entities/document/model/types'
 import {
   createDocumentUpdatedAt,
@@ -77,7 +78,7 @@ export function createSupabaseWorkspaceDocumentRepository(getClient = getSupabas
           title: row.title,
           updatedAt: row.updated_at ?? createDocumentUpdatedAt(),
           updatedLabel: formatDocumentUpdatedLabel(row.updated_at),
-          markdown: await loadMarkdownFromStorage(row.storage_path, supabase),
+          ...decodeDocumentFile(await loadMarkdownFromStorage(row.storage_path, supabase)),
           active: index === 0,
           withMenu: true,
         }))
@@ -110,7 +111,7 @@ export function createSupabaseWorkspaceDocumentRepository(getClient = getSupabas
           const storagePath = getWorkspaceCloudDocumentStoragePath(userId, cloudDocumentId)
           const { error: uploadError } = await supabase.storage.from('markdown-files').upload(
             storagePath,
-            createMarkdownBlob(document.markdown ?? ''),
+            createMarkdownBlob(encodeDocumentFile(document.markdown ?? '', document.options)),
             {
               upsert: true,
               contentType: 'text/markdown',

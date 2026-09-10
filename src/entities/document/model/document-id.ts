@@ -11,10 +11,13 @@ import type { DocumentRecord } from './types'
 // Generate a collision-resistant document id so repeated creates in the same millisecond do not reuse the same local identifier.
 export function createWorkspaceDocumentId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return `doc-${crypto.randomUUID()}`
+    return crypto.randomUUID()
   }
 
-  return `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const value = Math.floor(Math.random() * 16)
+    return (char === 'x' ? value : (value & 3) | 8).toString(16)
+  })
 }
 
 // Rebuild a document collection with unique ids so downstream storage paths and database keys never collide after a stale restore or a bad local draft.

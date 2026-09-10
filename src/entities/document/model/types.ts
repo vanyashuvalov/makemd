@@ -1,3 +1,5 @@
+import type { PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
+
 /**
  * File: src/entities/document/model/types.ts
  * Purpose: Shared document and workspace types for the mockups and future data model.
@@ -15,6 +17,7 @@ export type WorkspaceAccount = {
 }
 
 export type DocumentRecord = {
+  options?: PdfOptions
   id: string
   title: string
   updatedAt?: string

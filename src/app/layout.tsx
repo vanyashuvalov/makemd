@@ -5,6 +5,7 @@
  * What it does: wires Inter fonts, global styles, the root HTML/body scaffold, and Vercel Web Analytics.
  * Connected to: `src/app/globals.css`, the home page, Vercel's Analytics dashboard, and every future route rendered by Next.js.
  */
+import { documentFontCss } from '@/widgets/editor-preview/model/document-fonts'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -18,7 +19,7 @@ const interSans = Inter({
 
 export const metadata: Metadata = {
   title: 'makemd',
-  description: 'Markdown to PDF workspace inspired by the current Figma mockups.',
+  description: 'Write Markdown. Make it yours. Export a beautifully styled PDF.',
 }
 
 export default function RootLayout({
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={interSans.variable}>
       <body>
+        <style>{documentFontCss}</style>
         {/* Render analytics after the shared app content so page views are captured from the single root shell. */}
         {children}
         <Analytics />

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DocumentRecord, WorkspaceSidebarSection, WorkspaceSnapshot } from '@/entities/document/model/types'
+import { canonicalizeWorkspaceDraft } from './canonicalize-workspace-draft'
 import { createWorkspaceDocumentId } from '@/entities/document/model/document-id'
 import { createDocumentTitle } from '@/entities/document/model/document-title'
 import { createWorkspaceDraftRecord, getWorkspaceDraftStorageKey, normalizeWorkspaceDraftRecord, requestPersistentWorkspaceStorage, type WorkspaceDraftScope } from './workspace-draft'
@@ -33,9 +34,10 @@ export function useWorkspaceDraftPersistence({ enabled, scope, account, document
     // Status reflects an external storage operation, including account-scope changes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus('loading')
-    void repository.load(storageKey).then((raw) => {
+    void repository.load(storageKey).then(async (raw) => {
       if (cancelled) return
-      const draft = normalizeWorkspaceDraftRecord(raw)
+      const draft = await canonicalizeWorkspaceDraft(normalizeWorkspaceDraftRecord(raw))
+      if (cancelled) return
       // Each identity owns its cache. Never move or delete another account's draft on login/logout.
       const restored = draft?.documents ?? (scope === 'authorized' ? [] : [{ id: createWorkspaceDocumentId(), title: createDocumentTitle(), markdown: '', updatedAt: new Date().toISOString(), updatedLabel: 'Just now', active: true, withMenu: true }])
       setDeletedDocumentIds(draft?.deletedDocumentIds ?? [])

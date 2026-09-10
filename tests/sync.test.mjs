@@ -112,3 +112,21 @@ test('draft serialization preserves cloud acknowledgement and offline deletions'
   assert.deepEqual(restored.deletedDocumentIds, ['deleted'])
   assert.equal(normalizeWorkspaceDraftRecord({ version: 1, documents: null }), null)
 })
+
+test('a new server snapshot cannot reset live documents', async () => {
+  const { useDocumentSelection } = await import('../src/features/document-selection/model/use-document-selection.ts')
+  const hook = renderHook(({ initial }) => useDocumentSelection(initial), { initialProps: { initial: [doc('server seed')] } })
+  act(() => hook.result.current.setDocuments([doc('local edit')]))
+  hook.rerender({ initial: [doc('refreshed server seed')] })
+  assert.equal(hook.result.current.documents[0].markdown, 'local edit')
+})
+
+test('legacy IDs, acknowledgements and pending deletions migrate to the same cloud IDs', async () => {
+  const { canonicalizeWorkspaceDraft } = await import('../src/features/workspace-persistence/model/canonicalize-workspace-draft.ts')
+  const { getWorkspaceCloudDocumentId } = await import('../src/features/workspace-cloud-sync/model/workspace-cloud-document.ts')
+  const old = { ...doc(), id: 'doc-legacy', options: { font: 'serif' } }
+  const migrated = await canonicalizeWorkspaceDraft({ documents: [{ ...old, cloudSyncedSignature: signature(old) }], deletedDocumentIds: ['doc-deleted'] })
+  assert.equal(migrated.documents[0].id, await getWorkspaceCloudDocumentId(old.id))
+  assert.equal(migrated.documents[0].cloudSyncedSignature, signature(migrated.documents[0]))
+  assert.deepEqual(migrated.deletedDocumentIds, [await getWorkspaceCloudDocumentId('doc-deleted')])
+})

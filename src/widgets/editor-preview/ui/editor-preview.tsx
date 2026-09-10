@@ -7,6 +7,9 @@
  */
 'use client'
 
+import type { PdfOptions } from '../model/pdf-options'
+import { normalizePdfOptions } from '../model/pdf-options'
+import { getDocumentTheme } from '../model/pdf-theme'
 import { useState } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { Tabs } from '@/shared/ui/tabs'
@@ -109,11 +112,15 @@ export function MarkdownPane({
 
 export function PreviewPane({
   markdown,
+  options,
   mobile = false,
 }: {
   markdown: string
+  options?: PdfOptions
   mobile?: boolean
 }) {
+  const settings = normalizePdfOptions(options)
+  const colors = getDocumentTheme(settings)
   // Render the markdown preview through the shared renderer so CommonMark and GFM features stay visually consistent with the source editor.
   return (
     <section
@@ -124,8 +131,8 @@ export function PreviewPane({
           : PREVIEW_FRAME_CLASSNAME
       )}
     >
-      <div className={cn(mobile ? PREVIEW_BODY_MOBILE_CLASSNAME : PREVIEW_BODY_CLASSNAME)}>
-        <MarkdownRenderer markdown={markdown} mobile={mobile} />
+      <div className={cn(mobile ? PREVIEW_BODY_MOBILE_CLASSNAME : PREVIEW_BODY_CLASSNAME)} style={{ backgroundColor: colors.background, paddingTop: settings.margins === 'compact' ? 20 : 32, paddingLeft: settings.margins === 'compact' ? 20 : 32, paddingRight: settings.margins === 'compact' ? 20 : 32 }}>
+        <MarkdownRenderer markdown={markdown} mobile={mobile} options={settings} />
       </div>
     </section>
   )

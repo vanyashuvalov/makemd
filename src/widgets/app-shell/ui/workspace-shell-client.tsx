@@ -17,7 +17,8 @@ import type {
   WorkspaceSnapshot,
   WorkspaceSidebarSection,
 } from '@/entities/document/model/types'
-import { defaultPdfOptions, type PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
+import { normalizePdfOptions, type PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
+import { decodeDocumentFile } from '@/entities/document/lib/document-file'
 import { WorkspaceTools } from './workspace-tools'
 import { createWorkspaceDocumentId } from '@/entities/document/model/document-id'
 import {
@@ -98,7 +99,6 @@ export function WorkspaceShellClient({
   helpMarkdown: string
 }) {
   const [deletedDocumentIds, setDeletedDocumentIds] = useState<string[]>([])
-  const [pdfOptions, setPdfOptions] = useState<PdfOptions>(defaultPdfOptions)
   const [markdown, setMarkdown] = useState(snapshot.editor.markdown)
   const [isAuthenticated, setIsAuthenticated] = useState(snapshot.state === 'authorized')
   const [account, setAccount] = useState(snapshot.account)
@@ -135,6 +135,7 @@ export function WorkspaceShellClient({
   const importInputRef = useRef<HTMLInputElement>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
+  const pdfOptions = normalizePdfOptions(activeDocument?.options)
   const activeExportTitle = activeDocument?.title ?? createDocumentTitle()
 
   // Keep a quiet browser draft in sync with the live workspace so refreshes, tab closes, and future cloud-sync handoffs can recover the same document collection without touching the visible UI state.
@@ -426,13 +427,15 @@ export function WorkspaceShellClient({
   }
 
   // Create a blank draft document so the primary sidebar action now produces a tangible workspace state.
-  const createDocumentFromMarkdown = (markdownSource: string, title = createDocumentTitle()) => {
+  const createDocumentFromMarkdown = (markdownSource: string, title = createDocumentTitle(), options?: PdfOptions) => {
     closeHelpDocument()
+    const decoded = decodeDocumentFile(markdownSource)
     const nextDocument: DocumentRecord = {
       id: createWorkspaceDocumentId(),
       title,
       ...createWorkspaceDocumentFreshness(),
-      markdown: markdownSource,
+      markdown: decoded.markdown,
+      options: options ?? decoded.options,
       active: true,
       withMenu: true,
     }
@@ -449,7 +452,17 @@ export function WorkspaceShellClient({
       )
     )
     setSidebarSection('history')
-    setMarkdown(markdownSource)
+    setMarkdown(decoded.markdown)
+  }
+
+  const handlePdfOptionsChange = (next: PdfOptions) => {
+    const options = normalizePdfOptions(next)
+    if (!activeDocument) {
+      createDocumentFromMarkdown('', createDocumentTitle(), options)
+      return
+    }
+    setDocuments((current) => current.map((document) => document.id === activeDocument.id
+      ? { ...document, options, ...createWorkspaceDocumentFreshness() } : document))
   }
 
   // Create a blank draft document so the primary sidebar action now produces a tangible workspace state.
@@ -496,7 +509,7 @@ export function WorkspaceShellClient({
         await downloadMarkdownAsPdf({
           title: document.title ?? createDocumentTitle(),
           markdown: document.markdown ?? '',
-          options: pdfOptions,
+          options: normalizePdfOptions(document.options),
         })
       }
 
@@ -836,7 +849,7 @@ export function WorkspaceShellClient({
               />
 
               <div className="relative min-h-0 min-w-0">
-                <PreviewPane markdown={markdown} />
+                <PreviewPane markdown={markdown} options={pdfOptions} />
                 <ExportBar
                   title={activeExportTitle}
                   onTitleChange={handleActiveDocumentTitleChange}
@@ -885,6 +898,7 @@ export function WorkspaceShellClient({
           onDownloadSelected={handleDownloadSelectedDocuments}
           onCopyMarkdownSelected={handleCopyMarkdownSelectedDocuments}
           markdown={markdown}
+          pdfOptions={pdfOptions}
           placeholder={editorPlaceholder}
           helpMarkdown={helpMarkdown}
           isHelpDocumentOpen={isHelpDocumentOpen}
@@ -899,7 +913,7 @@ export function WorkspaceShellClient({
         title={activeExportTitle}
         onImport={() => importInputRef.current?.click()}
         pdfOptions={pdfOptions}
-        onPdfOptionsChange={setPdfOptions}
+        onPdfOptionsChange={handlePdfOptionsChange}
         localStatus={localPersistence.status}
         localReady={localPersistence.ready}
         isAuthenticated={isAuthenticated}

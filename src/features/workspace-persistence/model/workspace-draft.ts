@@ -6,6 +6,7 @@
  * Connected to: `use-workspace-draft-persistence.ts`, the IndexedDB repository, and the workspace shell state wiring.
  */
 
+import { normalizePdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import type { WorkspaceSnapshot, WorkspaceSidebarSection, DocumentRecord, WorkspaceStateKey } from '@/entities/document/model/types'
 import { normalizeWorkspaceDocumentIds } from '@/entities/document/model/document-id'
 import { sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
@@ -14,7 +15,7 @@ export type WorkspaceDraftScope = WorkspaceStateKey
 
 export type WorkspaceDraftDocument = Pick<
   DocumentRecord,
-  'id' | 'title' | 'updatedAt' | 'updatedLabel' | 'markdown' | 'active' | 'withMenu' | 'cloudSyncedSignature'
+  'id' | 'title' | 'updatedAt' | 'updatedLabel' | 'markdown' | 'active' | 'withMenu' | 'cloudSyncedSignature' | 'options'
 >
 
 export interface WorkspaceDraftRecord {
@@ -64,6 +65,7 @@ export function createWorkspaceDraftRecord({
     sidebarSection,
     editorMarkdown,
     documents: documents.map((document) => ({
+      options: normalizePdfOptions(document.options),
       cloudSyncedSignature: document.cloudSyncedSignature,
       id: document.id,
       title: document.title,
@@ -88,7 +90,8 @@ export function normalizeWorkspaceDraftRecord(draft: WorkspaceDraftRecord | null
       draft.documents
         .filter((document) => document && typeof document.id === 'string' && typeof document.title === 'string')
         .map((document) => ({
-          cloudSyncedSignature: document.cloudSyncedSignature,
+          options: normalizePdfOptions(document.options),
+      cloudSyncedSignature: document.cloudSyncedSignature,
           id: document.id,
           title: document.title,
           updatedAt: document.updatedAt,
