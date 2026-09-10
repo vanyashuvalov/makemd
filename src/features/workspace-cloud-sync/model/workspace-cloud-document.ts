@@ -89,16 +89,12 @@ export function createWorkspaceDocumentsSignature(documents: DocumentRecord[]) {
   return [...documents]
     .sort((left, right) => left.id.localeCompare(right.id))
     .map((document) => createWorkspaceDocumentContentSignature(document))
-    .join('||')
+    .map((signature) => JSON.stringify(signature)).join(',')
 }
 
 // Reduce a single document to the fields that should trigger a remote save so the cloud sync layer can ignore active/selection noise and only react to actual content edits.
 export function createWorkspaceDocumentContentSignature(document: DocumentRecord) {
-  return [
-    document.id,
-    document.title,
-    document.markdown ?? '',
-  ].join('::')
+  return JSON.stringify([document.id, document.title, document.markdown ?? ''])
 }
 
 // Format a remote timestamp into the same readable history label style used by the mock data so cloud-loaded documents blend into the existing sidebar UI.

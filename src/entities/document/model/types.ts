@@ -20,6 +20,8 @@ export type DocumentRecord = {
   updatedAt?: string
   updatedLabel: string
   markdown?: string
+  // Last acknowledged cloud content; stored only in the browser cache.
+  cloudSyncedSignature?: string
   selected?: boolean
   active?: boolean
   withMenu?: boolean

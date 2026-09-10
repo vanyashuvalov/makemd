@@ -1,4 +1,4 @@
-﻿/**
+/**
  * File: src/app/api/export/pdf/route.tsx
  * Purpose: Server-side PDF export endpoint for markdown documents.
  * Why it exists: the workspace needs a trusted PDF generation path that can validate the caller and return a browser-printable attachment.
@@ -13,6 +13,7 @@ import { PDF_EXPORT_APP_HEADER_NAME, PDF_EXPORT_APP_HEADER_VALUE } from '@/share
 import { runPdfTask } from '@/features/document-actions/model/pdf-browser'
 import { createSupabaseServerClient } from '@/shared/lib/supabase/server-client'
 import { PdfMarkdownDocument } from '@/widgets/editor-preview/ui/pdf-markdown-document'
+import { normalizePdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import { defaultPdfPreviewTheme } from '@/widgets/editor-preview/model/pdf-theme'
 import {
   PDF_DOWNLOAD_DAILY_LIMIT,
@@ -32,6 +33,7 @@ export const dynamic = 'force-dynamic'
 type PdfExportRequest = {
   title?: string
   markdown?: string
+  options?: unknown
 }
 
 // Reject any PDF export call that does not originate from the Makemd site and does not carry the app-only handshake header, while still allowing same-origin form submissions from iPhone fallback flows.
@@ -40,7 +42,9 @@ function isAllowedPdfExportRequest(request: NextRequest) {
   const requestOriginHeader = request.headers.get('origin')
   const requestRefererHeader = request.headers.get('referer')
   const requestAppHeader = request.headers.get(PDF_EXPORT_APP_HEADER_NAME)
-  const hasTrustedOrigin = requestOriginHeader === requestOrigin || Boolean(requestRefererHeader?.startsWith(requestOrigin))
+  let refererOrigin: string | undefined
+  try { refererOrigin = requestRefererHeader ? new URL(requestRefererHeader).origin : undefined } catch {}
+  const hasTrustedOrigin = requestOriginHeader ? requestOriginHeader === requestOrigin : refererOrigin === requestOrigin
   const isFormSubmission = request.headers.get('content-type')?.includes('application/x-www-form-urlencoded') || request.headers.get('content-type')?.includes('multipart/form-data')
 
   if (!hasTrustedOrigin) {
@@ -76,7 +80,10 @@ async function readPdfExportRequest(request: NextRequest) {
     return null
   }
 
+  let options: unknown
+  try { options = JSON.parse(String(formData.get('options') ?? '{}')) } catch {}
   return {
+    options,
     title: typeof formData.get('title') === 'string' ? String(formData.get('title')) : undefined,
     markdown: typeof formData.get('markdown') === 'string' ? String(formData.get('markdown')) : undefined,
   }
@@ -105,6 +112,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing markdown content.' }, { status: 400 })
   }
 
+  if (new TextEncoder().encode(markdown).length > 2 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Document exceeds the 2 MB export limit.' }, { status: 413 })
+  }
+  const options = normalizePdfOptions(body?.options)
   const title = typeof body?.title === 'string' && body.title.trim() ? body.title.trim() : createDocumentTitle()
   const fileName = buildDocumentFileName(title, 'pdf')
   const supabase = await createSupabaseServerClient()
@@ -143,7 +154,7 @@ export async function POST(request: NextRequest) {
   try {
     const { renderToStaticMarkup } = await import('react-dom/server')
     const html = renderToStaticMarkup(
-      <PdfMarkdownDocument title={title} markdown={markdown} theme={defaultPdfPreviewTheme} />
+      <PdfMarkdownDocument title={title} markdown={markdown} theme={defaultPdfPreviewTheme} options={options} />
     )
 
     const pdfBuffer = await runPdfTask(async ({ page }) => {
@@ -152,16 +163,11 @@ export async function POST(request: NextRequest) {
         waitUntil: 'load',
       })
 
+      await page.evaluate(() => document.fonts.ready)
       return page.pdf({
-        format: 'A4',
+        format: options.paper,
         printBackground: true,
         preferCSSPageSize: true,
-        margin: {
-          top: '18mm',
-          right: '16mm',
-          bottom: '20mm',
-          left: '16mm',
-        },
       })
     })
 

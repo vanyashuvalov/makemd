@@ -67,10 +67,7 @@ function createAuthorizedSnapshot(account: WorkspaceAccount = defaultAuthorizedA
 // Create the guest workspace snapshot from the current moment so the first document looks freshly created rather than copied from static mock data.
 function createGuestSnapshot(state: 'unauthorized' | 'empty'): WorkspaceSnapshot {
   const now = new Date()
-  const sharedMarkdown =
-    state === 'unauthorized'
-      ? `# ${guestWorkspacePromptTitle}\n\nStart typing or drop a file to begin.`
-      : `# ${guestWorkspacePromptTitle}`
+  const sharedMarkdown = ''
 
   return {
     state,

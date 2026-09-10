@@ -7,6 +7,7 @@
  * What it does: provides reusable helpers for copying text, downloading blobs, and building stable document filenames.
  * Connected to: document row menus, the workspace controller, the shared PDF export handshake, and future PDF/markdown export implementations.
  */
+import type { PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import { buildDocumentFileName } from '@/shared/lib/document-file-name'
 import { isIOSLikeDevice } from '@/shared/lib/browser-platform'
 import { buildMarkdownHtmlComment } from '@/shared/lib/markdown-comments'
@@ -61,6 +62,7 @@ export async function copyTextToClipboard(text: string) {
 export type PdfExportRequest = {
   title: string
   markdown: string
+  options?: PdfOptions
 }
 
 // Build the request headers for the PDF export path so every caller includes the same app-only handshake.
@@ -72,9 +74,9 @@ export function createPdfExportRequestHeaders() {
 }
 
 // Request a server-rendered PDF, then download the returned blob so the browser export path stays selectable and printable instead of rasterized.
-export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportRequest) {
+export async function downloadMarkdownAsPdf({ title, markdown, options }: PdfExportRequest) {
   if (isIOSLikeDevice()) {
-    await submitPdfDownloadForm({ title, markdown })
+    await submitPdfDownloadForm({ title, markdown, options })
     return
   }
 
@@ -85,6 +87,7 @@ export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportReques
     body: JSON.stringify({
       title,
       markdown,
+      options,
     }),
   })
 
@@ -98,7 +101,7 @@ export async function downloadMarkdownAsPdf({ title, markdown }: PdfExportReques
 }
 
 // Submit the PDF request as a same-origin form post so iPhone Safari can handle the attachment response more reliably than a blob URL download.
-function submitPdfDownloadForm({ title, markdown }: PdfExportRequest) {
+function submitPdfDownloadForm({ title, markdown, options }: PdfExportRequest) {
   return new Promise<void>((resolve, reject) => {
     const form = window.document.createElement('form')
     const targetName = `pdf-download-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -164,7 +167,11 @@ function submitPdfDownloadForm({ title, markdown }: PdfExportRequest) {
     markdownInput.name = 'markdown'
     markdownInput.value = markdown
 
-    form.append(titleInput, markdownInput)
+    const optionsInput = window.document.createElement('input')
+    optionsInput.type = 'hidden'
+    optionsInput.name = 'options'
+    optionsInput.value = JSON.stringify(options ?? {})
+    form.append(titleInput, markdownInput, optionsInput)
     window.document.body.append(iframe, form)
 
     timeoutId = window.setTimeout(() => {
@@ -182,8 +189,10 @@ export function downloadBlob({ blob, fileName }: DocumentDownloadBlob) {
 
   anchor.href = url
   anchor.download = fileName
+  window.document.body.append(anchor)
   anchor.click()
-  URL.revokeObjectURL(url)
+  anchor.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000)
 }
 
 // Parse the server's structured error response so the workspace can surface limit and validation messages instead of a generic failure string.

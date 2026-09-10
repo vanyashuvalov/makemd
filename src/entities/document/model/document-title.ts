@@ -6,14 +6,6 @@
  * Connected to: `WorkspaceShellClient`, the document mock snapshot, and future document creation flows.
  */
 
-const starterMarkdown = `# Paste Markdown here
-
-**tip:** start typing to replace this draft
-
----
-
-ok`
-
 // Pad date and time parts so document titles stay visually aligned in the sidebar and export chip.
 function padTimePart(value: number) {
   return String(value).padStart(2, '0')
@@ -36,5 +28,5 @@ export function createDocumentTitle(date: Date = new Date()) {
 
 // Reuse the same starter markdown in the mock snapshot and in newly created documents so the text body stays independent from the title.
 export function getDocumentStarterMarkdown() {
-  return starterMarkdown
+  return ''
 }

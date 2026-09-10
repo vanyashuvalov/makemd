@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-head-element -- standalone print HTML, not a Next.js page */
 /**
  * File: src/widgets/editor-preview/ui/pdf-markdown-document.tsx
  * Purpose: Standalone HTML document for server-side PDF generation.
@@ -14,6 +15,8 @@ import { containsTaskCheckboxNode, hasTaskListContainerClassName, hasTaskListIte
 import { TaskCheckbox } from '@/shared/ui/task-checkbox'
 import { defaultPdfPreviewTheme, type PdfPreviewTheme } from '../model/pdf-theme'
 
+import { normalizePdfOptions, type PdfOptions } from '../model/pdf-options'
+
 const pdfSansFontFamily = `var(--font-sans, "Inter", ui-sans-serif, system-ui, sans-serif)`
 const pdfMonoFontFamily = `var(--font-mono, ui-monospace, SFMono-Regular, monospace)`
 
@@ -21,6 +24,7 @@ export interface PdfMarkdownDocumentProps {
   title: string
   markdown: string
   theme?: PdfPreviewTheme
+  options?: PdfOptions
 }
 
 // Build an inline-style markdown component map so the server-rendered PDF stays independent from Tailwind and mirrors the document semantics we already use in the live preview.
@@ -34,6 +38,8 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
   const headingStyle = (fontSize: string, lineHeight: string, marginTop: string): CSSProperties => ({
     ...textStyle,
     marginTop,
+    breakAfter: 'avoid-page',
+    pageBreakAfter: 'avoid',
     fontFamily: pdfSansFontFamily,
     fontWeight: 600,
     letterSpacing: '-0.04em',
@@ -223,9 +229,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       <div
         style={{
           margin: '1rem 0',
-          overflow: 'hidden',
-          breakInside: 'avoid',
-          pageBreakInside: 'avoid',
+          overflow: 'visible',
         }}
       >
         <table
@@ -243,13 +247,13 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       </div>
     ),
     thead: ({ children, ...props }) => (
-      <thead {...props} style={{ backgroundColor: theme.tableHeaderBackground }}>
+      <thead {...props} style={{ display: 'table-header-group', backgroundColor: theme.tableHeaderBackground }}>
         {children}
       </thead>
     ),
     tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
     tr: ({ children, ...props }) => (
-      <tr {...props} style={{ borderBottom: `0.75pt solid ${theme.border}` }}>
+      <tr {...props} style={{ borderBottom: `0.75pt solid ${theme.border}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
         {children}
       </tr>
     ),
@@ -345,7 +349,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
                 backgroundColor: theme.surface,
                 breakInside: 'avoid',
                 pageBreakInside: 'avoid',
-                overflow: 'hidden',
+                overflow: 'visible',
               }}
             >
               <div style={{ padding: '0.75rem 1rem 0' }}>
@@ -395,7 +399,7 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
             border: `1px solid ${theme.border}`,
             backgroundColor: theme.surface,
             padding: 0,
-            overflow: 'hidden',
+            overflow: 'visible',
             breakInside: 'avoid',
             pageBreakInside: 'avoid',
           }}
@@ -438,7 +442,9 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
 }
 
 // Compose the final print-ready document wrapper so the PDF route can render the markdown as a complete HTML page instead of a DOM fragment.
-export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreviewTheme }: PdfMarkdownDocumentProps) {
+export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreviewTheme, options }: PdfMarkdownDocumentProps) {
+  const settings = normalizePdfOptions(options)
+  const baseSize = { small: 14, normal: 16, large: 18 }[settings.textSize]
   return (
     <html lang="en">
       <head>
@@ -449,9 +455,13 @@ export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreview
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
           @page {
-            size: A4 portrait;
-            margin: 18mm 16mm 20mm;
+            size: ${settings.paper} portrait;
+            margin: ${settings.margins === 'compact' ? '12mm' : '18mm 16mm 20mm'};
           }
+
+          html { font-size: ${baseSize}px; }
+          p { orphans: 3; widows: 3; }
+          h1, h2, h3, h4, h5, h6 { break-after: avoid-page; }
 
           html,
           body {
@@ -475,7 +485,7 @@ export function PdfMarkdownDocument({ title, markdown, theme = defaultPdfPreview
         `}</style>
       </head>
       <body>
-        <main style={{ minHeight: '100vh', backgroundColor: theme.background }}>
+        <main style={{ backgroundColor: theme.background }}>
           <article style={{ maxWidth: '43rem', margin: '0 auto' }}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm, stripMarkdownHtmlComments]}

@@ -2,7 +2,7 @@
  * File: src/features/workspace-persistence/model/indexeddb-workspace-draft-repository.ts
  * Purpose: Browser-only IndexedDB implementation for the workspace draft repository contract.
  * Why it exists: the persistence hook needs a quiet, durable local store now, while future cloud sync can reuse the same repository shape with a different backing implementation.
- * What it does: opens a single IndexedDB database, stores one draft per workspace key, and fails softly so persistence never blocks editing.
+ * What it does: opens a single IndexedDB database, stores one draft per workspace key, and reports transaction failures to the workspace status.
  * Connected to: `workspace-draft.ts`, the workspace persistence hook, and the client shell that restores and saves local drafts.
  */
 
@@ -38,7 +38,13 @@ function openWorkspaceDraftDatabase() {
         }
       }
 
-      request.onsuccess = () => resolve(request.result)
+      request.onsuccess = () => {
+        request.result.onversionchange = () => {
+          request.result.close()
+          databasePromise = null
+        }
+        resolve(request.result)
+      }
       request.onerror = () => reject(request.error ?? new Error('Failed to open the workspace draft database'))
       request.onblocked = () => reject(new Error('Workspace draft database upgrade was blocked'))
     }).catch((error) => {
@@ -59,50 +65,32 @@ function waitForTransaction(transaction: IDBTransaction) {
   })
 }
 
-// Build the local repository implementation with soft-failure behavior so persistence never interrupts editing even if the browser storage stack is unavailable.
+// Let the hook report failures instead of claiming an uncommitted draft was saved.
 export function createIndexedDbWorkspaceDraftRepository(): WorkspaceDraftRepository {
   return {
     async load(storageKey) {
-      try {
-        const database = await openWorkspaceDraftDatabase()
-
-        return await new Promise<WorkspaceDraftRecord | null>((resolve, reject) => {
-          const transaction = database.transaction(STORE_NAME, 'readonly')
-          const store = transaction.objectStore(STORE_NAME)
-          const request = store.get(storageKey)
-
-          request.onsuccess = () => resolve((request.result as WorkspaceDraftRecord | undefined) ?? null)
-          request.onerror = () => reject(request.error ?? new Error('Failed to load the workspace draft'))
-          transaction.onerror = () => reject(transaction.error ?? new Error('Workspace draft read transaction failed'))
-          transaction.onabort = () => reject(transaction.error ?? new Error('Workspace draft read transaction aborted'))
-        })
-      } catch {
-        return null
-      }
+      const database = await openWorkspaceDraftDatabase()
+      return await new Promise<WorkspaceDraftRecord | null>((resolve, reject) => {
+        const transaction = database.transaction(STORE_NAME, 'readonly')
+        const request = transaction.objectStore(STORE_NAME).get(storageKey)
+        request.onsuccess = () => resolve((request.result as WorkspaceDraftRecord | undefined) ?? null)
+        request.onerror = () => reject(request.error ?? new Error('Failed to load the workspace draft'))
+        transaction.onabort = () => reject(transaction.error ?? new Error('Workspace draft read aborted'))
+      })
     },
     async save(storageKey, draft) {
-      try {
-        const database = await openWorkspaceDraftDatabase()
-        const transaction = database.transaction(STORE_NAME, 'readwrite')
-        const store = transaction.objectStore(STORE_NAME)
-
-        store.put(draft, storageKey)
-        await waitForTransaction(transaction)
-      } catch {
-        // Ignore storage failures so the editor still works if IndexedDB is blocked or temporarily unavailable.
-      }
+      const database = await openWorkspaceDraftDatabase()
+      const transaction = database.transaction(STORE_NAME, 'readwrite')
+      const committed = waitForTransaction(transaction)
+      transaction.objectStore(STORE_NAME).put(draft, storageKey)
+      await committed
     },
     async delete(storageKey) {
-      try {
-        const database = await openWorkspaceDraftDatabase()
-        const transaction = database.transaction(STORE_NAME, 'readwrite')
-        const store = transaction.objectStore(STORE_NAME)
-
-        store.delete(storageKey)
-        await waitForTransaction(transaction)
-      } catch {
-        // Ignore deletion failures for the same reason as saves: draft persistence should stay invisible and non-blocking.
-      }
+      const database = await openWorkspaceDraftDatabase()
+      const transaction = database.transaction(STORE_NAME, 'readwrite')
+      const committed = waitForTransaction(transaction)
+      transaction.objectStore(STORE_NAME).delete(storageKey)
+      await committed
     },
   }
 }

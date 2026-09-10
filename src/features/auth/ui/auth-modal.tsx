@@ -19,7 +19,7 @@ import { GOOGLE_AUTH_ICON_SRC } from '@/shared/lib/social-icons'
 export interface AuthModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onEmailPasswordSubmit: (email: string, password: string) => Promise<void> | void
+  onEmailPasswordSubmit: (email: string, password: string, mode: 'sign-in' | 'sign-up') => Promise<void> | void
   onGoogleSignIn: () => Promise<void> | void
   isLoading?: boolean
   errorMessage?: string
@@ -34,13 +34,14 @@ export function AuthModal({
   isLoading = false,
   errorMessage,
 }: AuthModalProps) {
+  const [mode, setMode] = React.useState<'sign-in' | 'sign-up'>('sign-in')
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
 
   // Submit only the minimum credentials surface here so the workspace controller can keep sign-in and Google redirect routing out of the modal UI itself.
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    await onEmailPasswordSubmit(email, password)
+    await onEmailPasswordSubmit(email, password, mode)
   }
 
   // Route Google login through the parent shell so the modal stays reusable and does not own provider-specific redirect logic.
@@ -51,7 +52,7 @@ export function AuthModal({
   return (
     <Modal
       open={open}
-      title="Continue with email"
+      title={mode === 'sign-in' ? 'Sign in' : 'Create an account'}
       description="Use email/password or Google to sign in and keep your drafts synced across devices."
       onOpenChange={onOpenChange}
     >
@@ -95,6 +96,8 @@ export function AuthModal({
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email address"
             autoComplete="email"
+            aria-label="Email address"
+            required
             type="email"
           />
 
@@ -102,16 +105,22 @@ export function AuthModal({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Password"
-            autoComplete="current-password"
+            autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+            aria-label="Password"
+            required
+            minLength={mode === 'sign-up' ? 6 : undefined}
             type="password"
           />
 
           <div className="pt-1">
             <Button type="submit" variant="primary" size="primary" className="w-full" disabled={isLoading}>
-              Continue
+              {mode === 'sign-in' ? 'Sign in' : 'Create account'}
             </Button>
           </div>
         </form>
+        <button type="button" disabled={isLoading} className="w-full text-sm underline" onClick={() => setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in')}>
+          {mode === 'sign-in' ? 'New here? Create an account' : 'Already have an account? Sign in'}
+        </button>
       </div>
     </Modal>
   )
