@@ -1,4 +1,4 @@
-﻿/**
+/**
  * File: src/features/document-selection/model/use-document-selection.ts
  * Purpose: Shared selection state for the workspace document list.
  * Why it exists: the sidebar needs one source of truth for Ctrl-driven multi-select, selected ids, and bulk actions.
@@ -28,10 +28,8 @@ export function useDocumentSelection(initialDocuments: DocumentRecord[]): UseDoc
   const [documents, setDocuments] = useState(() => sortDocumentsByUpdatedAt(normalizeWorkspaceDocumentIds(initialDocuments)))
   const [isCtrlPressed, setIsCtrlPressed] = useState(false)
 
-  // Keep the current document rows in local state so selection can react to Ctrl presses without touching the server snapshot.
-  useEffect(() => {
-    setDocuments(sortDocumentsByUpdatedAt(normalizeWorkspaceDocumentIds(initialDocuments)))
-  }, [initialDocuments])
+  // The server snapshot seeds the state once. Later refreshes must not overwrite
+  // the restored cache or live edits; persistence owns account-scope transitions.
 
   // Mirror the physical Ctrl key so the list can swap file icons for checkboxes while the key is held down.
   useEffect(() => {

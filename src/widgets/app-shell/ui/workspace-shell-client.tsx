@@ -8,7 +8,7 @@
  * Connected to: `MarkdownPane`, `PreviewPane`, `ExportBar`, `HelpDocument`, `Sidebar`, `MobileWorkspaceShell`, `AuthModal`, and the workspace snapshot model.
  */
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { MarkdownPane, PreviewPane } from '@/widgets/editor-preview/ui/editor-preview'
 import { ToastStack, type ToastItem } from '@/shared/ui/toast'
 import { ExportBar } from '@/widgets/export-bar/ui/export-bar'
@@ -17,6 +17,9 @@ import type {
   WorkspaceSnapshot,
   WorkspaceSidebarSection,
 } from '@/entities/document/model/types'
+import { normalizePdfOptions, type PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
+import { decodeDocumentFile } from '@/entities/document/lib/document-file'
+import { WorkspaceTools } from './workspace-tools'
 import { createWorkspaceDocumentId } from '@/entities/document/model/document-id'
 import {
   createDocumentTitle,
@@ -47,7 +50,6 @@ import { useWorkspaceCloudSync } from '@/features/workspace-cloud-sync/model/use
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 
 const DESKTOP_SIDEBAR_WIDTH = 360
-const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 // Allocate a stable toast identifier so the workspace can add and remove transient feedback without colliding across renders.
 function createToastId() {
@@ -70,12 +72,12 @@ function createWorkspaceDocumentFreshness(date = new Date()) {
 }
 
 // Restore a starter document when the last file is deleted so the workspace never falls into an empty dead-end state.
-function createStarterDocument(snapshot: WorkspaceSnapshot): DocumentRecord {
+function createStarterDocument(): DocumentRecord {
   return {
     id: createWorkspaceDocumentId(),
     title: createDocumentTitle(),
     ...createWorkspaceDocumentFreshness(),
-    markdown: snapshot.editor.markdown,
+    markdown: '',
     active: true,
     withMenu: true,
   }
@@ -96,6 +98,7 @@ export function WorkspaceShellClient({
   snapshot: WorkspaceSnapshot
   helpMarkdown: string
 }) {
+  const [deletedDocumentIds, setDeletedDocumentIds] = useState<string[]>([])
   const [markdown, setMarkdown] = useState(snapshot.editor.markdown)
   const [isAuthenticated, setIsAuthenticated] = useState(snapshot.state === 'authorized')
   const [account, setAccount] = useState(snapshot.account)
@@ -129,37 +132,38 @@ export function WorkspaceShellClient({
   const [isSignOutConfirmationOpen, setIsSignOutConfirmationOpen] = useState(false)
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
   const [pendingDocumentCapRequest, setPendingDocumentCapRequest] = useState<DocumentCapPendingAction | null>(null)
+  const importInputRef = useRef<HTMLInputElement>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
-  const hasHydratedGuestTitleRef = useRef(false)
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
+  const pdfOptions = normalizePdfOptions(activeDocument?.options)
   const activeExportTitle = activeDocument?.title ?? createDocumentTitle()
 
   // Keep a quiet browser draft in sync with the live workspace so refreshes, tab closes, and future cloud-sync handoffs can recover the same document collection without touching the visible UI state.
-  useWorkspaceDraftPersistence({
-    shouldRestoreDraft: !isAuthenticated,
+  const localPersistence = useWorkspaceDraftPersistence({
+    enabled: isSessionResolved,
     scope: workspacePersistenceScope,
     account,
     documents,
+    deletedDocumentIds,
+    setDeletedDocumentIds,
     editorMarkdown: markdown,
     sidebarSection,
-    setAccount,
     setDocuments,
     setEditorMarkdown: setMarkdown,
     setSidebarSection,
   })
 
   // Keep authenticated workspaces connected to Supabase so every document mutation is mirrored into Postgres and Storage instead of only living in the local browser cache.
-  const isHydratingRemoteDocuments = useWorkspaceCloudSync({
-    enabled: isAuthenticated,
+  const cloudSync = useWorkspaceCloudSync({
+    enabled: isAuthenticated && localPersistence.ready,
     userId: supabaseUserId,
     documents,
-    editorMarkdown: markdown,
-    sidebarSection,
+    deletedDocumentIds,
+    setDeletedDocumentIds,
     setDocuments,
     setEditorMarkdown: setMarkdown,
-    setAccount,
   })
-  const isDocumentsLoading = !isSessionResolved || (isAuthenticated && isHydratingRemoteDocuments)
+  const isDocumentsLoading = !localPersistence.ready || !isSessionResolved || (isAuthenticated && cloudSync.isHydrating)
   // Hydrate favorites through a separate cloud flow so reusable snapshots can load and save independently from the live document history.
   const {
     favorites: workspaceFavorites,
@@ -255,23 +259,6 @@ export function WorkspaceShellClient({
     }
   }, [])
 
-  // Replace the server-rendered guest document title with a client-local timestamp once the workspace hydrates so the first visible document uses the user's clock instead of the server clock.
-  useIsomorphicLayoutEffect(() => {
-    if (snapshot.state === 'authorized' || hasHydratedGuestTitleRef.current) {
-      return
-    }
-
-    hasHydratedGuestTitleRef.current = true
-    const hydratedTitle = createDocumentTitle()
-
-    setDocuments((current) =>
-      current.map((document) =>
-        document.active ? { ...document, title: hydratedTitle } : document
-      )
-    )
-  }, [setDocuments, snapshot.state])
-
-
   // Announce successful markdown clipboard copies through the shared toast stack so every copy entry point gives the same confirmation.
   const showMarkdownCopiedToast = () => {
     showToast({
@@ -317,6 +304,10 @@ export function WorkspaceShellClient({
   // Keep the editor content aligned with the currently active document, but only advance the document freshness stamp when the markdown text itself actually changed.
   const syncMarkdownToActiveDocument = (nextMarkdown: string) => {
     setMarkdown(nextMarkdown)
+    if (!activeDocument) {
+      createDocumentFromMarkdown(nextMarkdown)
+      return
+    }
 
     if (nextMarkdown === (activeDocument?.markdown ?? '')) {
       return
@@ -335,11 +326,12 @@ export function WorkspaceShellClient({
       return
     }
 
+    if (isAuthenticated) setDeletedDocumentIds((current) => [...new Set([...current, ...documentIds])])
     const removedDocumentIdSet = new Set(documentIds)
     const nextDocuments = documents.filter((document) => !removedDocumentIdSet.has(document.id))
 
     if (nextDocuments.length === 0) {
-      const starterDocument = createStarterDocument(snapshot)
+      const starterDocument = createStarterDocument()
 
       setDocuments([starterDocument])
       setMarkdown(starterDocument.markdown ?? snapshot.editor.markdown)
@@ -435,13 +427,15 @@ export function WorkspaceShellClient({
   }
 
   // Create a blank draft document so the primary sidebar action now produces a tangible workspace state.
-  const createDocumentFromMarkdown = (markdownSource: string, title = createDocumentTitle()) => {
+  const createDocumentFromMarkdown = (markdownSource: string, title = createDocumentTitle(), options?: PdfOptions) => {
     closeHelpDocument()
+    const decoded = decodeDocumentFile(markdownSource)
     const nextDocument: DocumentRecord = {
       id: createWorkspaceDocumentId(),
       title,
       ...createWorkspaceDocumentFreshness(),
-      markdown: markdownSource,
+      markdown: decoded.markdown,
+      options: options ?? decoded.options,
       active: true,
       withMenu: true,
     }
@@ -458,7 +452,17 @@ export function WorkspaceShellClient({
       )
     )
     setSidebarSection('history')
-    setMarkdown(markdownSource)
+    setMarkdown(decoded.markdown)
+  }
+
+  const handlePdfOptionsChange = (next: PdfOptions) => {
+    const options = normalizePdfOptions(next)
+    if (!activeDocument) {
+      createDocumentFromMarkdown('', createDocumentTitle(), options)
+      return
+    }
+    setDocuments((current) => current.map((document) => document.id === activeDocument.id
+      ? { ...document, options, ...createWorkspaceDocumentFreshness() } : document))
   }
 
   // Create a blank draft document so the primary sidebar action now produces a tangible workspace state.
@@ -469,6 +473,25 @@ export function WorkspaceShellClient({
     }
 
     createDocumentFromMarkdown(getDocumentStarterMarkdown())
+  }
+
+  const importDocument = async (file?: File) => {
+    if (!file) return
+    if (!/\.(md|markdown|txt)$/i.test(file.name) || file.size > 2 * 1024 * 1024) {
+      showToast({ tone: 'warning', title: 'Could not import file', description: 'Choose a .md, .markdown or .txt file up to 2 MB.' })
+      return
+    }
+    if (isDocumentCapReachedNow) {
+      showToast({ tone: 'warning', title: 'Document limit reached', description: 'Delete a document before importing another one.' })
+      return
+    }
+    try {
+      const text = await file.text()
+      createDocumentFromMarkdown(text.replace(/^\uFEFF/, ''), file.name.replace(/\.(md|markdown|txt)$/i, ''))
+      showToast({ tone: 'success', title: 'Document imported', description: file.name })
+    } catch {
+      showToast({ tone: 'warning', title: 'Could not read file', description: 'Please try importing it again.' })
+    }
   }
 
   // Send one or more document markdown payloads to the server PDF route so the shared export flow always produces real PDF files instead of markdown bundles.
@@ -486,6 +509,7 @@ export function WorkspaceShellClient({
         await downloadMarkdownAsPdf({
           title: document.title ?? createDocumentTitle(),
           markdown: document.markdown ?? '',
+          options: normalizePdfOptions(document.options),
         })
       }
 
@@ -513,8 +537,12 @@ export function WorkspaceShellClient({
 
     const markdownSource = buildDocumentMarkdownBundle(targetDocuments)
 
-    await copyTextToClipboard(markdownSource)
-    showMarkdownCopiedToast()
+    try {
+      await copyTextToClipboard(markdownSource)
+      showMarkdownCopiedToast()
+    } catch {
+      showToast({ tone: 'warning', title: 'Clipboard unavailable', description: 'Use Save .md to download the source instead.' })
+    }
   }
 
   // Remove a document from the local workspace collection and keep the editor pointed at the next available active row.
@@ -666,7 +694,7 @@ export function WorkspaceShellClient({
   }
 
   // Run email/password auth through Supabase so the modal can support both login and registration without owning credential storage itself.
-  const handleEmailPasswordSubmit = async (email: string, password: string) => {
+  const handleEmailPasswordSubmit = async (email: string, password: string, mode: 'sign-in' | 'sign-up') => {
     const resolvedEmail = email.trim().toLowerCase()
 
     if (!resolvedEmail || !password) {
@@ -678,40 +706,19 @@ export function WorkspaceShellClient({
     setIsAuthBusy(true)
     setAuthErrorMessage(undefined)
 
-    const signInResult = await supabase.auth.signInWithPassword({
-      email: resolvedEmail,
-      password,
-    })
-
-    if (!signInResult.error) {
+    try {
+      const result = mode === 'sign-up'
+        ? await supabase.auth.signUp({ email: resolvedEmail, password })
+        : await supabase.auth.signInWithPassword({ email: resolvedEmail, password })
+      if (result.error) setAuthErrorMessage(result.error.message)
+      else if (mode === 'sign-up' && !result.data.session) {
+        setAuthErrorMessage('Check your email to confirm your account, then sign in.')
+      }
+    } catch {
+      setAuthErrorMessage('Unable to connect. Please try again.')
+    } finally {
       setIsAuthBusy(false)
-      return
     }
-
-    const isMissingAccount = signInResult.error.message.toLowerCase().includes('invalid login credentials')
-
-    if (!isMissingAccount) {
-      setAuthErrorMessage(signInResult.error.message)
-      setIsAuthBusy(false)
-      return
-    }
-
-    const signUpResult = await supabase.auth.signUp({
-      email: resolvedEmail,
-      password,
-    })
-
-    if (signUpResult.error) {
-      setAuthErrorMessage(signUpResult.error.message)
-      setIsAuthBusy(false)
-      return
-    }
-
-    if (!signUpResult.data.session) {
-      setAuthErrorMessage('Check your email to confirm the account and finish signing in.')
-    }
-
-    setIsAuthBusy(false)
   }
 
   // Send Google sign-in through the Supabase OAuth flow so the workspace can reuse the same local auth modal and keep the redirect callback server-side.
@@ -777,7 +784,18 @@ export function WorkspaceShellClient({
 
   // Keep the live markdown and selection state isolated to the client surface while the sidebar stays a fixed 360px anchor in the shell.
   return (
-    <>
+    <div className="h-full" inert={!localPersistence.ready && localPersistence.status !== 'error'} onDragOverCapture={(event) => {
+      if (event.dataTransfer.types.includes('Files')) event.preventDefault()
+    }} onDropCapture={(event) => {
+      if (!event.dataTransfer.files.length) return
+      event.preventDefault()
+      event.stopPropagation()
+      void importDocument(event.dataTransfer.files[0])
+    }}>
+      <input ref={importInputRef} type="file" accept=".md,.markdown,.txt" aria-label="Import Markdown file" className="hidden" onChange={(event) => {
+        void importDocument(event.target.files?.[0])
+        event.target.value = ''
+      }} />
       <div className="hidden h-full min-h-0 lg:flex lg:gap-2">
         <div className="min-h-0 shrink-0" style={{ width: `${DESKTOP_SIDEBAR_WIDTH}px` }}>
           <Sidebar
@@ -831,7 +849,7 @@ export function WorkspaceShellClient({
               />
 
               <div className="relative min-h-0 min-w-0">
-                <PreviewPane markdown={markdown} />
+                <PreviewPane markdown={markdown} options={pdfOptions} />
                 <ExportBar
                   title={activeExportTitle}
                   onTitleChange={handleActiveDocumentTitleChange}
@@ -880,6 +898,7 @@ export function WorkspaceShellClient({
           onDownloadSelected={handleDownloadSelectedDocuments}
           onCopyMarkdownSelected={handleCopyMarkdownSelectedDocuments}
           markdown={markdown}
+          pdfOptions={pdfOptions}
           placeholder={editorPlaceholder}
           helpMarkdown={helpMarkdown}
           isHelpDocumentOpen={isHelpDocumentOpen}
@@ -889,6 +908,18 @@ export function WorkspaceShellClient({
         />
       </div>
 
+      <WorkspaceTools
+        markdown={markdown}
+        title={activeExportTitle}
+        onImport={() => importInputRef.current?.click()}
+        pdfOptions={pdfOptions}
+        onPdfOptionsChange={handlePdfOptionsChange}
+        localStatus={localPersistence.status}
+        localReady={localPersistence.ready}
+        isAuthenticated={isAuthenticated}
+        cloudStatus={cloudSync.status}
+        onRetry={cloudSync.retry}
+      />
       <ToastStack items={toasts} onDismiss={dismissToast} />
 
       <DocumentCapModal
@@ -939,25 +970,6 @@ export function WorkspaceShellClient({
           void handleConfirmSignOut()
         }}
       />
-    </>
+    </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

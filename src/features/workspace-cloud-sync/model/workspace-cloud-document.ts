@@ -6,6 +6,7 @@
  * Connected to: the Supabase workspace document repository and the workspace cloud sync hook.
  */
 
+import { hasCustomDocumentStyle, normalizePdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import type { DocumentRecord } from '@/entities/document/model/types'
 import { formatDocumentUpdatedLabel } from '@/entities/document/model/document-updated'
 
@@ -89,16 +90,14 @@ export function createWorkspaceDocumentsSignature(documents: DocumentRecord[]) {
   return [...documents]
     .sort((left, right) => left.id.localeCompare(right.id))
     .map((document) => createWorkspaceDocumentContentSignature(document))
-    .join('||')
+    .map((signature) => JSON.stringify(signature)).join(',')
 }
 
 // Reduce a single document to the fields that should trigger a remote save so the cloud sync layer can ignore active/selection noise and only react to actual content edits.
 export function createWorkspaceDocumentContentSignature(document: DocumentRecord) {
-  return [
-    document.id,
-    document.title,
-    document.markdown ?? '',
-  ].join('::')
+  const fields: unknown[] = [document.id, document.title, document.markdown ?? '']
+  if (hasCustomDocumentStyle(document.options)) fields.push(normalizePdfOptions(document.options))
+  return JSON.stringify(fields)
 }
 
 // Format a remote timestamp into the same readable history label style used by the mock data so cloud-loaded documents blend into the existing sidebar UI.

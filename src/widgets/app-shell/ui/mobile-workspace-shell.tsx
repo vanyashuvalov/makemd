@@ -8,6 +8,7 @@
  * Connected to: the shared drawer primitive, the sidebar widget, the shared tabs and icon buttons, and the workspace shell client.
  */
 
+import type { PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import { useState } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
 import { IconButton } from '@/shared/ui/icon-button'
@@ -28,6 +29,7 @@ import { HelpDocument } from '@/widgets/help-document/ui/help-document'
 
 export interface MobileWorkspaceShellProps extends Omit<SidebarProps, 'selectionMode' | 'selectedCount'> {
   markdown: string
+  pdfOptions?: PdfOptions
   placeholder: string
   helpMarkdown: string
   isHelpDocumentOpen: boolean
@@ -69,6 +71,7 @@ export function MobileWorkspaceShell({
   onDownloadSelected,
   onCopyMarkdownSelected,
   markdown,
+  pdfOptions,
   placeholder,
   helpMarkdown,
   isHelpDocumentOpen,
@@ -202,7 +205,7 @@ export function MobileWorkspaceShell({
         ) : mobilePanel === 'markdown' ? (
           <MarkdownPane value={markdown} onChange={onMarkdownChange} placeholder={placeholder} mobile />
         ) : (
-          <PreviewPane markdown={markdown} mobile />
+          <PreviewPane markdown={markdown} mobile options={pdfOptions} />
         )}
       </div>
 

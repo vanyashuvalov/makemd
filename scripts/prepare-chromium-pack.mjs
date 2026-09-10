@@ -43,6 +43,12 @@ function resolveChromiumPackUrl(version) {
 
 // Download the tarball only when it is missing so local and CI builds avoid paying the transfer cost more than once per workspace state.
 async function main() {
+  // macOS/Windows development uses the installed browser, not a Linux serverless binary.
+  if (!process.env.VERCEL && process.platform !== 'linux' && !process.env.PDF_PREPARE_CHROMIUM_PACK) {
+    console.log('[chromium-pack] local build uses the installed Chrome browser')
+    return
+  }
+
   if (existsSync(join(OUTPUT_DIR, 'chromium.br'))) {
     console.log(`[chromium-pack] already present at ${OUTPUT_DIR}`)
     return

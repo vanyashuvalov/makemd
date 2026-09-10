@@ -55,7 +55,7 @@ export default async function Page({ searchParams }: PageProps) {
   // Prefer the real Supabase session when one exists so authenticated users land on their signed-in workspace instead of the mock authorized fixture.
   const snapshot = user
     ? getWorkspaceSnapshot('authorized', mapSupabaseUserToWorkspaceAccount(user))
-    : getWorkspaceSnapshot(normalizedState)
+    : getWorkspaceSnapshot(normalizedState === 'authorized' ? 'unauthorized' : normalizedState)
 
   return <WorkspacePage snapshot={snapshot} helpMarkdown={helpMarkdown} />
 }

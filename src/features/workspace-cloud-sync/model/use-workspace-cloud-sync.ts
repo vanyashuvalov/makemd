@@ -1,211 +1,100 @@
-/**
- * File: src/features/workspace-cloud-sync/model/use-workspace-cloud-sync.ts
- * Purpose: Client hook that keeps authenticated workspace documents in Supabase in sync with the live editor state.
- * Why it exists: the app already had local IndexedDB drafts, but signed-in users also need real DB and Storage writes so their changes survive across devices.
- * What it does: hydrates the authenticated workspace from Supabase, then debounces saves and deletes so document create/edit/delete actions emit real remote requests.
- * Connected to: `workspace-shell-client.tsx`, the Supabase workspace document repository, and the shared cloud document helpers.
- */
+'use client'
 
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
-import type { DocumentRecord, WorkspaceSidebarSection, WorkspaceSnapshot } from '@/entities/document/model/types'
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
+import type { DocumentRecord } from '@/entities/document/model/types'
 import { normalizeWorkspaceDocumentIds } from '@/entities/document/model/document-id'
-import { formatDocumentUpdatedLabel, sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
-import {
-  createWorkspaceDocumentContentSignature,
-  createWorkspaceDocumentsSignature,
-} from './workspace-cloud-document'
-import {
-  supabaseWorkspaceDocumentRepository,
-  type WorkspaceCloudDocumentRepository,
-} from './supabase-workspace-document-repository'
+import { createWorkspaceDocumentContentSignature as signature } from './workspace-cloud-document'
+import { mergeWorkspaceDocuments } from './merge-workspace-documents'
+import { supabaseWorkspaceDocumentRepository, type WorkspaceCloudDocumentRepository } from './supabase-workspace-document-repository'
 
-export interface UseWorkspaceCloudSyncParams {
+export type CloudSyncStatus = 'idle' | 'loading' | 'saving' | 'saved' | 'error'
+
+export function useWorkspaceCloudSync({ enabled, userId, documents, deletedDocumentIds, setDeletedDocumentIds, setDocuments, setEditorMarkdown, repository = supabaseWorkspaceDocumentRepository }: {
   enabled: boolean
   userId: string | null
   documents: DocumentRecord[]
-  editorMarkdown: string
-  sidebarSection: WorkspaceSidebarSection
+  deletedDocumentIds: string[]
+  setDeletedDocumentIds: Dispatch<SetStateAction<string[]>>
   setDocuments: Dispatch<SetStateAction<DocumentRecord[]>>
   setEditorMarkdown: Dispatch<SetStateAction<string>>
-  setAccount: Dispatch<SetStateAction<WorkspaceSnapshot['account'] | undefined>>
   repository?: WorkspaceCloudDocumentRepository
-}
+}) {
+  const [status, setStatus] = useState<CloudSyncStatus>('idle')
+  const [revision, setRevision] = useState(0)
+  const latest = useRef(documents)
+  const latestDeleted = useRef(deletedDocumentIds)
+  const session = useRef({ generation: 0, hydrated: false, saving: false, baseline: new Map<string, string>() })
+  useEffect(() => { latest.current = documents; latestDeleted.current = deletedDocumentIds }, [documents, deletedDocumentIds])
+  const retry = useCallback(() => setRevision((value) => value + 1), [])
 
-// Keep the cloud sync layer separate from the local draft cache so authenticated workspaces can write to Supabase without disturbing the browser-side restore flow.
-export function useWorkspaceCloudSync({
-  enabled,
-  userId,
-  documents,
-  editorMarkdown,
-  sidebarSection,
-  setDocuments,
-  setEditorMarkdown,
-  setAccount,
-  repository = supabaseWorkspaceDocumentRepository,
-}: UseWorkspaceCloudSyncParams) {
-  const hasLoadedRemoteRef = useRef(false)
-  const lastSavedSignatureRef = useRef<string | null>(null)
-  const lastSavedDocumentIdsRef = useRef<string[]>([])
-  const lastSavedDocumentSignaturesRef = useRef<Map<string, string>>(new Map())
-  const saveTimerRef = useRef<number | null>(null)
-  const [isHydratingRemote, setIsHydratingRemote] = useState(false)
-  const liveDocumentsSignature = createWorkspaceDocumentsSignature(documents)
-  // Reset the cloud sync bookkeeping whenever the signed-in user changes so one account cannot leak its sync state into another.
   useEffect(() => {
-    hasLoadedRemoteRef.current = false
-    lastSavedSignatureRef.current = null
-    lastSavedDocumentIdsRef.current = []
-    lastSavedDocumentSignaturesRef.current = new Map()
-    setIsHydratingRemote(false)
-  }, [userId])
+    session.current = { generation: session.current.generation + 1, hydrated: false, saving: false, baseline: new Map() }
+    setStatus('idle')
+    return () => { session.current.generation += 1 }
+  }, [enabled, userId])
 
-  // Hydrate the workspace from Supabase as soon as an authenticated session is available so cloud rows become the source of truth before the shell starts saving local mutations.
   useEffect(() => {
-    if (!enabled || !userId || hasLoadedRemoteRef.current) {
-      return
-    }
+    if (!enabled || !userId || session.current.hydrated) return
+    let cancelled = false
+    const generation = session.current.generation
+    setStatus('loading')
+    void repository.load(userId).then((rows) => {
+      if (cancelled || generation !== session.current.generation) return
+      const remote = normalizeWorkspaceDocumentIds(rows)
+      const merged = mergeWorkspaceDocuments(latest.current, remote, latestDeleted.current)
+      session.current.baseline = new Map(remote.map((document) => [document.id, signature(document)]))
+      session.current.hydrated = true
+      setDocuments(merged)
+      setEditorMarkdown(merged.find((document) => document.active)?.markdown ?? '')
+      setStatus('saved')
+      setRevision((value) => value + 1)
+    }).catch(() => {
+      if (!cancelled && generation === session.current.generation) setStatus('error')
+      // Do not allow writes after a failed load: an incomplete list cannot prove a deletion.
+    })
+    return () => { cancelled = true }
+  }, [enabled, userId, repository, setDocuments, setEditorMarkdown, revision])
 
-    let isMounted = true
-
-    const loadRemoteDocuments = async () => {
-      setIsHydratingRemote(true)
-
-      try {
-        const remoteDocuments = normalizeWorkspaceDocumentIds(await repository.load(userId))
-
-        if (!isMounted) {
-          return
-        }
-
-        hasLoadedRemoteRef.current = true
-
-        if (remoteDocuments.length === 0) {
-          return
-        }
-
-        lastSavedSignatureRef.current = createWorkspaceDocumentsSignature(remoteDocuments)
-        lastSavedDocumentIdsRef.current = remoteDocuments.map((document) => document.id)
-        lastSavedDocumentSignaturesRef.current = new Map(
-          remoteDocuments.map((document) => [document.id, createWorkspaceDocumentContentSignature(document)])
-        )
-
-        setDocuments(remoteDocuments)
-        setEditorMarkdown(remoteDocuments.find((document) => document.active)?.markdown ?? remoteDocuments[0]?.markdown ?? '')
-        setAccount((current) => current)
-      } catch (error) {
-        // Keep the workspace usable when the initial cloud hydrate fails so the local draft can still continue syncing once the browser regains a stable connection.
-        console.error('[workspace-cloud-sync] remote hydrate failed', error)
-      } finally {
-        if (isMounted) {
-          hasLoadedRemoteRef.current = true
-          setIsHydratingRemote(false)
-        }
-      }
-    }
-
-    void loadRemoteDocuments()
-
-    return () => {
-      isMounted = false
-    }
-  }, [
-    enabled,
-    repository,
-    setAccount,
-    setDocuments,
-    setEditorMarkdown,
-    userId,
-  ])
-
-  // Debounce cloud writes so document edits, renames, creates, and deletes all batch into one remote save instead of spamming Supabase on every keystroke.
   useEffect(() => {
-    if (!enabled || !userId || !hasLoadedRemoteRef.current) {
-      return
-    }
-
-    const nextSignature = liveDocumentsSignature
-
-    if (nextSignature === lastSavedSignatureRef.current) {
-      return
-    }
-
-    if (saveTimerRef.current !== null) {
-      window.clearTimeout(saveTimerRef.current)
-    }
-
-    saveTimerRef.current = window.setTimeout(() => {
-      const previousDocumentIds = lastSavedDocumentIdsRef.current
-      const currentDocumentIds = documents.map((document) => document.id)
-      const removedDocumentIds = previousDocumentIds.filter((documentId) => !currentDocumentIds.includes(documentId))
-      const previousDocumentSignatures = lastSavedDocumentSignaturesRef.current
-      const changedDocuments = documents.filter((document) => {
-        const nextDocumentSignature = createWorkspaceDocumentContentSignature(document)
-        return previousDocumentSignatures.get(document.id) !== nextDocumentSignature
-      })
-      const nextDocumentSignatureMap = new Map(
-        documents.map((document) => [document.id, createWorkspaceDocumentContentSignature(document)])
-      )
-
-      void Promise.resolve()
-        .then(async () => {
-          if (removedDocumentIds.length > 0) {
-            await repository.delete(userId, removedDocumentIds)
-          }
-
-          if (changedDocuments.length > 0) {
-            const savedTimestamps = await repository.save(userId, changedDocuments)
-            const savedTimestampMap = new Map<string, string>(
-              savedTimestamps.map((item) => [item.id, item.updatedAt])
-            )
-
-            // Merge the DB-provided timestamps back into local state so the sidebar labels and sort order reflect the same `updated_at` values that Supabase just wrote.
-            if (savedTimestampMap.size > 0) {
-              setDocuments((current) =>
-                sortDocumentsByUpdatedAt(
-                  current.map((document) => {
-                    const updatedAt = savedTimestampMap.get(document.id)
-
-                    if (!updatedAt) {
-                      return document
-                    }
-
-                    return {
-                      ...document,
-                      updatedAt,
-                      updatedLabel: formatDocumentUpdatedLabel(updatedAt),
-                    }
-                  })
-                )
-              )
-            }
-          }
-
-          lastSavedSignatureRef.current = nextSignature
-          lastSavedDocumentIdsRef.current = currentDocumentIds
-          lastSavedDocumentSignaturesRef.current = nextDocumentSignatureMap
-        })
-        .catch((error) => {
-          // Keep cloud sync silent in the UI, but make failures observable in the console so backend issues are still discoverable during debugging.
-          console.error('[workspace-cloud-sync] remote save failed', error)
-        })
+    if (!enabled || !userId || !session.current.hydrated || session.current.saving) return
+    const current = session.current
+    const changed = documents.filter((document) => current.baseline.get(document.id) !== signature(document))
+    const ids = new Set(documents.map((document) => document.id))
+    const removed = [...new Set([...deletedDocumentIds, ...current.baseline.keys()].filter((id) => !ids.has(id)))]
+    if (!changed.length && !removed.length) return
+    const generation = current.generation
+    const timer = window.setTimeout(() => {
+      current.saving = true
+      setStatus('saving')
+      void (async () => {
+        try {
+          if (changed.length) await repository.save(userId, changed)
+          if (removed.length) await repository.delete(userId, removed)
+          if (generation !== session.current.generation) return
+          // Only acknowledge the snapshot actually sent; newer edits remain dirty.
+          changed.forEach((document) => current.baseline.set(document.id, signature(document)))
+          removed.forEach((id) => current.baseline.delete(id))
+          const acknowledged = new Map(changed.map((document) => [document.id, signature(document)]))
+          setDocuments((latestDocuments) => latestDocuments.map((document) => acknowledged.has(document.id) ? { ...document, cloudSyncedSignature: acknowledged.get(document.id) } : document))
+          if (removed.length) setDeletedDocumentIds((latestIds) => latestIds.filter((id) => !removed.includes(id)))
+          setStatus('saved')
+          setRevision((value) => value + 1)
+        } catch {
+          if (generation === session.current.generation) setStatus('error')
+        } finally {
+          current.saving = false
+        }
+      })()
     }, 700)
+    return () => window.clearTimeout(timer)
+  }, [documents, deletedDocumentIds, enabled, userId, repository, revision, setDocuments, setDeletedDocumentIds])
 
-    return () => {
-      if (saveTimerRef.current !== null) {
-        window.clearTimeout(saveTimerRef.current)
-      }
-    }
-  }, [documents, editorMarkdown, enabled, liveDocumentsSignature, repository, setDocuments, sidebarSection, userId])
+  useEffect(() => {
+    window.addEventListener('online', retry)
+    const timer = window.setInterval(() => { if (navigator.onLine) retry() }, 30000)
+    return () => { window.removeEventListener('online', retry); window.clearInterval(timer) }
+  }, [retry])
 
-  // Clear any pending sync debounce when the hook unmounts so the browser does not try to write a stale draft after the workspace leaves the page.
-  useEffect(
-    () => () => {
-      if (saveTimerRef.current !== null) {
-        window.clearTimeout(saveTimerRef.current)
-      }
-    },
-    []
-  )
-
-  return isHydratingRemote
+  const pending = deletedDocumentIds.length > 0 || documents.some((document) => session.current.baseline.get(document.id) !== signature(document)) || session.current.baseline.size !== documents.length
+  return { status: status === 'saved' && pending ? 'saving' as const : status, retry, isHydrating: enabled && (status === 'idle' || status === 'loading') }
 }

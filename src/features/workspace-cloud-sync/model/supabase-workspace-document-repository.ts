@@ -6,6 +6,7 @@
  * Connected to: the workspace cloud sync hook, Supabase Auth session state, the `documents` table, and the private `markdown-files` bucket.
  */
 
+import { decodeDocumentFile, encodeDocumentFile } from '@/entities/document/lib/document-file'
 import type { DocumentRecord } from '@/entities/document/model/types'
 import {
   createDocumentUpdatedAt,
@@ -42,30 +43,31 @@ function createMarkdownBlob(markdown: string) {
   return new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
 }
 
-// Load one markdown file from storage and fall back to an empty document body if the object is missing so a partially-synced cloud state still renders.
-async function loadMarkdownFromStorage(storagePath: string) {
-  const supabase = getSupabaseBrowserClient()
+// A failed download is an error, never an empty document that could be uploaded over the original.
+async function loadMarkdownFromStorage(storagePath: string, supabase: ReturnType<typeof getSupabaseBrowserClient>) {
   const { data, error } = await supabase.storage.from('markdown-files').download(storagePath)
 
   if (error || !data) {
-    return ''
+    throw error ?? new Error('The document body could not be loaded')
   }
 
   return await data.text()
 }
 
 // Build the browser-side repository around the shared Supabase client so the cloud sync hook can stay focused on orchestration instead of transport details.
-export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocumentRepository {
+export function createSupabaseWorkspaceDocumentRepository(getClient = getSupabaseBrowserClient): WorkspaceCloudDocumentRepository {
   return {
     async load(userId) {
-      const supabase = getSupabaseBrowserClient()
+      const supabase = getClient()
       const { data: rows, error } = await supabase
         .from('documents')
         .select('id, title, storage_path, updated_at')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
-      if (error || !rows?.length) {
+      if (error) throw error
+
+      if (!rows?.length) {
         return []
       }
 
@@ -76,7 +78,7 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
           title: row.title,
           updatedAt: row.updated_at ?? createDocumentUpdatedAt(),
           updatedLabel: formatDocumentUpdatedLabel(row.updated_at),
-          markdown: await loadMarkdownFromStorage(row.storage_path),
+          ...decodeDocumentFile(await loadMarkdownFromStorage(row.storage_path, supabase)),
           active: index === 0,
           withMenu: true,
         }))
@@ -89,7 +91,7 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
         return []
       }
 
-      const supabase = getSupabaseBrowserClient()
+      const supabase = getClient()
       const upsertRows = await Promise.all(
         documents.map(async (document) => {
           const cloudDocumentId = await getWorkspaceCloudDocumentId(document.id)
@@ -103,21 +105,13 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
         })
       )
 
-      const { error: upsertError } = await supabase.from('documents').upsert(upsertRows, {
-        onConflict: 'id',
-      })
-
-      if (upsertError) {
-        throw upsertError
-      }
-
-      await Promise.all(
+      const uploads = await Promise.allSettled(
         documents.map(async (document) => {
           const cloudDocumentId = await getWorkspaceCloudDocumentId(document.id)
           const storagePath = getWorkspaceCloudDocumentStoragePath(userId, cloudDocumentId)
           const { error: uploadError } = await supabase.storage.from('markdown-files').upload(
             storagePath,
-            createMarkdownBlob(document.markdown ?? ''),
+            createMarkdownBlob(encodeDocumentFile(document.markdown ?? '', document.options)),
             {
               upsert: true,
               contentType: 'text/markdown',
@@ -129,6 +123,19 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
           }
         })
       )
+
+      // Wait for every upload before releasing the write queue, including failures.
+      // Otherwise a slow upload from a rejected batch can overwrite a newer retry.
+      const failedUpload = uploads.find((result) => result.status === 'rejected')
+      if (failedUpload?.status === 'rejected') throw failedUpload.reason
+
+      const { error: upsertError } = await supabase.from('documents').upsert(upsertRows, {
+        onConflict: 'id',
+      })
+
+      if (upsertError) {
+        throw upsertError
+      }
 
       // Read back the DB-assigned `updated_at` values after the write so the UI can display the same freshness timestamps that Supabase stored, instead of trusting the browser clock.
       const savedDocumentIds = upsertRows.map((row) => row.id)
@@ -154,19 +161,13 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
         return
       }
 
-      const supabase = getSupabaseBrowserClient()
+      const supabase = getClient()
       const cloudDocumentIds = await Promise.all(
         documentIds.map(async (documentId) => getWorkspaceCloudDocumentId(documentId))
       )
       const storagePaths = cloudDocumentIds.map((documentId) =>
         getWorkspaceCloudDocumentStoragePath(userId, documentId)
       )
-
-      const { error: removeError } = await supabase.storage.from('markdown-files').remove(storagePaths)
-
-      if (removeError) {
-        throw removeError
-      }
 
       const { error: deleteError } = await supabase
         .from('documents')
@@ -177,6 +178,12 @@ export function createSupabaseWorkspaceDocumentRepository(): WorkspaceCloudDocum
       if (deleteError) {
         throw deleteError
       }
+      const { error: removeError } = await supabase.storage.from('markdown-files').remove(storagePaths)
+
+      if (removeError) {
+        throw removeError
+      }
+
     },
   }
 }

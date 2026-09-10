@@ -7,6 +7,7 @@
  */
 
 export type PdfPreviewTheme = {
+  accent?: string
   background: string
   foreground: string
   mutedForeground: string
@@ -39,4 +40,25 @@ export const defaultPdfPreviewTheme: PdfPreviewTheme = {
   taskMarkerBackground: '#181717',
   taskMarkerBorder: '#181717',
   taskMarkerForeground: '#ffffff',
+}
+
+export const documentAccentColors = { ink: '#181717', blue: '#275baf', green: '#2e6651', plum: '#78516f' } as const
+
+export function getDocumentTheme(options: import('./pdf-options').PdfOptions): PdfPreviewTheme {
+  const accent = documentAccentColors[options.accent]
+  const white = options.surface === 'white'
+  return {
+    ...defaultPdfPreviewTheme,
+    background: white ? '#ffffff' : '#fffdf8',
+    border: white ? '#dededb' : '#d6cec1',
+    surface: white ? '#f4f4f2' : '#f0ebe2',
+    codeBackground: white ? '#f4f4f2' : '#f0ebe2',
+    tableHeaderBackground: white ? '#f4f4f2' : '#f0ebe2',
+    link: accent,
+    linkDecoration: accent,
+    quoteBorder: accent,
+    taskMarkerBackground: accent,
+    taskMarkerBorder: accent,
+    accent,
+  }
 }

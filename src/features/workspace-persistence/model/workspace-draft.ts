@@ -6,6 +6,7 @@
  * Connected to: `use-workspace-draft-persistence.ts`, the IndexedDB repository, and the workspace shell state wiring.
  */
 
+import { normalizePdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import type { WorkspaceSnapshot, WorkspaceSidebarSection, DocumentRecord, WorkspaceStateKey } from '@/entities/document/model/types'
 import { normalizeWorkspaceDocumentIds } from '@/entities/document/model/document-id'
 import { sortDocumentsByUpdatedAt } from '@/entities/document/model/document-updated'
@@ -14,7 +15,7 @@ export type WorkspaceDraftScope = WorkspaceStateKey
 
 export type WorkspaceDraftDocument = Pick<
   DocumentRecord,
-  'id' | 'title' | 'updatedAt' | 'updatedLabel' | 'markdown' | 'active' | 'withMenu'
+  'id' | 'title' | 'updatedAt' | 'updatedLabel' | 'markdown' | 'active' | 'withMenu' | 'cloudSyncedSignature' | 'options'
 >
 
 export interface WorkspaceDraftRecord {
@@ -24,6 +25,7 @@ export interface WorkspaceDraftRecord {
   sidebarSection: WorkspaceSidebarSection
   editorMarkdown: string
   documents: WorkspaceDraftDocument[]
+  deletedDocumentIds?: string[]
   savedAt: number
 }
 
@@ -45,21 +47,26 @@ export function createWorkspaceDraftRecord({
   sidebarSection,
   documents,
   editorMarkdown,
+  deletedDocumentIds = [],
 }: {
   scope: WorkspaceDraftScope
   account?: WorkspaceSnapshot['account']
   sidebarSection: WorkspaceSidebarSection
   documents: DocumentRecord[]
   editorMarkdown: string
+  deletedDocumentIds?: string[]
 }): WorkspaceDraftRecord {
 
   return {
     version: 1,
+    deletedDocumentIds,
     scope,
     account,
     sidebarSection,
     editorMarkdown,
     documents: documents.map((document) => ({
+      options: normalizePdfOptions(document.options),
+      cloudSyncedSignature: document.cloudSyncedSignature,
       id: document.id,
       title: document.title,
       updatedAt: document.updatedAt,
@@ -74,41 +81,41 @@ export function createWorkspaceDraftRecord({
 
 // Rebuild a usable draft payload from IndexedDB so the workspace can restore the last local state without trusting stale or partially written records.
 export function normalizeWorkspaceDraftRecord(draft: WorkspaceDraftRecord | null | undefined): WorkspaceDraftRecord | null {
-  if (!draft || draft.version !== 1) {
+  if (!draft || draft.version !== 1 || !Array.isArray(draft.documents)) {
     return null
   }
 
   const documents = sortDocumentsByUpdatedAt(
     normalizeWorkspaceDocumentIds(
       draft.documents
-        .filter((document) => Boolean(document.id && document.title))
+        .filter((document) => document && typeof document.id === 'string' && typeof document.title === 'string')
         .map((document) => ({
+          options: normalizePdfOptions(document.options),
+      cloudSyncedSignature: document.cloudSyncedSignature,
           id: document.id,
           title: document.title,
           updatedAt: document.updatedAt,
           updatedLabel: document.updatedLabel,
-          markdown: document.markdown ?? '',
+          markdown: typeof document.markdown === 'string' ? document.markdown : '',
           active: Boolean(document.active),
           withMenu: Boolean(document.withMenu),
         }))
     )
   )
 
-  if (documents.length === 0) {
-    return null
-  }
 
   const activeDocumentExists = documents.some((document) => document.active)
 
   return {
     ...draft,
+    deletedDocumentIds: Array.isArray(draft.deletedDocumentIds) ? draft.deletedDocumentIds.filter((id) => typeof id === 'string') : [],
     documents: activeDocumentExists
       ? documents
       : documents.map((document, index) => ({
           ...document,
           active: index === 0,
         })),
-    editorMarkdown: draft.editorMarkdown ?? documents.find((document) => document.active)?.markdown ?? documents[0].markdown ?? '',
+    editorMarkdown: documents.find((document) => document.active)?.markdown ?? documents[0]?.markdown ?? '',
   }
 }
 

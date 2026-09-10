@@ -6,6 +6,7 @@
  * Connected to: the workspace favorites hook, the Supabase favorites repository, and the sidebar favorites list.
  */
 
+import { encodeDocumentFile } from '@/entities/document/lib/document-file'
 import type { DocumentRecord, WorkspaceFavorite } from '@/entities/document/model/types'
 import { parseMarkdownBlocks } from '@/entities/document/model/markdown'
 
@@ -37,7 +38,7 @@ export function createWorkspaceFavoriteFromDocument(document: DocumentRecord): W
   return {
     title: document.title.trim() || 'Untitled favorite',
     description: createWorkspaceFavoriteDescription(document.markdown ?? ''),
-    markdown: document.markdown ?? '',
+    markdown: encodeDocumentFile(document.markdown ?? '', document.options),
   }
 }
 
