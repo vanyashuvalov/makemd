@@ -7,11 +7,12 @@
  */
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import CodeMirror, { EditorView, basicSetup } from '@uiw/react-codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
+import { imageEditorExtensions } from '../model/image-editor-extension'
 import { cn } from '@/shared/lib/cn'
 
 const markdownEditorExtensions = [
@@ -124,16 +125,19 @@ export function MarkdownEditor({
   placeholder: string
   mobile?: boolean
 }) {
+  const [imageError, setImageError] = useState('')
+  const imageExtensions = useMemo(() => imageEditorExtensions(setImageError), [])
   const theme = useMemo(() => createMarkdownEditorTheme(mobile), [mobile])
 
   // Keep the editor itself lightweight and controlled by the surrounding workspace state so the shell owns all persistence and preview sync.
   return (
     <div className={cn('h-auto min-h-[100%] w-full min-w-0 overflow-visible')}>
+      {imageError && <p role="alert" className="px-6 pt-3 text-sm text-destructive">{imageError}</p>}
       <CodeMirror
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        extensions={[...markdownEditorExtensions, syntaxHighlighting(markdownSyntaxTheme)]}
+        extensions={[...markdownEditorExtensions, ...imageExtensions, syntaxHighlighting(markdownSyntaxTheme)]}
         basicSetup={false}
         theme={theme}
         height={mobile ? 'auto' : '100%'}

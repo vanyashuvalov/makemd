@@ -1,27 +1,12 @@
-import { DocumentCustomization } from './document-customization'
-import { encodeDocumentFile } from '@/entities/document/lib/document-file'
-import { downloadBlob } from '@/features/document-actions/model/document-actions'
-import { buildDocumentFileName } from '@/shared/lib/document-file-name'
-import type { PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import type { CloudSyncStatus } from '@/features/workspace-cloud-sync/model/use-workspace-cloud-sync'
 
 export function WorkspaceTools({
-  markdown,
-  title,
-  onImport,
-  pdfOptions,
-  onPdfOptionsChange,
   localStatus,
   localReady,
   isAuthenticated,
   cloudStatus,
   onRetry,
 }: {
-  markdown: string
-  title: string
-  onImport: () => void
-  pdfOptions: PdfOptions
-  onPdfOptionsChange: (options: PdfOptions) => void
   localStatus: 'loading' | 'saving' | 'saved' | 'error'
   localReady: boolean
   isAuthenticated: boolean
@@ -30,29 +15,6 @@ export function WorkspaceTools({
 }) {
   return (
     <>
-      <div className="fixed left-3 bottom-10 z-20 flex items-center gap-1 rounded-full bg-sidebar-surface p-1 text-sm text-sidebar-foreground lg:left-[380px]">
-        <button type="button" className="h-10 cursor-pointer rounded-full px-3 hover:bg-sidebar-icon-hover" onClick={() => onImport()}>
-          Import
-        </button>
-        <button
-          type="button"
-          className="h-10 cursor-pointer rounded-full px-3 hover:bg-sidebar-icon-hover"
-          onClick={() =>
-            downloadBlob({
-              blob: new Blob([encodeDocumentFile(markdown, pdfOptions)], {
-                type: 'text/markdown;charset=utf-8',
-              }),
-              fileName: buildDocumentFileName(title, 'md'),
-            })
-          }
-        >
-          Save .md
-        </button>
-        <DocumentCustomization
-          options={pdfOptions}
-          onChange={onPdfOptionsChange}
-        />
-      </div>
       <div
         role="status"
         aria-live="polite"

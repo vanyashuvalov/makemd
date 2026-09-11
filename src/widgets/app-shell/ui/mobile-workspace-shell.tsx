@@ -8,6 +8,7 @@
  * Connected to: the shared drawer primitive, the sidebar widget, the shared tabs and icon buttons, and the workspace shell client.
  */
 
+import { DocumentCustomization } from './document-customization'
 import type { PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import { useState } from 'react'
 import { IconDownload, IconEye, IconFileCode2, IconMenu2 } from '@tabler/icons-react'
@@ -29,7 +30,8 @@ import { HelpDocument } from '@/widgets/help-document/ui/help-document'
 
 export interface MobileWorkspaceShellProps extends Omit<SidebarProps, 'selectionMode' | 'selectedCount'> {
   markdown: string
-  pdfOptions?: PdfOptions
+  pdfOptions: PdfOptions
+  onPdfOptionsChange: (options: PdfOptions) => void
   placeholder: string
   helpMarkdown: string
   isHelpDocumentOpen: boolean
@@ -72,6 +74,7 @@ export function MobileWorkspaceShell({
   onCopyMarkdownSelected,
   markdown,
   pdfOptions,
+  onPdfOptionsChange,
   placeholder,
   helpMarkdown,
   isHelpDocumentOpen,
@@ -182,6 +185,7 @@ export function MobileWorkspaceShell({
             className="min-w-0 flex-1"
           />
 
+          {!isHelpDocumentOpen && <DocumentCustomization options={pdfOptions} onChange={onPdfOptionsChange} />}
           <IconButton
             aria-label="Download PDF"
             variant="primary"
@@ -203,7 +207,7 @@ export function MobileWorkspaceShell({
         {isHelpDocumentOpen ? (
           <HelpDocument markdown={helpMarkdown} />
         ) : mobilePanel === 'markdown' ? (
-          <MarkdownPane value={markdown} onChange={onMarkdownChange} placeholder={placeholder} mobile />
+          <MarkdownPane key={documents.find((document) => document.active)?.id} value={markdown} onChange={onMarkdownChange} placeholder={placeholder} mobile />
         ) : (
           <PreviewPane markdown={markdown} mobile options={pdfOptions} />
         )}

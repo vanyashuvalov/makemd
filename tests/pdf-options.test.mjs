@@ -30,3 +30,17 @@ test('styles are durable in drafts and participate in cloud sync without invalid
   const draft = normalizeWorkspaceDraftRecord(createWorkspaceDraftRecord({ scope: 'unauthorized', documents: [styled], editorMarkdown: 'Body', sidebarSection: 'history' }))
   assert.deepEqual(draft.documents[0].options, styled.options)
 })
+
+test('custom colors and continuous margins are safe and survive document export', () => {
+  const options = normalizePdfOptions({ textColor: '#F0EEDD', backgroundColor: '#202020', marginHorizontal: 24, marginVertical: 0 })
+  assert.equal(options.textColor, '#f0eedd')
+  assert.equal(options.backgroundColor, '#202020')
+  assert.equal(options.marginHorizontal, 24)
+  assert.equal(options.marginVertical, 0)
+  assert.deepEqual(decodeDocumentFile(encodeDocumentFile('# Текст', options)), { markdown: '# Текст', options })
+  const rejected = normalizePdfOptions({ textColor: '</style>', backgroundColor: 'url(https://example.com)', marginHorizontal: Infinity, marginVertical: '16; color: red' })
+  assert.deepEqual(rejected, defaultPdfOptions)
+  const bounded = normalizePdfOptions({ marginHorizontal: -20, marginVertical: 500 })
+  assert.equal(bounded.marginHorizontal, 0)
+  assert.equal(bounded.marginVertical, 40)
+})

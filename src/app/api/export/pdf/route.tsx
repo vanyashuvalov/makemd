@@ -164,7 +164,12 @@ export async function POST(request: NextRequest) {
         waitUntil: 'load',
       })
 
-      await page.evaluate(() => document.fonts.ready)
+      await page.evaluate(async () => {
+        await document.fonts.ready
+        await Promise.all(Array.from(document.images).map(async (image) => {
+          try { await image.decode() } catch { /* A broken external URL must not block the rest of the document. */ }
+        }))
+      })
       return page.pdf({
         format: options.paper,
         printBackground: true,

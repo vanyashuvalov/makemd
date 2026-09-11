@@ -19,6 +19,7 @@ import type {
 } from '@/entities/document/model/types'
 import { normalizePdfOptions, type PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
 import { decodeDocumentFile } from '@/entities/document/lib/document-file'
+import { imageFilesToMarkdown, isImageFile } from '@/features/document-images/model/document-images'
 import { WorkspaceTools } from './workspace-tools'
 import { createWorkspaceDocumentId } from '@/entities/document/model/document-id'
 import {
@@ -132,9 +133,10 @@ export function WorkspaceShellClient({
   const [isSignOutConfirmationOpen, setIsSignOutConfirmationOpen] = useState(false)
   const [pendingDeleteDocumentIds, setPendingDeleteDocumentIds] = useState<string[] | null>(null)
   const [pendingDocumentCapRequest, setPendingDocumentCapRequest] = useState<DocumentCapPendingAction | null>(null)
-  const importInputRef = useRef<HTMLInputElement>(null)
   const toastTimersRef = useRef<Map<string, number>>(new Map())
   const activeDocument = documents.find((document) => document.active) ?? documents[0]
+  const latestWorkspace = useRef({ documents, activeId: activeDocument?.id })
+  useEffect(() => { latestWorkspace.current = { documents, activeId: activeDocument?.id } }, [documents, activeDocument?.id])
   const pdfOptions = normalizePdfOptions(activeDocument?.options)
   const activeExportTitle = activeDocument?.title ?? createDocumentTitle()
 
@@ -581,15 +583,6 @@ export function WorkspaceShellClient({
     await copyMarkdownDocuments(selectedDocuments.map((document) => document.id))
   }
 
-  // Copy the active document markdown so the export toolbar can reuse the same clipboard contract as the sidebar actions.
-  const handleCopyActiveDocument = async () => {
-    if (!activeDocument) {
-      return
-    }
-
-    await copyMarkdownDocuments([activeDocument.id])
-  }
-
   // Update a single document title without touching its markdown so the sidebar row and the export chip can be renamed independently of content.
   const handleRenameDocument = (documentId: string, nextTitle: string) => {
     const resolvedTitle = nextTitle.trim() || createDocumentTitle()
@@ -788,14 +781,27 @@ export function WorkspaceShellClient({
       if (event.dataTransfer.types.includes('Files')) event.preventDefault()
     }} onDropCapture={(event) => {
       if (!event.dataTransfer.files.length) return
+      const images = Array.from(event.dataTransfer.files).filter(isImageFile)
+      if (images.length && (event.target as HTMLElement).closest('.cm-editor')) return
       event.preventDefault()
       event.stopPropagation()
-      void importDocument(event.dataTransfer.files[0])
+      if (images.length) {
+        const id = activeDocument?.id
+        void imageFilesToMarkdown(images).then((content) => {
+          const document = latestWorkspace.current.documents.find((item) => item.id === id)
+          if (!document) return
+          const next = (document.markdown ?? '') + content
+          if (new TextEncoder().encode(next).length > 2 * 1024 * 1024) {
+            showToast({ tone: 'warning', title: 'Document is full', description: 'Use a smaller image or a new document.' })
+            return
+          }
+          setDocuments((current) => current.map((item) => item.id === id ? { ...item, markdown: next, ...createWorkspaceDocumentFreshness() } : item))
+          if (latestWorkspace.current.activeId === id) setMarkdown(next)
+        }).catch((error) => showToast({ tone: 'warning', title: 'Could not add image', description: error instanceof Error ? error.message : 'Try another image.' }))
+      } else {
+        void importDocument(event.dataTransfer.files[0])
+      }
     }}>
-      <input ref={importInputRef} type="file" accept=".md,.markdown,.txt" aria-label="Import Markdown file" className="hidden" onChange={(event) => {
-        void importDocument(event.target.files?.[0])
-        event.target.value = ''
-      }} />
       <div className="hidden h-full min-h-0 lg:flex lg:gap-2">
         <div className="min-h-0 shrink-0" style={{ width: `${DESKTOP_SIDEBAR_WIDTH}px` }}>
           <Sidebar
@@ -843,6 +849,7 @@ export function WorkspaceShellClient({
           ) : (
             <div className="grid h-full min-h-0 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <MarkdownPane
+                key={activeDocument?.id}
                 value={markdown}
                 onChange={handleMarkdownChange}
                 placeholder={editorPlaceholder}
@@ -851,9 +858,10 @@ export function WorkspaceShellClient({
               <div className="relative min-h-0 min-w-0">
                 <PreviewPane markdown={markdown} options={pdfOptions} />
                 <ExportBar
+                  pdfOptions={pdfOptions}
+                  onPdfOptionsChange={handlePdfOptionsChange}
                   title={activeExportTitle}
                   onTitleChange={handleActiveDocumentTitleChange}
-                  onCopyMarkdown={handleCopyActiveDocument}
                   onDownloadPdf={handleDownloadActiveDocument}
                   isDownloadingPdf={isDownloadingPdf}
                 />
@@ -899,6 +907,7 @@ export function WorkspaceShellClient({
           onCopyMarkdownSelected={handleCopyMarkdownSelectedDocuments}
           markdown={markdown}
           pdfOptions={pdfOptions}
+          onPdfOptionsChange={handlePdfOptionsChange}
           placeholder={editorPlaceholder}
           helpMarkdown={helpMarkdown}
           isHelpDocumentOpen={isHelpDocumentOpen}
@@ -909,11 +918,6 @@ export function WorkspaceShellClient({
       </div>
 
       <WorkspaceTools
-        markdown={markdown}
-        title={activeExportTitle}
-        onImport={() => importInputRef.current?.click()}
-        pdfOptions={pdfOptions}
-        onPdfOptionsChange={handlePdfOptionsChange}
         localStatus={localPersistence.status}
         localReady={localPersistence.ready}
         isAuthenticated={isAuthenticated}
