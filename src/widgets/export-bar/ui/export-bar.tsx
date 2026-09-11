@@ -8,7 +8,9 @@
  * Connected to: the editor/preview widget and the current document snapshot.
  */
 import * as React from 'react'
-import { IconDownload, IconPencil, IconCopy } from '@tabler/icons-react'
+import { DocumentCustomization } from '@/widgets/app-shell/ui/document-customization'
+import type { PdfOptions } from '@/widgets/editor-preview/model/pdf-options'
+import { IconDownload, IconPencil } from '@tabler/icons-react'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Icon } from '@/shared/ui/icon'
 import { Spinner } from '@/shared/ui/spinner'
@@ -29,16 +31,18 @@ function formatDisplayTitle(title: string) {
 export function ExportBar({
   title,
   onTitleChange,
-  onCopyMarkdown,
   onDownloadPdf,
   isDownloadingPdf,
+  pdfOptions,
+  onPdfOptionsChange,
   className,
 }: {
   title: string
   onTitleChange: (nextTitle: string) => void
-  onCopyMarkdown?: () => void
   onDownloadPdf?: () => void
   isDownloadingPdf?: boolean
+  pdfOptions: PdfOptions
+  onPdfOptionsChange: (options: PdfOptions) => void
   className?: string
 }) {
   const [isEditing, setIsEditing] = React.useState(false)
@@ -73,12 +77,12 @@ export function ExportBar({
   return (
     <div
       className={cn(
-        'absolute bottom-3 right-3 z-10 inline-flex items-center gap-2',
+        'absolute bottom-3 right-3 z-10 inline-flex max-w-[calc(100%-24px)] items-center gap-2',
         className
       )}
     >
       {isEditing ? (
-        <div className="flex h-11 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white">
+        <div className="flex h-11 min-w-0 items-center gap-2 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white">
           <input
             ref={inputRef}
             value={draftTitle}
@@ -104,7 +108,7 @@ export function ExportBar({
         <button
           type="button"
           title={title}
-          className="flex h-11 items-center gap-0 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
+          className="flex h-11 min-w-0 items-center gap-0 rounded-full border border-transparent bg-[color:var(--color-sidebar-surface)] px-4 text-[18px] leading-[25px] font-normal text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
           onClick={() => {
             setDraftTitle(title)
             setIsEditing(true)
@@ -117,20 +121,12 @@ export function ExportBar({
           <Icon icon={IconPencil} size="md" tone="white" className="ml-1" />
         </button>
       )}
-      <IconButton
-        aria-label="Copy document"
-        variant="outline"
-        size="default"
-        className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
-        onClick={onCopyMarkdown}
-      >
-        <Icon icon={IconCopy} size="md" tone="white" />
-      </IconButton>
+      <DocumentCustomization options={pdfOptions} onChange={onPdfOptionsChange} />
       <IconButton
         aria-label="Download PDF"
         variant="outline"
         size="default"
-        className="border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
+        className="shrink-0 border-transparent bg-[color:var(--color-sidebar-surface)] text-white hover:bg-[color:var(--color-sidebar-surface)] active:bg-[color:var(--color-sidebar-surface)]"
         disabled={isDownloadingPdf}
         onClick={onDownloadPdf}
       >

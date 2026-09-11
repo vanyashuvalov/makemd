@@ -5,7 +5,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import ReactMarkdown, { type Components } from 'react-markdown'
+import ReactMarkdown, { defaultUrlTransform, type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { stripMarkdownHtmlComments } from '@/shared/lib/markdown-comments'
 import {
@@ -439,17 +439,14 @@ function createPdfMarkdownComponents(theme: PdfPreviewTheme): Components {
       <img
         {...props}
         alt={alt ?? ''}
-        crossOrigin="anonymous"
-        decoding="async"
+        decoding="sync"
         loading="eager"
-        src={src}
+        src={src || undefined}
         style={{
           display: 'block',
           maxWidth: '100%',
           height: 'auto',
           margin: 'calc(var(--document-unit, 16px) * 1) 0',
-          border: `1px solid ${theme.border}`,
-          borderRadius: '14px',
           pageBreakInside: 'avoid',
           breakInside: 'avoid',
         }}
@@ -495,6 +492,7 @@ export function MarkdownDocumentContent({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, stripMarkdownHtmlComments]}
+        urlTransform={(url, key, node) => node.tagName === 'img' && key === 'src' && /^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(url) ? url : defaultUrlTransform(url)}
         components={createPdfMarkdownComponents(colors)}
       >
         {markdown}
